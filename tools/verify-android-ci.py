@@ -63,8 +63,11 @@ def main():
             # Use a fresh target process/data directory per class, like an orchestrated
             # runner; lifecycle/stress tests still exercise repeated transitions in one run.
             totals = {'passed': 0, 'platformSkipped': 0}
+            failures = []
             for test_class, expected in test_inventory(ROOT):
                 adb('shell', 'pm', 'clear', 'dev.pingclash.app')
+                for key in ('window_animation_scale', 'transition_animation_scale', 'animator_duration_scale'):
+                    adb('shell', 'settings', 'put', 'global', key, '0')
                 adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0')
                 adb('shell', 'cmd', 'uimode', 'night', 'no')
                 args = ['adb', '-s', SERIAL, 'shell', 'am', 'instrument', '-w', '-r',
@@ -88,6 +91,12 @@ def main():
                             logger.wait()
                 output = result.stdout + result.stderr
                 (OUT / ('ci-' + test_class.rsplit('.', 1)[-1] + '.txt')).write_text(output, encoding='utf-8')
+                # Keep failure screenshots too, before the next class resets data.
+                evidence = '/sdcard/Android/data/dev.pingclash.app/files/synthetic-test-evidence'
+                if adb('shell', 'ls', '-d', evidence, check=False).strip() == evidence:
+                    destination = OUT / 'ci-device' / test_class.rsplit('.', 1)[-1]
+                    destination.mkdir(parents=True, exist_ok=True)
+                    adb('pull', evidence, str(destination))
                 if result.returncode:
                     print(output, flush=True)
                     raise RuntimeError('Instrumentation command failed')
@@ -97,13 +106,15 @@ def main():
                     (OUT / ('ci-' + test_class.rsplit('.', 1)[-1] + '-logcat.txt')).write_text(
                         adb('logcat', '-d', '-t', '1500', check=False), encoding='utf-8')
                     print(output, flush=True)
-                    raise
-                for key in totals:
-                    totals[key] += checked[key]
-                print(test_class, checked, flush=True)
-                adb('pull', '/sdcard/Android/data/dev.pingclash.app/files/synthetic-test-evidence',
-                    str(OUT / 'ci-device' / test_class.rsplit('.', 1)[-1]), check=False)
-            (OUT / 'ci-android.txt').write_text(json.dumps(totals, indent=2), encoding='utf-8')
+                    failures.append(test_class)
+                else:
+                    for key in totals:
+                        totals[key] += checked[key]
+                    print(test_class, checked, flush=True)
+                # Continue isolated assertion failures, but never report a green run
+                # after any failure. Transport/device failures still stop immediately.
+                (OUT / 'ci-android.txt').write_text(
+                    json.dumps({**totals, 'failedClasses': failures}, indent=2), encoding='utf-8')
             port = int(data['httpPort'])
             if not 0 < port < 65536:
                 raise RuntimeError('Invalid fixture port')
@@ -113,6 +124,8 @@ def main():
             if stats.get('dnsQueries', 0) < 1 or stats.get('peerRequests', 0) < 1:
                 raise RuntimeError('Real VPN DNS and separate-UID HTTP relay were not observed')
             (OUT / 'ci-relay-stats.json').write_text(json.dumps(stats, indent=2), encoding='utf-8')
+            if failures:
+                raise RuntimeError('Failed instrumentation classes: ' + ', '.join(failures))
             print('Controlled VPN DNS and peer HTTP relay passed; no user subscription was used.')
         finally:
             stop.write_text('stop', encoding='ascii')

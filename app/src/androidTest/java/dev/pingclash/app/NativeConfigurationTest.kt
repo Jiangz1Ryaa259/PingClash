@@ -12,6 +12,9 @@ import android.os.ResultReceiver
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -105,7 +108,8 @@ class NativeConfigurationTest {
                 )
                 repeat(2) {
                     compose.onNodeWithTag("nav-0").performClick()
-                    compose.onNodeWithTag("vpn-power").performClick()
+                    awaitPowerControl()
+                    compose.onNodeWithTag("vpn-power").assertIsEnabled().performClick()
                     approveSyntheticVpn(device, compose)
                     compose.waitUntil(20_000) {
                         VpnRuntime.state.value.phase in listOf("established", "error")
@@ -156,6 +160,16 @@ class NativeConfigurationTest {
                     previous.probeUrl,
                 )
             }
+        }
+    }
+
+    private fun awaitPowerControl() {
+        // The peer activity returns asynchronously; wait for the resumed UI and
+        // its actual enabled state before attempting the next user action.
+        compose.waitUntil(15_000) {
+            compose.activity.lifecycle.currentState == androidx.lifecycle.Lifecycle.State.RESUMED &&
+                compose.onAllNodesWithTag("vpn-power").fetchSemanticsNodes().singleOrNull()
+                    ?.config?.contains(SemanticsProperties.Disabled) == false
         }
     }
 }

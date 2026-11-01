@@ -23,8 +23,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -36,8 +34,6 @@ import org.junit.runner.RunWith
 class LiquidOpticsTest {
     @get:Rule(order = 0) val locale = ResourceLocaleRule()
     @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
-    private val device
-        get() = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
     @Test
     fun actualLensWarpsOnlyTheRimAndLegacyDevicesSelectTheirFallback() {
@@ -87,7 +83,8 @@ class LiquidOpticsTest {
             else if (Build.VERSION.SDK_INT >= 31) "haze" else "opaque"
         assertEquals(backend, nav.config[NavOpticalBackend])
         if (Build.VERSION.SDK_INT < 33) return
-        val bounds = nav.boundsInRoot
+        // PixelCopy captures window pixels, not the Compose root's local origin.
+        val bounds = nav.boundsInWindow
         val refracted = capture("liquid-rim-enabled.png")
         compose.runOnIdle { material.value = material.value.copy(refractionAmount = 0.dp) }
         compose.waitForIdle()
@@ -130,7 +127,7 @@ class LiquidOpticsTest {
         compose.waitForIdle()
         Thread.sleep(1200)
         val released = capture("navigation-after-release.png")
-        val bounds = compose.onNodeWithTag("glass-navigation").fetchSemanticsNode().boundsInRoot
+        val bounds = compose.onNodeWithTag("glass-navigation").fetchSemanticsNode().boundsInWindow
         try {
             val difference = pixelDifference(baseline, released, bounds, false)
             assertTrue(
@@ -163,10 +160,12 @@ class LiquidOpticsTest {
     }
 
     private fun capture(name: String): Bitmap {
+        compose.runOnUiThread { compose.activity.window.decorView.invalidate() }
+        compose.waitForIdle()
         Thread.sleep(250)
         val file = File(compose.activity.getExternalFilesDir(null), "synthetic-test-evidence/$name")
         file.parentFile?.mkdirs()
-        assertTrue(device.takeScreenshot(file))
+        captureSyntheticWindow(compose.activity, file)
         return requireNotNull(BitmapFactory.decodeFile(file.absolutePath))
     }
 

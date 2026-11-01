@@ -112,7 +112,10 @@ jobs:
           path: .tools/ci-apks
       - name: Build controlled loopback fixture
         working-directory: core
-        run: go build -p=2 -mod=readonly -trimpath -o ../.tools/hyfixture ./tools/hyfixture
+        run: |
+          go build -p=2 -mod=readonly -trimpath -o ../.tools/hyfixture ./tools/hyfixture
+          # No later step compiles Go in this job; leave space for AVD userdata.
+          go clean -cache -modcache
         env:
           GOTOOLCHAIN: local
       - name: Enable KVM for the dedicated emulator
@@ -143,6 +146,8 @@ jobs:
           avd-name: pingclash-ci
           cores: 2
           ram-size: 2048M
+          disk-size: 2048M
+          emulator-boot-timeout: 300
           disable-animations: true
           # Host GLES is backed by the explicitly verified Mesa CPU renderer below.
           emulator-build: ${{ matrix.emulator }}
