@@ -1,6 +1,7 @@
 name: Build and verify
 on:
   push:
+    branches: [main]
   pull_request:
 permissions:
   contents: read
@@ -85,14 +86,18 @@ jobs:
     needs: android
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      DISPLAY: ':99'
+      LIBGL_ALWAYS_SOFTWARE: 'true'
+      GALLIUM_DRIVER: llvmpipe
     strategy:
       fail-fast: false
       matrix:
         include:
           - {api: 31, emulator: '13610412', gpu: swiftshader_indirect}
-          - {api: 33, emulator: '16428233', gpu: lavapipe}
-          - {api: 34, emulator: '16428233', gpu: lavapipe}
-          - {api: 35, emulator: '16428233', gpu: lavapipe}
+          - {api: 33, emulator: '16428233', gpu: host}
+          - {api: 34, emulator: '16428233', gpu: host}
+          - {api: 35, emulator: '16428233', gpu: host}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -112,6 +117,23 @@ jobs:
           GOTOOLCHAIN: local
       - name: Enable KVM for the dedicated emulator
         run: sudo chmod a+rw /dev/kvm
+      - name: Prepare verified Mesa software display
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends xvfb mesa-utils libgl1-mesa-dri libgl1-mesa-dev libegl1 libx11-dev libxkbcommon-x11-0 libxcb-cursor0 libxcb-xinerama0 libxcb-keysyms1 libxcb-icccm4 libxcb-image0 libpulse0 libnss3 libxcomposite1 libxcursor1 libxi6 libxrender1 libxtst6 libxrandr2
+          mkdir -p .tools/test-results
+          Xvfb :99 -screen 0 1280x1024x24 -nolisten tcp </dev/null >.tools/test-results/ci-xvfb.txt 2>&1 &
+          for attempt in {1..30}
+          do
+            if glxinfo -B >.tools/test-results/ci-host-display.txt 2>/dev/null
+            then
+              break
+            fi
+            sleep 1
+          done
+          cat .tools/test-results/ci-host-display.txt
+          grep -qi llvmpipe .tools/test-results/ci-host-display.txt
       - name: Android ${{ matrix.api }} integration tests
         uses: ReactiveCircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
         with:
@@ -122,9 +144,9 @@ jobs:
           cores: 2
           ram-size: 2048M
           disable-animations: true
-          # Mesa software Vulkan handles AGSL on current APIs; retain the API31 GLES fallback.
+          # Host GLES is backed by the explicitly verified Mesa CPU renderer below.
           emulator-build: ${{ matrix.emulator }}
-          emulator-options: -no-window -no-audio -no-snapshot -no-boot-anim -gpu ${{ matrix.gpu }} ${{ matrix.api == 31 && '-feature -Vulkan' || '' }} -no-metrics -prop persist.sys.locale=zh-CN
+          emulator-options: ${{ matrix.api == 31 && '-no-window' || '' }} -no-audio -no-snapshot -no-boot-anim -gpu ${{ matrix.gpu }} -feature -Vulkan -no-metrics -prop persist.sys.locale=zh-CN
           script: python3 tools/verify-android-ci.py
       - name: Collect host graphics shutdown evidence
         if: failure()

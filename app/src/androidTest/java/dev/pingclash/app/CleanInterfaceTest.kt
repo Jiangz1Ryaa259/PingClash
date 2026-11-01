@@ -71,11 +71,15 @@ class CleanInterfaceTest {
     @Test
     fun ordinaryRulePageRemainsCapturableThroughItsRightwardTransition() {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        // Drive the transition explicitly; an animated shader has no global idle frame.
+        compose.mainClock.autoAdvance = false
         device.executeShellCommand("settings put global animator_duration_scale 1")
         try {
             compose.onNodeWithTag("nav-3").performClick()
+            compose.mainClock.advanceTimeBy(500)
             compose.waitForIdle()
             visibleSettingsControl(compose, "settings-rules").performClick()
+            compose.mainClock.advanceTimeBy(500)
             compose.waitForIdle()
             assertFalse(secure())
             compose.mainClock.autoAdvance = false
@@ -84,12 +88,11 @@ class CleanInterfaceTest {
             compose.waitForIdle()
             assertFalse("Ordinary rule metadata unexpectedly blocks capture", secure())
             compose.mainClock.advanceTimeBy(500)
-            compose.mainClock.autoAdvance = true
             compose.waitUntil(5000) { !secure() }
             assertFalse(secure())
         } finally {
-            compose.mainClock.autoAdvance = true
             device.executeShellCommand("settings put global animator_duration_scale 0")
+            compose.mainClock.autoAdvance = true
         }
     }
 

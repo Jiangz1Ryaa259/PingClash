@@ -1,3 +1,4 @@
+param([ValidateSet('auto','host','software','lavapipe','swangle')][string]$Graphics='auto')
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path -Parent $PSScriptRoot
 $env:ANDROID_HOME=Join-Path $projectRoot '.tools\android-sdk'
@@ -22,7 +23,7 @@ hw.lcd.width=1080
 hw.lcd.height=2400
 hw.lcd.density=420
 hw.gpu.enabled=yes
-hw.gpu.mode=lavapipe
+hw.gpu.mode=$Graphics
 disk.dataPartition.size=4G
 image.sysdir.1=$image\
 tag.id=default
@@ -40,7 +41,7 @@ $inventory=& $adb devices
 if(($inventory -join "`n") -notmatch "$serial\s+(device|offline)"){
     $emulator=Join-Path $projectRoot '.tools\emulator-37.2.12\emulator\emulator.exe'
     if(-not(Test-Path -LiteralPath $emulator)){$emulator=Join-Path $env:ANDROID_HOME 'emulator\emulator.exe'}
-    $arguments=@('-avd',$name,'-port','5556','-no-window','-no-audio','-no-snapshot','-no-boot-anim','-gpu','lavapipe','-accel','on','-no-metrics')
+    $arguments=@('-avd',$name,'-port','5556','-no-audio','-no-snapshot','-no-boot-anim','-gpu',$Graphics,'-accel','on','-no-metrics')
     $process=Start-Process -FilePath $emulator -ArgumentList $arguments -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput (Join-Path $device 'emulator.log') -RedirectStandardError (Join-Path $device 'emulator-error.log')
     Write-Output ('Emulator process: '+$process.Id)

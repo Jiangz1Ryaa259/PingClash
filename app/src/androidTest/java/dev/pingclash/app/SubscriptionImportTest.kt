@@ -560,6 +560,26 @@ internal fun approveSyntheticVpn(
     device: UiDevice,
     compose: AndroidComposeTestRule<*, MainActivity>,
 ) {
+    if (android.os.Build.VERSION.SDK_INT >= 33 &&
+        compose.activity.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+    ) {
+        val allow = device.wait(
+            androidx.test.uiautomator.Until.findObject(
+                androidx.test.uiautomator.By.res("com.android.permissioncontroller", "permission_allow_button")
+            ), 3000,
+        )
+        if (allow != null) {
+            val message = device.findObject(
+                androidx.test.uiautomator.By.res("com.android.permissioncontroller", "permission_message")
+            )?.text.orEmpty()
+            check(message.contains("notification", ignoreCase = true) || message.contains("通知")) {
+                "Unexpected runtime permission in synthetic VPN flow"
+            }
+            allow.click()
+            device.waitForIdle()
+        }
+    }
     if (android.net.VpnService.prepare(compose.activity) == null) return
     val present =
         device.wait(
