@@ -22,7 +22,7 @@ hw.lcd.width=1080
 hw.lcd.height=2400
 hw.lcd.density=420
 hw.gpu.enabled=yes
-hw.gpu.mode=swiftshader
+hw.gpu.mode=lavapipe
 disk.dataPartition.size=4G
 image.sysdir.1=$image\
 tag.id=default
@@ -38,9 +38,9 @@ $adb=Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 $serial='emulator-5556'
 $inventory=& $adb devices
 if(($inventory -join "`n") -notmatch "$serial\s+(device|offline)"){
-    $emulator=Join-Path $projectRoot '.tools\emulator-35.6.11\emulator\emulator.exe'
+    $emulator=Join-Path $projectRoot '.tools\emulator-37.2.12\emulator\emulator.exe'
     if(-not(Test-Path -LiteralPath $emulator)){$emulator=Join-Path $env:ANDROID_HOME 'emulator\emulator.exe'}
-    $arguments=@('-avd',$name,'-port','5556','-no-window','-no-audio','-no-snapshot','-no-boot-anim','-gpu','swiftshader_indirect','-feature','-Vulkan','-accel','on','-no-metrics')
+    $arguments=@('-avd',$name,'-port','5556','-no-window','-no-audio','-no-snapshot','-no-boot-anim','-gpu','lavapipe','-accel','on','-no-metrics')
     $process=Start-Process -FilePath $emulator -ArgumentList $arguments -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput (Join-Path $device 'emulator.log') -RedirectStandardError (Join-Path $device 'emulator-error.log')
     Write-Output ('Emulator process: '+$process.Id)
