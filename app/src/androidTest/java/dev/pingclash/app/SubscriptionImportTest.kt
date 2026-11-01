@@ -550,6 +550,8 @@ internal fun captureSyntheticFixture(
         captureSyntheticWindow(activity, destination)
     }
     check(destination.isFile && destination.length() > 0) { "Synthetic screenshot was not saved" }
+    // Visual assertions read the original path; CI also collects the evidence directory.
+    destination.copyTo(File(activity.getExternalFilesDir(null), name), overwrite = true)
 
 }
 
