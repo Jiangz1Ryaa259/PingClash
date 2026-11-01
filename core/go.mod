@@ -8,7 +8,7 @@ require (
 	github.com/klauspost/compress v1.18.7
 	github.com/metacubex/mihomo v1.19.32
 	github.com/metacubex/quic-go v0.61.1-0.20260727080200-2548683b76f4
-	github.com/metacubex/sing v0.5.8
+	github.com/metacubex/sing v0.5.9
 	github.com/metacubex/sing-tun v0.4.27
 	github.com/metacubex/tls v0.1.8
 	github.com/miekg/dns v1.1.63
