@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="issue_advice_compatibility">The configuration was imported with the limitations above. Skipped entries do not apply and requests may match later rules. This warning does not mean the download failed. After updating the app, reparse the saved configuration or update the subscription.</string>
+    <string name="subscription_ua">Subscription User-Agent</string>
+    <string name="subscription_ua_invalid">User-Agent must contain 1–256 printable ASCII characters.</string>
+    <string name="subscription_used">Used: %1$s</string>
+    <string name="subscription_total">Quota: %1$s</string>
+    <string name="subscription_remaining">Remaining: %1$s</string>
+    <string name="subscription_expires">Expires: %1$s</string>
+    <string name="subscription_unknown">Not provided by the subscription server</string>
+    <string name="subscription_expired">Subscription expired</string>
+    <string name="provider_redirect">The source redirect is invalid, uses non-HTTPS or exceeds the redirect limit.</string>
+    <string name="provider_failure">Provider %1$d (%2$s): %3$s</string>
+    <string name="provider_invalid">Unsupported or invalid provider configuration</string>
+    <string name="provider_payload">Invalid, unsupported or oversized provider content</string>
+    <string name="provider_network">Download failed; check network, certificate and server response</string>
+    <string name="provider_status">Provider %1$d · %2$s · refresh every %3$d s</string>
+    <string name="provider_updated">Last successful update: %1$s</string>
+    <string name="provider_pending">A provider update is ready. Reconnect the VPN to apply it.</string>
+    <string name="provider_refresh">Refresh providers</string>
+    <string name="latency_url">URL: %1$s</string>
+    <string name="latency_tcp_test">Test direct TCP reachability</string>
+    <string name="latency_skipped">Not applicable</string>
+    <string name="terminal_start_failed">Unable to start the terminal. No command was executed. Try creating a new session.</string>
+    <string name="terminal_process_exit">\n[Session ended: %1$d]</string>
+    <string name="provider_size_limit">Provider exceeds the app limit (rule source: 16 MiB; proxy source or subscription: 2 MiB)</string>
+    <string name="provider_total_limit">Combined uncompressed provider content exceeds 32 MiB</string>
+    <string name="provider_config_limit">The packed runtime configuration exceeds the app capacity</string>
+    <string name="provider_rule_limit">The rule sources contain more than 500,000 entries in total</string>
+    <string name="provider_rule_document">The rule document cannot be decoded; YAML requires a payload list. Check format: yaml/text</string>
+    <string name="provider_rule_syntax">A rule entry does not match its declared behavior (domain/ipcidr/classical)</string>
+    <string name="provider_rule_type">The classical source contains a rule type not supported by this runtime</string>
+    <string name="provider_html">The server returned an HTML page instead of rules; check login, expiry or the source URL</string>
+    <string name="provider_declared_size_limit">Provider exceeds the subscription\'s declared size-limit; check that source setting</string>
+    <string name="provider_cache_limit">Combined packed provider cache exceeds 24 MiB</string>
+    <plurals name="provider_rules_skipped">
+        <item quantity="one">Skipped %1$d rule-source entry; remaining rules keep their original order and outbounds.</item>
+        <item quantity="other">Skipped %1$d rule-source entries; remaining rules keep their original order and outbounds.</item>
+    </plurals>
+    <plurals name="provider_rule_warning_row">
+        <item quantity="one">Provider %1$d · first entry %2$d · %3$s · %4$d entry: %5$s</item>
+        <item quantity="other">Provider %1$d · first entry %2$d · %3$s · %4$d entries: %5$s</item>
+    </plurals>
+    <string name="provider_classical_forbidden">Mihomo does not allow this type inside a classical source</string>
+    <string name="provider_rule_metadata_missing">The current VPN stack does not supply this metadata</string>
+    <string name="provider_rule_database_missing">Required rule database or classification is unavailable</string>
+    <string name="provider_rule_entry_invalid">Invalid rule entry</string>
+    <string name="provider_rule_entry_unsupported">Unrecognized rule type</string>
+</resources>

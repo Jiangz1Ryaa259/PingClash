@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_connection_failed">连接失败</string>
+    <string name="ui_connection_path">连接路径</string>
+    <string name="ui_choose_configuration">选择配置</string>
+    <string name="ui_checking">检测中…</string>
+    <string name="ui_not_measured">未测试</string>
+    <string name="ui_not_separately_tested">未单测</string>
+    <string name="ui_incomplete">未完成</string>
+    <string name="ui_retest">需复测</string>
+    <string name="ui_observed_pass">通过</string>
+    <string name="ui_observed_failure">失败</string>
+    <string name="ui_device">本机</string>
+    <string name="ui_dns">DNS</string>
+    <string name="ui_node">节点入口</string>
+    <string name="ui_target">目标</string>
+    <string name="ui_cancel_connection">取消连接</string>
+    <string name="ui_test_latency">测试延迟</string>
+    <string name="ui_last_url_result">上次 URL 测试 · %1$s</string>
+    <string name="ui_latency_fast">响应快</string>
+    <string name="ui_latency_moderate">延迟偏高</string>
+    <string name="ui_latency_high">高延迟</string>
+    <string name="ui_dynamic_color">跟随系统配色</string>
+    <string name="ui_reduce_effects">减少效果</string>
+    <string name="ui_traffic_overview">实时流量</string>
+</resources>

@@ -1,0 +1,11 @@
+<resources>
+    <string name="rule_category_unknown">未识别</string>
+    <string name="profile_quota_refilling">配额已补充</string>
+    <string name="profile_upload">上传：%1$s</string>
+    <string name="profile_download">下载：%1$s</string>
+    <string name="rule_failure_category">规则类型：%1$s\n%2$s</string>
+    <string name="profile_remaining_percent">剩余 %1$d%%</string>
+    <string name="profile_quota_unknown">配额未知</string>
+    <string name="profile_inventory">节点 %1$d · 策略组 %2$d · 规则 %3$d</string>
+    <string name="profile_protocol_count">%1$s · %2$d</string>
+</resources>

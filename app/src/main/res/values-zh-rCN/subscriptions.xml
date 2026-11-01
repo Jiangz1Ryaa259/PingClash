@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="issue_advice_compatibility">配置已导入，但存在上述兼容限制。跳过条目不生效，请求可能命中后续规则；此警告不表示下载失败。更新应用后，可重新解析本地配置或更新订阅。</string>
+    <string name="subscription_ua">订阅 User-Agent</string>
+    <string name="subscription_ua_invalid">User-Agent 必须为 1–256 个可打印 ASCII 字符。</string>
+    <string name="subscription_used">已用：%1$s</string>
+    <string name="subscription_total">总配额：%1$s</string>
+    <string name="subscription_remaining">剩余：%1$s</string>
+    <string name="subscription_expires">有效期至：%1$s</string>
+    <string name="subscription_unknown">订阅服务器未提供</string>
+    <string name="subscription_expired">订阅已到期</string>
+    <string name="provider_redirect">来源重定向无效、跳转至非 HTTPS 地址或超过跳转次数。</string>
+    <string name="provider_failure">提供源 %1$d（%2$s）：%3$s</string>
+    <string name="provider_invalid">提供源配置无效或尚不支持</string>
+    <string name="provider_payload">提供源内容无效、不支持或超出限制</string>
+    <string name="provider_network">下载失败，请检查网络、证书和服务端响应</string>
+    <string name="provider_status">提供源 %1$d · %2$s · 每 %3$d 秒刷新</string>
+    <string name="provider_updated">最近成功更新：%1$s</string>
+    <string name="provider_pending">提供源更新已就绪，重新连接 VPN 后生效。</string>
+    <string name="provider_refresh">刷新提供源</string>
+    <string name="latency_url">URL：%1$s</string>
+    <string name="latency_tcp_test">测试直连 TCP 可达性</string>
+    <string name="latency_skipped">不适用</string>
+    <string name="terminal_start_failed">终端无法启动，未执行命令。请尝试新建会话。</string>
+    <string name="terminal_process_exit">\n[会话已结束：%1$d]</string>
+    <string name="provider_size_limit">提供源文件超过应用容量上限（规则源 16 MiB；代理源及订阅 2 MiB）</string>
+    <string name="provider_total_limit">提供源解压后的正文总量超过 32 MiB</string>
+    <string name="provider_config_limit">压缩后的运行配置超过应用容量限制</string>
+    <string name="provider_rule_limit">规则源条目总数超过 500,000 条</string>
+    <string name="provider_rule_document">规则文档无法解析；YAML 需要 payload 列表。请核对 format: yaml/text</string>
+    <string name="provider_rule_syntax">规则条目的格式与声明的 behavior（domain/ipcidr/classical）不符</string>
+    <string name="provider_rule_type">classical 规则源包含当前运行模式尚未支持的规则类型</string>
+    <string name="provider_html">服务器返回了网页而非规则；请检查登录、有效期或来源地址</string>
+    <string name="provider_declared_size_limit">提供源超过订阅声明的 size-limit；这是来源配置限制，请核对该项</string>
+    <string name="provider_cache_limit">提供源压缩缓存总量超过 24 MiB</string>
+    <plurals name="provider_rules_skipped">
+        <item quantity="other">已跳过 %1$d 条提供源规则；其余规则保留原有顺序和出站。</item>
+    </plurals>
+    <plurals name="provider_rule_warning_row">
+        <item quantity="other">提供源 %1$d · 首条位置 %2$d · %3$s · %4$d 条：%5$s</item>
+    </plurals>
+    <string name="provider_classical_forbidden">Mihomo 不允许在 classical 来源中使用此类型</string>
+    <string name="provider_rule_metadata_missing">当前 VPN 协议栈不提供此项元数据</string>
+    <string name="provider_rule_database_missing">所需规则数据库或分类尚不可用</string>
+    <string name="provider_rule_entry_invalid">规则条目无效</string>
+    <string name="provider_rule_entry_unsupported">未识别的规则类型</string>
+</resources>

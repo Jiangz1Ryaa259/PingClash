@@ -1,0 +1,10 @@
+<resources>
+    <string name="proxy_layout_grid">Compact grid</string>
+    <string name="proxy_layout_list">Single-column list</string>
+    <string name="proxy_member_details">Node details</string>
+    <string name="proxy_url_latency">Node latency</string>
+    <string name="proxy_test_url">Test latency</string>
+    <string name="proxy_test_tcp">Test TCP</string>
+    <string name="proxy_diagnose_member">Diagnose this node</string>
+    <string name="proxy_diagnostic_target">Diagnostic target</string>
+</resources>

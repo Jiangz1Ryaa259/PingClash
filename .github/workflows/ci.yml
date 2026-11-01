@@ -1,0 +1,133 @@
+name: Build and verify
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  android:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      ANDROID_HOME: ${{ github.workspace }}/.tools/android-sdk
+      ANDROID_NDK_HOME: ${{ github.workspace }}/.tools/android-sdk/ndk/27.2.12479018
+      ANDROID_USER_HOME: ${{ github.workspace }}/.tools/android-user
+      GRADLE_USER_HOME: ${{ github.workspace }}/.tools/gradle
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Reject signing material and local files across repository history
+        shell: pwsh
+        run: python tools/verify-source-hygiene.py
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.14.0'
+      - name: Rebuild and verify the offline Lanyard renderer
+        working-directory: ui/lanyard
+        shell: pwsh
+        run: |
+          npm ci --ignore-scripts --no-fund --no-audit
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm run build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm audit --audit-level=high
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --exit-code -- ../../app/src/main/assets/lanyard ../../app/src/main/assets/licenses/lanyard bundle-integrity.json src/Lanyard.jsx
+      - name: Install pinned SDK and native tools
+        shell: pwsh
+        run: ./tools/bootstrap.ps1 -AcceptSdkLicense
+      - name: Verify pinned Backdrop source and compatibility shims
+        shell: pwsh
+        run: python tools/verify-backdrop.py
+      - name: Verify localization resources and format placeholders
+        shell: pwsh
+        run: ./tools/verify-localization.ps1
+      - name: Build APK, detekt baseline gate, lint, and Java verification
+        shell: pwsh
+        run: ./tools/build-android.ps1
+      - name: Verify application copy and external guide
+        shell: pwsh
+        run: python tools/verify-ui-copy.py app/build/outputs/apk/debug/app-debug.apk
+      - name: Build instrumentation APK
+        shell: pwsh
+        run: ./gradlew.bat --no-daemon --max-workers=2 :app:assembleDebugAndroidTest
+        env:
+          GRADLE_USER_HOME: ${{ github.workspace }}/.tools/gradle
+          ANDROID_USER_HOME: ${{ github.workspace }}/.tools/android-user
+      - name: Upload synthetic-test APKs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-test-apks
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+      - name: Native parser, protocol, and privacy tests
+        shell: pwsh
+        run: ./tools/verify-native-core.ps1
+      - name: Bounded fuzz and reachable vulnerability scan
+        shell: pwsh
+        run: ./tools/verify-security.ps1 -Fuzz
+  integration:
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [31, 33, 34, 35]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: android-test-apks
+          path: .tools/ci-apks
+      - name: Build controlled loopback fixture
+        working-directory: core
+        run: go build -p=2 -mod=readonly -trimpath -o ../.tools/hyfixture ./tools/hyfixture
+        env:
+          GOTOOLCHAIN: local
+      - name: Enable KVM for the dedicated emulator
+        run: sudo chmod a+rw /dev/kvm
+      - name: Android ${{ matrix.api }} integration tests
+        uses: ReactiveCircus/android-emulator-runner@4c44018e59b437e86cdfc41da381398f93ed8808 # v2
+        with:
+          api-level: ${{ matrix.api }}
+          target: default
+          arch: x86_64
+          avd-name: pingclash-ci
+          cores: 2
+          ram-size: 2048M
+          disable-animations: true
+          emulator-build: '13610412' # 35.6.11; 37.2.12 exited at the first WebView test on all four APIs.
+          emulator-options: -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect -feature -Vulkan -no-metrics -prop persist.sys.locale=zh-CN
+          script: python3 tools/verify-android-ci.py
+      - name: Upload synthetic validation results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-${{ matrix.api }}-results
+          retention-days: 7
+          path: |
+            .tools/test-results/ci-*.txt
+            .tools/test-results/ci-relay-stats.json
+            .tools/test-results/ci-device/**/*.png
+            .tools/test-results/ci-device/**/*.json

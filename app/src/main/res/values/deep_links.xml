@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="deep_link_default_name">Imported subscription</string>
+    <string name="deep_link_title">Import subscription</string>
+    <string name="deep_link_confirm">Source: %1$s\n\nImport this subscription and its HTTPS providers? Enable the profile separately after import.</string>
+    <string name="deep_link_importing">Downloading and checking the subscription…</string>
+    <string name="deep_link_saved">Saved without activation. Open Configurations and select this profile to use it. Your current proxy selection has not changed.</string>
+    <string name="deep_link_failed">The link could not be imported. Use a valid HTTPS subscription, disconnect VPN before importing, and check network access and available storage. No configuration was activated.</string>
+    <string name="deep_link_import">Import only</string>
+    <string name="deep_link_close">Done</string>
+    <string name="deep_link_cancel">Cancel</string>
+    <string name="deep_link_inactive">Not enabled</string>
+    <string name="latency_udp_na">N/A (UDP)</string>
+</resources>

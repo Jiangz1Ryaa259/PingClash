@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_connection_failed">Connection failed</string>
+    <string name="ui_connection_path">Connection path</string>
+    <string name="ui_choose_configuration">Choose a configuration</string>
+    <string name="ui_checking">Checking…</string>
+    <string name="ui_not_measured">Not tested</string>
+    <string name="ui_not_separately_tested">Skipped</string>
+    <string name="ui_incomplete">Incomplete</string>
+    <string name="ui_retest">Test again</string>
+    <string name="ui_observed_pass">Passed</string>
+    <string name="ui_observed_failure">Failed</string>
+    <string name="ui_device">Device</string>
+    <string name="ui_dns">DNS</string>
+    <string name="ui_node">Node entry</string>
+    <string name="ui_target">Web</string>
+    <string name="ui_cancel_connection">Cancel connection</string>
+    <string name="ui_test_latency">Test latency</string>
+    <string name="ui_last_url_result">Last URL test · %1$s</string>
+    <string name="ui_latency_fast">Fast response</string>
+    <string name="ui_latency_moderate">Elevated latency</string>
+    <string name="ui_latency_high">High latency</string>
+    <string name="ui_dynamic_color">Use system colors</string>
+    <string name="ui_reduce_effects">Reduce effects</string>
+    <string name="ui_traffic_overview">Live traffic</string>
+</resources>

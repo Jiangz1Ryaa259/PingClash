@@ -1,0 +1,8 @@
+<resources>
+    <string name="provider_dns">DNS lookup failed. Check the current network resolver or retry on another network.</string>
+    <string name="provider_timeout">The source request timed out. Retry or check whether this source is reachable on the current network.</string>
+    <string name="provider_tls">TLS handshake or certificate validation failed. Check device time and the source certificate; verification remains enabled.</string>
+    <string name="provider_connect">The source connection could not be established or was interrupted. Retry on the current network.</string>
+    <string name="provider_http">The source returned HTTP %1$d. Check subscription validity, authorization or the required User-Agent.</string>
+    <string name="issue_copy">Copy summary</string>
+</resources>

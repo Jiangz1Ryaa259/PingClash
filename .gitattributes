@@ -1,0 +1,13 @@
+# Deterministic hashes and shader literals across Windows/Linux checkouts.
+ui/lanyard/** text eol=lf
+app/src/main/assets/lanyard/** text eol=lf
+app/src/main/assets/licenses/lanyard/** text eol=lf
+# Keep the supplied export and generated upstream shader strings byte-for-byte.
+ui/lanyard/reference/Lanyard.jsx whitespace=-blank-at-eof linguist-vendored
+ui/lanyard/src/Lanyard.jsx whitespace=-blank-at-eof linguist-generated
+ui/lanyard/src/Lanyard.css whitespace=-blank-at-eof
+app/src/main/assets/lanyard/renderer.js -whitespace linguist-generated
+app/src/main/assets/lanyard/renderer.css whitespace=-blank-at-eof linguist-generated
+
+# Preserve whitespace inside the hash-verified upstream AGSL strings.
+third-party/backdrop/src/main/java/com/kyant/backdrop/Shaders.kt whitespace=-blank-at-eol

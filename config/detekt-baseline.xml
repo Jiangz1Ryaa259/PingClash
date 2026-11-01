@@ -1,0 +1,345 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:AppViewModel.kt$AppViewModel$!app.nativeReady || testJob?.isCompleted == false || mutableProxyTests.value.running || mutableUi.value.busy || mutableDiagnosis.value.running</ID>
+    <ID>ComplexCondition:ProfileRepository.kt$ProfileRepository$!force &amp;&amp; !RemoteProfiles.due(remote) &amp;&amp; (!remote.pending || VpnRuntime.state.value.active)</ID>
+    <ID>CyclomaticComplexMethod:AppScreens.kt$@Composable internal fun PingClashApp(model: AppViewModel = viewModel())</ID>
+    <ID>CyclomaticComplexMethod:AppScreens.kt$@Composable private fun ProfilesScreen( data: AppData, locked: Boolean, model: AppViewModel, ui: AppUiState, onProxies: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:AppViewModel.kt$AppViewModel$fun testProxies(profile: LocalProfile, names: List&lt;String&gt;, groupName: String = "")</ID>
+    <ID>CyclomaticComplexMethod:AppViewModel.kt$AppViewModel$fun testTcpProxies(profile: LocalProfile, names: List&lt;String&gt;, groupName: String = "")</ID>
+    <ID>CyclomaticComplexMethod:AppViewModel.kt$AppViewModel$private fun diagnoseSnapshot(snapshot: AppData, allowDuringTests: Boolean = false)</ID>
+    <ID>CyclomaticComplexMethod:AppViewModel.kt$AppViewModel$private fun proxyStep(result: JSONObject): Models.Step</ID>
+    <ID>CyclomaticComplexMethod:ClientSettings.kt$internal fun validateClientSettings(value: ClientSettings)</ID>
+    <ID>CyclomaticComplexMethod:PingVpnService.kt$PingVpnService$private suspend fun establish()</ID>
+    <ID>CyclomaticComplexMethod:ProfileRepository.kt$ProfileRepository$@Synchronized fun importProfile( name: String, text: String, source: String? = null, replaceId: String? = null, explicitSelections: Map&lt;String, String&gt;? = null, userAgent: String? = null, subscriptionResponse: SubscriptionResponse? = null, remote: RemoteProfile? = null, providerRefresh: Boolean = false, startingVpn: Boolean = false, requireActivation: Boolean = false, ): LocalProfile</ID>
+    <ID>CyclomaticComplexMethod:ProfileRepository.kt$ProfileRepository$fun refreshProviders(profile: LocalProfile, force: Boolean = false)</ID>
+    <ID>CyclomaticComplexMethod:ProxyScreen.kt$@Composable internal fun ProxyScreen( data: AppData, locked: Boolean, model: AppViewModel, tests: ProxyTestState, onProfiles: () -&gt; Unit, onDiagnosis: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:SettingsHub.kt$@Composable internal fun SettingsHub( data: AppData, vpn: VpnUiState, locked: Boolean, model: AppViewModel, onDiagnose: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:SubscriptionDetails.kt$@Composable internal fun SubscriptionDetails(profile: LocalProfile)</ID>
+    <ID>CyclomaticComplexMethod:SubscriptionImportTest.kt$SubscriptionImportTest$@Test fun screenshotsAllowedExceptWhenCredentialsAreVisible()</ID>
+    <ID>CyclomaticComplexMethod:TcpLatencyProbe.kt$TcpLatencyProbe$fun run(context: Context, node: LocalNode?, timeout: Int, control: RunControl): ProxyDelay</ID>
+    <ID>EmptyWhileBlock:DelayCompatibilityTest.kt$DelayCompatibilityTest${}</ID>
+    <ID>InstanceOfCheckForException:TcpLatencyProbe.kt$TcpLatencyProbe$failure is ProbeFailure</ID>
+    <ID>InstanceOfCheckForException:TcpLatencyProbe.kt$TcpLatencyProbe$failure is java.net.UnknownHostException</ID>
+    <ID>InstanceOfCheckForException:TcpLatencyProbe.kt$TcpLatencyProbe$failure is java.util.concurrent.TimeoutException</ID>
+    <ID>LargeClass:AppViewModel.kt$AppViewModel : AndroidViewModel</ID>
+    <ID>LargeClass:ProfileRepository.kt$ProfileRepository</ID>
+    <ID>LongMethod:AdvancedSettingsTest.kt$AdvancedSettingsTest$@Test fun categoriesSaveEffectiveNetworkOptionsEncryptedAndSwitchLanguageAndTheme()</ID>
+    <ID>LongMethod:AdvancedSettingsTest.kt$AdvancedSettingsTest$@Test fun invalidRulesCannotMutateStorageAndOriginalRulesSurviveGroupChoices()</ID>
+    <ID>LongMethod:AppScreens.kt$@Composable internal fun PingClashApp(model: AppViewModel = viewModel())</ID>
+    <ID>LongMethod:AppScreens.kt$@Composable private fun NodeDiagnosisScreen( data: AppData, diagnosis: DiagnosticUiState, busy: Boolean, model: AppViewModel, onBack: () -&gt; Unit, )</ID>
+    <ID>LongMethod:AppScreens.kt$@Composable private fun ProfilesScreen( data: AppData, locked: Boolean, model: AppViewModel, ui: AppUiState, onProxies: () -&gt; Unit, )</ID>
+    <ID>LongMethod:AppTheme.kt$internal fun oceanColors(dark: Boolean): ColorScheme</ID>
+    <ID>LongMethod:AppViewModel.kt$AppViewModel$@Suppress("ReturnCount") fun runProbe(name: String, timeout: Int, finalAttempt: Boolean)</ID>
+    <ID>LongMethod:AppViewModel.kt$AppViewModel$fun testProxies(profile: LocalProfile, names: List&lt;String&gt;, groupName: String = "")</ID>
+    <ID>LongMethod:AppViewModel.kt$AppViewModel$fun testTcpProxies(profile: LocalProfile, names: List&lt;String&gt;, groupName: String = "")</ID>
+    <ID>LongMethod:AppViewModel.kt$AppViewModel$private fun diagnoseSnapshot(snapshot: AppData, allowDuringTests: Boolean = false)</ID>
+    <ID>LongMethod:AuditRegressionTest.kt$AuditRegressionTest$@Test fun hotNodeAndModeUpdatesKeepDescriptorTimerAndOneUsageSession()</ID>
+    <ID>LongMethod:BottomNavigationBar.kt$@Composable internal fun GlassNavigation( selected: Int, modifier: Modifier = Modifier, onSelect: (Int) -&gt; Unit, )</ID>
+    <ID>LongMethod:CanaryPrivacyTest.kt$CanaryPrivacyTest$@Test fun automaticMessagesReportsAndEncryptedStorageDoNotExposeCanaryCredentials()</ID>
+    <ID>LongMethod:ClientIntegrationTest.kt$ClientIntegrationTest$@Test fun importEncryptProbeEstablishVPNForwardSeparateUIDAndStop()</ID>
+    <ID>LongMethod:CompactHomeTest.kt$CompactHomeTest$@Test fun smallLargeFontHomeDoesNotScrollAndMoreDoesNotStartHiddenChecks()</ID>
+    <ID>LongMethod:DelayCompatibilityTest.kt$DelayCompatibilityTest$@Test fun delayQueueRunsTenAtOnceCancelsAndCompletesBeyondThirtySeconds()</ID>
+    <ID>LongMethod:ErrorCaptureTest.kt$ErrorCaptureTest$@Test fun privateInputIsMaskedBeforeErrorCaptureAndCopiedSummaryIsSafe()</ID>
+    <ID>LongMethod:FlexibleProxyTest.kt$FlexibleProxyTest$@Test fun tappingAnotherMemberKeepsIndependentBatchRunningAndItsResults()</ID>
+    <ID>LongMethod:FlexibleProxyTest.kt$FlexibleProxyTest$private fun checkLiveSelection( tls: WebsiteTlsFixture, first: ControlledServers, second: ControlledServers, scope: CoroutineScope, )</ID>
+    <ID>LongMethod:FrameGlassProbe.kt$FrameGlassProbe$fun verify()</ID>
+    <ID>LongMethod:GlassUi.kt$@Suppress("MagicNumber") @Composable internal fun VpnPowerControl(phase: String, enabled: Boolean, label: String, onClick: () -&gt; Unit)</ID>
+    <ID>LongMethod:GroupAvailabilityTest.kt$GroupAvailabilityTest$@Test fun mixed101And11SubscriptionKeepsSelectableGroupsAndLocalReparse()</ID>
+    <ID>LongMethod:HysteriaCompatibilityTest.kt$HysteriaCompatibilityTest$@Test fun selfSignedHysteriaKeepsSubscriptionPolicyAndForwardsPeerDnsAndTcp()</ID>
+    <ID>LongMethod:ImportCompatibilityTest.kt$ImportCompatibilityTest$@Test fun elevenHysteria2NodesWithNativeAliasesAndUnusedMetadataImportWithoutIsolation()</ID>
+    <ID>LongMethod:ImportForm.kt$@Composable private fun ImportFields(form: ImportFormState, busy: Boolean)</ID>
+    <ID>LongMethod:ImportForm.kt$@Suppress("LongParameterList") // Retains the existing form callback API for auxiliary callers. @Composable internal fun ImportDialog( ui: AppUiState, onDismiss: () -&gt; Unit, onUserAgent: (String) -&gt; Unit = {}, onFile: (() -&gt; Unit)? = null, initial: ImportDraft? = null, onSubmit: (String, String, Boolean) -&gt; Unit, )</ID>
+    <ID>LongMethod:IssueNoticeHost.kt$@Composable internal fun IssueNoticeHost(center: IssueNoticeCenter)</ID>
+    <ID>LongMethod:IssueNoticeHost.kt$@Composable private fun NoticeCard(notice: IssueNotice, count: Int, open: () -&gt; Unit, dismiss: () -&gt; Unit)</ID>
+    <ID>LongMethod:LanyardControlTest.kt$LanyardControlTest$@Test fun dragReleaseAndCancelNeverToggleWhileTapCommitsOnce()</ID>
+    <ID>LongMethod:LanyardPowerControl.kt$@Composable internal fun LanyardPowerControl( phase: String, enabled: Boolean, label: String, stageHeight: Dp? = null, onClick: () -&gt; Unit, )</ID>
+    <ID>LongMethod:LanyardThreeTest.kt$LanyardThreeTest$@Test fun originalThreeSceneRendersAndNativeActionControlsBothFaces()</ID>
+    <ID>LongMethod:LanyardThreeTest.kt$LanyardThreeTest$@Test fun returningHomeKeepsThePaintedFaceAndRecoversOneDroppedResumeWithoutReplaying()</ID>
+    <ID>LongMethod:LiquidOpticsTest.kt$LiquidOpticsTest$@Test fun actualLensWarpsOnlyTheRimAndLegacyDevicesSelectTheirFallback()</ID>
+    <ID>LongMethod:LiquidSwitch.kt$private fun DrawScope.drawLiquidSwitch( p: Float, stretch: Float, checked: Boolean, rtl: Boolean, paint: SwitchPaint, )</ID>
+    <ID>LongMethod:MainActivity.kt$@Composable internal fun StepCard(step: Models.Step)</ID>
+    <ID>LongMethod:MinimalCopyTest.kt$MinimalCopyTest$@Test fun profileEmptyStateAndSelectionRemainClearWithoutExplanatoryCopy()</ID>
+    <ID>LongMethod:NativeConfigurationTest.kt$NativeConfigurationTest$@Test fun nativeDNSFakeIPAndSubRulesForwardPeerUIDAndSurviveRestart()</ID>
+    <ID>LongMethod:NavigationSelectorTest.kt$NavigationSelectorTest$@Test fun rtlMirrorsOnceAndFixedLabelsKeepOneInteractiveRowAtLargeFont()</ID>
+    <ID>LongMethod:NavigationTrackingTest.kt$NavigationTrackingTest$@Test fun continuousDragFollowsEachFrameThenCancelReturnsWithoutCommitting()</ID>
+    <ID>LongMethod:NetworkReconnectionTest.kt$NetworkReconnectionTest$@Test fun networkLossKeepsTunAndForegroundThenResumesWithoutNewPermission()</ID>
+    <ID>LongMethod:NodeConnectivityTest.kt$NodeConnectivityTest$@Test fun certificatePolicyNeverBecomesConnectivityEvidenceOrLeaksAcrossNodes()</ID>
+    <ID>LongMethod:OceanBackdrop.kt$@Composable internal fun OceanBackdrop( tone: TrailTone, connecting: Boolean, modifier: Modifier = Modifier, scene: String = "ocean", )</ID>
+    <ID>LongMethod:PendingProxyUiTest.kt$PendingProxyUiTest$@Test fun pendingStatesUseSpinnersWithoutQueueTextOrTopProgressAndFinishInPlace()</ID>
+    <ID>LongMethod:PingVpnService.kt$PingVpnService$private suspend fun establish()</ID>
+    <ID>LongMethod:ProfileCards.kt$@Composable private fun ProfileMenu(profile: LocalProfile, locked: Boolean, actions: ProfileActions)</ID>
+    <ID>LongMethod:ProfileCards.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun ProfileDetailsSheet( profile: LocalProfile, locked: Boolean, onDismiss: () -&gt; Unit, onCommand: (ProfileCommand, LocalProfile) -&gt; Unit, )</ID>
+    <ID>LongMethod:ProfileImportMenu.kt$@Composable internal fun ProfileImportMenu( compact: Boolean, locked: Boolean, modifier: Modifier, onImport: (ImportMethod) -&gt; Unit, )</ID>
+    <ID>LongMethod:ProfileRepository.kt$ProfileRepository$@Synchronized fun importProfile( name: String, text: String, source: String? = null, replaceId: String? = null, explicitSelections: Map&lt;String, String&gt;? = null, userAgent: String? = null, subscriptionResponse: SubscriptionResponse? = null, remote: RemoteProfile? = null, providerRefresh: Boolean = false, startingVpn: Boolean = false, requireActivation: Boolean = false, ): LocalProfile</ID>
+    <ID>LongMethod:ProfileRepository.kt$ProfileRepository$fun refreshProviders(profile: LocalProfile, force: Boolean = false)</ID>
+    <ID>LongMethod:ProfileRepository.kt$ProfileRepository$private fun decode(text: String): AppData</ID>
+    <ID>LongMethod:ProfileRepository.kt$ProfileRepository$private fun encode(data: AppData): String</ID>
+    <ID>LongMethod:ProviderDownloadTest.kt$ProviderDownloadTest$@Test fun binaryMrsSourcesPreserveBytesEncryptedReloadAndLastGoodConfiguration()</ID>
+    <ID>LongMethod:ProviderDownloadTest.kt$ProviderDownloadTest$@Test fun classicalNativeRulesImportWithSafeWarningsForSkippedEntries()</ID>
+    <ID>LongMethod:ProviderDownloadTest.kt$ProviderDownloadTest$@Test fun largeRuleSourceImportsReloadsAndReportsSpecificFailures()</ID>
+    <ID>LongMethod:ProxyPageTest.kt$ProxyPageTest$@Test fun disjointGroupsKeepNestedCardsAndRootRouteWhileTabsSwipe()</ID>
+    <ID>LongMethod:ProxyPresentationTest.kt$ProxyPresentationTest$@Test fun longPressTcpAndDiagnosisUseInspectedNodeWithoutSelectingItOrStartingVpn()</ID>
+    <ID>LongMethod:ProxyScreen.kt$@Composable internal fun ProxyScreen( data: AppData, locked: Boolean, model: AppViewModel, tests: ProxyTestState, onProfiles: () -&gt; Unit, onDiagnosis: () -&gt; Unit, )</ID>
+    <ID>LongMethod:QuietFeedbackTest.kt$QuietFeedbackTest$@Test fun heldControlsHaveNoDarkWashWhileClicksAndLongPressStillWork()</ID>
+    <ID>LongMethod:QuietFeedbackTest.kt$QuietFeedbackTest$@Test fun lightAndDarkThemesRemoveInheritedFoundationMaterialAndPopupWash()</ID>
+    <ID>LongMethod:RuntimeCards.kt$@Composable private fun TelemetryGroup( settings: ClientSettings, vpn: VpnUiState, compact: Boolean, data: AppData? = null, )</ID>
+    <ID>LongMethod:ScenicFrame.kt$@Composable internal fun ScenicFrame( selected: Int, scene: String, reduceTransparency: Boolean, onSelect: (Int) -&gt; Unit, content: @Composable () -&gt; Unit, )</ID>
+    <ID>LongMethod:ScenicGlassTest.kt$ScenicGlassTest$@Test fun idleWavesActuallyMoveAndReducedMotionFreezesSceneWhileCloudsAndNoneAreSelectable()</ID>
+    <ID>LongMethod:ServiceChecks.kt$ServiceChecks$fun start(timeout: Int, ids: List&lt;String&gt;, targets: List&lt;ServiceTarget&gt; = serviceTargets)</ID>
+    <ID>LongMethod:SessionTimer.kt$@Composable internal fun SessionTimer( vpn: VpnUiState, modifier: Modifier = Modifier, away: Boolean = false, onHome: () -&gt; Unit = {}, onDisconnect: () -&gt; Unit = {}, )</ID>
+    <ID>LongMethod:SettingsHub.kt$@Composable internal fun SettingsHub( data: AppData, vpn: VpnUiState, locked: Boolean, model: AppViewModel, onDiagnose: () -&gt; Unit, )</ID>
+    <ID>LongMethod:SettingsHub.kt$@Composable private fun AppRoutingPanel( draft: ClientSettings, enabled: Boolean, onChange: (ClientSettings) -&gt; Unit, )</ID>
+    <ID>LongMethod:StrategyGroupsTest.kt$StrategyGroupsTest$@Test fun import234NodesKeepFifteenDialerDependenciesAndPersistManualChoice()</ID>
+    <ID>LongMethod:SubscriptionDetails.kt$@Composable internal fun SubscriptionDetails(profile: LocalProfile)</ID>
+    <ID>LongMethod:SubscriptionFeaturesTest.kt$SubscriptionFeaturesTest$@Test fun customUaQuotaRedirectAndEncryptedPersistence()</ID>
+    <ID>LongMethod:SubscriptionFeaturesTest.kt$SubscriptionFeaturesTest$@Test fun httpProvidersPreserveGroupsCacheAndRetainLastGoodConfiguration()</ID>
+    <ID>LongMethod:SubscriptionGroupsPriorityTest.kt$SubscriptionGroupsPriorityTest$@Test fun declaredUnavailableGroupsNeverBecomeAllNodesOrSilentlySelectAnotherGroup()</ID>
+    <ID>LongMethod:SubscriptionGroupsPriorityTest.kt$SubscriptionGroupsPriorityTest$@Test fun providerOrderDefaultsAndMembershipSurviveRefreshOnlyManualChoicesOverride()</ID>
+    <ID>LongMethod:SubscriptionImportTest.kt$SubscriptionImportTest$fun assertCaptureProtected(expected: Boolean)</ID>
+    <ID>LongMethod:TcpLatencyProbe.kt$TcpLatencyProbe$fun run(context: Context, node: LocalNode?, timeout: Int, control: RunControl): ProxyDelay</ID>
+    <ID>LongMethod:TerminalActivity.kt$@Composable private fun TerminalPage(model: TerminalModel, back: () -&gt; Unit)</ID>
+    <ID>LongMethod:TerminalOutputActions.kt$@Composable internal fun TerminalOutputActions( session: TerminalSession?, onShareFailed: () -&gt; Unit = {}, keyboard: () -&gt; Unit, )</ID>
+    <ID>LongMethod:WebsiteRoutingTest.kt$WebsiteRoutingTest$@Test fun websiteCannotBorrowNodeBeforeVpnButAppHttpsTraversesTunAfterConnect()</ID>
+    <ID>LongParameterList:ProfileRepository.kt$ProfileRepository$( name: String, text: String, source: String? = null, replaceId: String? = null, explicitSelections: Map&lt;String, String&gt;? = null, userAgent: String? = null, subscriptionResponse: SubscriptionResponse? = null, remote: RemoteProfile? = null, providerRefresh: Boolean = false, startingVpn: Boolean = false, requireActivation: Boolean = false, )</ID>
+    <ID>LongParameterList:ProxyScreen.kt$( data: AppData, locked: Boolean, model: AppViewModel, tests: ProxyTestState, onProfiles: () -&gt; Unit, onDiagnosis: () -&gt; Unit, )</ID>
+    <ID>LoopWithTooManyJumpStatements:AppViewModel.kt$AppViewModel$while</ID>
+    <ID>LoopWithTooManyJumpStatements:SubscriptionImportTest.kt$SubscriptionFixture$while</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$.5</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$11</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$12</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$13</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$14</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$15</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$16</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$17</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$18</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$19</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$20</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$21</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$22</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$23</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$24</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$24f</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$25</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$26</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$27</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$3</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$32</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$4</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$5</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$6</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$7</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$7.7</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$8</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$9</ID>
+    <ID>MagicNumber:AppIcons.kt$AppIcons$9.6</ID>
+    <ID>MagicNumber:AppScreens.kt$100</ID>
+    <ID>MagicNumber:AppScreens.kt$1024</ID>
+    <ID>MagicNumber:AppScreens.kt$1024.0</ID>
+    <ID>MagicNumber:AppScreens.kt$1024L</ID>
+    <ID>MagicNumber:AppScreens.kt$110</ID>
+    <ID>MagicNumber:AppScreens.kt$12</ID>
+    <ID>MagicNumber:AppScreens.kt$140</ID>
+    <ID>MagicNumber:AppScreens.kt$16</ID>
+    <ID>MagicNumber:AppScreens.kt$190</ID>
+    <ID>MagicNumber:AppScreens.kt$256</ID>
+    <ID>MagicNumber:AppScreens.kt$33</ID>
+    <ID>MagicNumber:AppScreens.kt$8</ID>
+    <ID>MagicNumber:AppViewModel.kt$AppViewModel$100</ID>
+    <ID>MagicNumber:AppViewModel.kt$AppViewModel$10000</ID>
+    <ID>MagicNumber:AppViewModel.kt$AppViewModel$1000L</ID>
+    <ID>MagicNumber:AppViewModel.kt$AppViewModel$1024</ID>
+    <ID>MagicNumber:AppViewModel.kt$AppViewModel$15_000</ID>
+    <ID>MagicNumber:AppViewModel.kt$AppViewModel$16</ID>
+    <ID>MagicNumber:AppViewModel.kt$AppViewModel$3</ID>
+    <ID>MagicNumber:AppViewModel.kt$AppViewModel$30_000</ID>
+    <ID>MagicNumber:AppViewModel.kt$AppViewModel$500</ID>
+    <ID>MagicNumber:ClientSettings.kt$10</ID>
+    <ID>MagicNumber:ClientSettings.kt$1000</ID>
+    <ID>MagicNumber:ClientSettings.kt$1024</ID>
+    <ID>MagicNumber:ClientSettings.kt$1280</ID>
+    <ID>MagicNumber:ClientSettings.kt$16</ID>
+    <ID>MagicNumber:ClientSettings.kt$20000</ID>
+    <ID>MagicNumber:ClientSettings.kt$2048</ID>
+    <ID>MagicNumber:ClientSettings.kt$255</ID>
+    <ID>MagicNumber:ClientSettings.kt$3</ID>
+    <ID>MagicNumber:ClientSettings.kt$300</ID>
+    <ID>MagicNumber:ClientSettings.kt$512</ID>
+    <ID>MagicNumber:ClientSettings.kt$60</ID>
+    <ID>MagicNumber:ClientSettings.kt$64</ID>
+    <ID>MagicNumber:ClientSettings.kt$65535</ID>
+    <ID>MagicNumber:ClientSettings.kt$9000</ID>
+    <ID>MagicNumber:ClientSettings.kt$ClientSettings.Companion$10</ID>
+    <ID>MagicNumber:ClientSettings.kt$ClientSettings.Companion$1500</ID>
+    <ID>MagicNumber:ClientSettings.kt$ClientSettings.Companion$256</ID>
+    <ID>MagicNumber:ClientSettings.kt$ClientSettings.Companion$300</ID>
+    <ID>MagicNumber:ClientSettings.kt$ClientSettings.Companion$5000</ID>
+    <ID>MagicNumber:ClientSettings.kt$ClientSettings.Companion$60</ID>
+    <ID>MagicNumber:DiagnosticViewModel.kt$DiagnosticViewModel$25_000</ID>
+    <ID>MagicNumber:Localization.kt$UiStrings$33</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$.5f</ID>
+    <ID>MagicNumber:MainActivity.kt$MainActivity$33</ID>
+    <ID>MagicNumber:PingClashApplication.kt$AndroidCorePlatform$5000</ID>
+    <ID>MagicNumber:PingVpnService.kt$PingVpnService$1000</ID>
+    <ID>MagicNumber:PingVpnService.kt$PingVpnService$126</ID>
+    <ID>MagicNumber:PingVpnService.kt$PingVpnService$30</ID>
+    <ID>MagicNumber:PingVpnService.kt$PingVpnService$300</ID>
+    <ID>MagicNumber:PingVpnService.kt$PingVpnService$31</ID>
+    <ID>MagicNumber:PingVpnService.kt$PingVpnService$34</ID>
+    <ID>MagicNumber:PingVpnService.kt$VpnRuntime$60</ID>
+    <ID>MagicNumber:ProfileRepository.kt$1024</ID>
+    <ID>MagicNumber:ProfileRepository.kt$2000</ID>
+    <ID>MagicNumber:ProfileRepository.kt$2048</ID>
+    <ID>MagicNumber:ProfileRepository.kt$256</ID>
+    <ID>MagicNumber:ProfileRepository.kt$4096</ID>
+    <ID>MagicNumber:ProfileRepository.kt$500</ID>
+    <ID>MagicNumber:ProfileRepository.kt$64</ID>
+    <ID>MagicNumber:ProfileRepository.kt$65535</ID>
+    <ID>MagicNumber:ProfileRepository.kt$8192</ID>
+    <ID>MagicNumber:ProfileRepository.kt$ProfileRepository$100</ID>
+    <ID>MagicNumber:ProfileRepository.kt$ProfileRepository$128</ID>
+    <ID>MagicNumber:ProfileRepository.kt$ProfileRepository$13</ID>
+    <ID>MagicNumber:ProfileRepository.kt$ProfileRepository$20</ID>
+    <ID>MagicNumber:ProfileRepository.kt$ProfileRepository$2048</ID>
+    <ID>MagicNumber:ProfileRepository.kt$ProfileRepository$29</ID>
+    <ID>MagicNumber:ProfileRepository.kt$ProfileRepository$500</ID>
+    <ID>MagicNumber:ProfileRepository.kt$ProfileRepository$64</ID>
+    <ID>MagicNumber:ProfileRepository.kt$ProfileRepository$80</ID>
+    <ID>MagicNumber:ProfileRepository.kt$SubscriptionDownloader$10_000</ID>
+    <ID>MagicNumber:ProfileRepository.kt$SubscriptionDownloader$301</ID>
+    <ID>MagicNumber:ProfileRepository.kt$SubscriptionDownloader$302</ID>
+    <ID>MagicNumber:ProfileRepository.kt$SubscriptionDownloader$303</ID>
+    <ID>MagicNumber:ProfileRepository.kt$SubscriptionDownloader$307</ID>
+    <ID>MagicNumber:ProfileRepository.kt$SubscriptionDownloader$308</ID>
+    <ID>MagicNumber:ProfileRepository.kt$SubscriptionDownloader$30_000</ID>
+    <ID>MagicNumber:ProfileRepository.kt$SubscriptionDownloader$4</ID>
+    <ID>MagicNumber:ProxyScreen.kt$1.6f</ID>
+    <ID>MagicNumber:ProxyScreen.kt$100</ID>
+    <ID>MagicNumber:ProxyScreen.kt$180</ID>
+    <ID>MagicNumber:RemoteProfiles.kt$RemoteProfile.Companion$1024</ID>
+    <ID>MagicNumber:RemoteProfiles.kt$RemoteProfiles$60</ID>
+    <ID>MagicNumber:RuntimeCards.kt$1024</ID>
+    <ID>MagicNumber:RuntimeCards.kt$3600</ID>
+    <ID>MagicNumber:RuntimeCards.kt$60</ID>
+    <ID>MagicNumber:SettingsHub.kt$10</ID>
+    <ID>MagicNumber:SettingsHub.kt$100</ID>
+    <ID>MagicNumber:SettingsHub.kt$1000</ID>
+    <ID>MagicNumber:SettingsHub.kt$1024</ID>
+    <ID>MagicNumber:SettingsHub.kt$1280</ID>
+    <ID>MagicNumber:SettingsHub.kt$16</ID>
+    <ID>MagicNumber:SettingsHub.kt$20000</ID>
+    <ID>MagicNumber:SettingsHub.kt$2048</ID>
+    <ID>MagicNumber:SettingsHub.kt$255</ID>
+    <ID>MagicNumber:SettingsHub.kt$3</ID>
+    <ID>MagicNumber:SettingsHub.kt$300</ID>
+    <ID>MagicNumber:SettingsHub.kt$500</ID>
+    <ID>MagicNumber:SettingsHub.kt$512</ID>
+    <ID>MagicNumber:SettingsHub.kt$60</ID>
+    <ID>MagicNumber:SettingsHub.kt$64</ID>
+    <ID>MagicNumber:SettingsHub.kt$80</ID>
+    <ID>MagicNumber:SettingsHub.kt$9000</ID>
+    <ID>MagicNumber:SubscriptionInfo.kt$126</ID>
+    <ID>MagicNumber:SubscriptionInfo.kt$256</ID>
+    <ID>MagicNumber:SubscriptionInfo.kt$32</ID>
+    <ID>MagicNumber:SubscriptionInfo.kt$SubscriptionQuota.Companion$253402300799L</ID>
+    <ID>MagicNumber:SubscriptionInfo.kt$SubscriptionQuota.Companion$4096</ID>
+    <ID>MagicNumber:TcpLatencyProbe.kt$TcpLatencyProbe$8</ID>
+    <ID>MagicNumber:TerminalActivity.kt$7</ID>
+    <ID>MagicNumber:TerminalActivity.kt$8</ID>
+    <ID>MagicNumber:TerminalActivity.kt$TerminalModel$12</ID>
+    <ID>MagicNumber:TerminalActivity.kt$TerminalModel$14</ID>
+    <ID>MagicNumber:TerminalActivity.kt$TerminalModel$16384</ID>
+    <ID>MagicNumber:TerminalActivity.kt$TerminalModel$2000</ID>
+    <ID>MagicNumber:TerminalActivity.kt$TerminalModel$3</ID>
+    <ID>MagicNumber:TerminalActivity.kt$TerminalModel$40</ID>
+    <ID>MaxLineLength:AdvancedSettingsTest.kt$AdvancedSettingsTest$"""{"proxies":[{"name":"fixture-node","type":"trojan","server":"example.invalid","port":443,"password":"private-settings-fixture"}],"proxy-groups":[{"name":"provider-root","type":"select","proxies":["fixture-node","REJECT"]}],"rules":["DOMAIN-SUFFIX,private-rule.test,REJECT","MATCH,provider-root"]}"""</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M12 3 L19.5 6 V11.2 C19.5 15.8 16.7 19.1 12 21 C7.3 19.1 4.5 15.8 4.5 11.2 V6 Z M8.5 11.8 L11 14.3 L15.7 9.6"</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M14.2 3.5 H7 A2 2 0 0 0 5 5.5 V18.5 A2 2 0 0 0 7 20.5 H17 A2 2 0 0 0 19 18.5 V8.3 Z M14 3.8 V7 A1.5 1.5 0 0 0 15.5 8.5 H18.6 M8.8 12 H15.2 M8.8 15.8 H13.2"</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M20.5 12 A8.5 8.5 0 1 1 3.5 12 A8.5 8.5 0 1 1 20.5 12 Z M3.8 12 H20.2 M12 3.5 C8 7.8 8 16.2 12 20.5 C16 16.2 16 7.8 12 3.5"</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M3.5 8.2 C8.2 3.5 15.8 3.5 20.5 8.2 M6.8 11.5 C9.7 8.6 14.3 8.6 17.2 11.5 M10 14.7 C11.1 13.6 12.9 13.6 14 14.7 M12 18.2 V18.3"</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M4.5 17.8 A9 9 0 1 1 19.5 17.8 Q19 18.5 18 18.5 H6 Q5 18.5 4.5 17.8 Z M12 12.5 L16 8.5 M12.9 13 A1.3 1.3 0 1 1 10.3 13 A1.3 1.3 0 1 1 12.9 13 M5.8 12 H6.8 M8.2 6.8 L8.7 7.6 M17.3 12 H18.3"</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M4.5 4 H19.5 A1.5 1.5 0 0 1 21 5.5 V9 A1.5 1.5 0 0 1 19.5 10.5 H4.5 A1.5 1.5 0 0 1 3 9 V5.5 A1.5 1.5 0 0 1 4.5 4 Z M4.5 13.5 H19.5 A1.5 1.5 0 0 1 21 15 V18.5 A1.5 1.5 0 0 1 19.5 20 H4.5 A1.5 1.5 0 0 1 3 18.5 V15 A1.5 1.5 0 0 1 4.5 13.5 Z M6.5 7.3 H6.6 M6.5 16.8 H6.6 M15.5 7.3 H17.5 M15.5 16.8 H17.5"</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M5.5 3.5 H8.5 A2 2 0 0 1 10.5 5.5 V8.5 A2 2 0 0 1 8.5 10.5 H5.5 A2 2 0 0 1 3.5 8.5 V5.5 A2 2 0 0 1 5.5 3.5 Z M15.5 3.5 H18.5 A2 2 0 0 1 20.5 5.5 V8.5 A2 2 0 0 1 18.5 10.5 H15.5 A2 2 0 0 1 13.5 8.5 V5.5 A2 2 0 0 1 15.5 3.5 Z M5.5 13.5 H8.5 A2 2 0 0 1 10.5 15.5 V18.5 A2 2 0 0 1 8.5 20.5 H5.5 A2 2 0 0 1 3.5 18.5 V15.5 A2 2 0 0 1 5.5 13.5 Z M15.5 13.5 H18.5 A2 2 0 0 1 20.5 15.5 V18.5 A2 2 0 0 1 18.5 20.5 H15.5 A2 2 0 0 1 13.5 18.5 V15.5 A2 2 0 0 1 15.5 13.5 Z"</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M8 6.5 V5 A2 2 0 0 1 10 3 H14 A2 2 0 0 1 16 5 V6.5 M5 6.5 H19 A2 2 0 0 1 21 8.5 V18.5 A2 2 0 0 1 19 20.5 H5 A2 2 0 0 1 3 18.5 V8.5 A2 2 0 0 1 5 6.5 Z M3.5 12 H20.5 M10 12 V14 H14 V12"</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M9 3.5 H15 A1 1 0 0 1 16 4.5 V8.5 A1 1 0 0 1 15 9.5 H9 A1 1 0 0 1 8 8.5 V4.5 A1 1 0 0 1 9 3.5 Z M12 9.5 V13.5 M5 16 V14.5 A1 1 0 0 1 6 13.5 H18 A1 1 0 0 1 19 14.5 V16 M3 16 H7 V20.5 H3 Z M17 16 H21 V20.5 H17 Z"</ID>
+    <ID>MaxLineLength:AppIcons.kt$AppIcons$"M9.2 14.8 L14.8 9.2 M8.2 8 L9.8 6.4 A4.1 4.1 0 0 1 17.6 14.2 L16 15.8 M8 8.2 L6.4 9.8 A4.1 4.1 0 0 0 14.2 17.6 L15.8 16"</ID>
+    <ID>MaxLineLength:SubscriptionFeaturesTest.kt$SubscriptionFeaturesTest$"proxies: [{name: remote-HK, type: anytls, server: example.invalid, port: 443, password: synthetic-secret}]"</ID>
+    <ID>MaxLineLength:SubscriptionImportTest.kt$SubscriptionFixture$"HTTP/1.1 302 Found\r\nLocation: ${redirects[path]?:"/subscribe"}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"</ID>
+    <ID>MaxLineLength:SubscriptionImportTest.kt$SubscriptionFixture$"anytls://fixture-password@example.invalid:443?sni=example.invalid&amp;insecure=1#HK%20AnyTLS"</ID>
+    <ID>NestedBlockDepth:NetworkReconnectionTest.kt$NetworkReconnectionTest$@Test fun networkLossKeepsTunAndForegroundThenResumesWithoutNewPermission()</ID>
+    <ID>ReturnCount:AppViewModel.kt$AppViewModel$private fun diagnoseSnapshot(snapshot: AppData, allowDuringTests: Boolean = false)</ID>
+    <ID>ReturnCount:DiagnosticViewModel.kt$internal fun nodeConnectivitySummary(state: DiagnosticUiState, selectedId: String?): String</ID>
+    <ID>ReturnCount:PingVpnService.kt$PingVpnService$override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int</ID>
+    <ID>ReturnCount:PingVpnService.kt$PingVpnService$private suspend fun establish()</ID>
+    <ID>ReturnCount:ProfileRepository.kt$ProfileRepository$fun refreshProviders(profile: LocalProfile, force: Boolean = false)</ID>
+    <ID>ReturnCount:ProxyScreen.kt$internal fun LocalProfile.displayGroups(): List&lt;LocalGroup&gt;</ID>
+    <ID>ReturnCount:ProxyScreen.kt$internal fun LocalProfile.proxyDescription(name: String): String</ID>
+    <ID>ReturnCount:SubscriptionInfo.kt$SubscriptionQuota.Companion$fun parse(header: String?): SubscriptionQuota?</ID>
+    <ID>ReturnCount:TcpLatencyProbe.kt$TcpLatencyProbe$fun run(context: Context, node: LocalNode?, timeout: Int, control: RunControl): ProxyDelay</ID>
+    <ID>ThrowsCount:AndroidNetworkBinding.kt$AndroidNetworkBinding.Companion$fun open(context: Context): NetworkBinding</ID>
+    <ID>TooGenericExceptionCaught:AppViewModel.kt$AppViewModel$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:PingVpnService.kt$VpnRuntime$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProfileRepository.kt$ProfileRepository$error: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProfileRepository.kt$ProfileRepository$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:ProfileRepository.kt$SubscriptionDownloader$failure: Exception</ID>
+    <ID>TooGenericExceptionCaught:TcpLatencyProbe.kt$TcpLatencyProbe$failure: Exception</ID>
+    <ID>TooManyFunctions:AppViewModel.kt$AppViewModel : AndroidViewModel</ID>
+    <ID>TooManyFunctions:PingVpnService.kt$PingVpnService : VpnService</ID>
+    <ID>TooManyFunctions:ProfileRepository.kt$ProfileRepository</ID>
+    <ID>UnusedPrivateMember:AppScreens.kt$private fun bytes(value: Long): String</ID>
+    <ID>UnusedPrivateProperty:PingVpnService.kt$PingVpnService$val node = data.selected ?: error("node_required")</ID>
+    <ID>WildcardImport:AdvancedSettingsTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:AdvancedSettingsTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:AppScreens.kt$import androidx.compose.animation.*</ID>
+    <ID>WildcardImport:AppScreens.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:AppScreens.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:AppScreens.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:AppTheme.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:ClientIntegrationTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ClientIntegrationTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:DelayCompatibilityTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:DelayCompatibilityTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:EncryptedStorageTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:GlassInteractionTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:GlassInteractionTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:GlassUi.kt$import androidx.compose.animation.core.*</ID>
+    <ID>WildcardImport:GlassUi.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:GlassUi.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:GlassUi.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:GroupAvailabilityTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:GroupAvailabilityTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:HysteriaCompatibilityTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:HysteriaCompatibilityTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:MainActivity.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:MainActivity.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:MainActivity.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:NetworkReconnectionTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:NodeConnectivityTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ProxyPageTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:ProxyPageTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:ProxyScreen.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:ProxyScreen.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:ProxyScreen.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:RuntimeCards.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:RuntimeCards.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:RuntimeCards.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:SettingsHub.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:SettingsHub.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:SettingsHub.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:StrategyGroupsTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:StrategyGroupsTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:SubscriptionFeaturesTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:SubscriptionFeaturesTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:SubscriptionGroupsPriorityTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:SubscriptionImportTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:SubscriptionImportTest.kt$import javax.net.ssl.*</ID>
+    <ID>WildcardImport:SubscriptionImportTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:TerminalActivity.kt$import androidx.compose.foundation.layout.*</ID>
+    <ID>WildcardImport:TerminalActivity.kt$import androidx.compose.material3.*</ID>
+    <ID>WildcardImport:TerminalActivity.kt$import androidx.compose.runtime.*</ID>
+    <ID>WildcardImport:TerminalTest.kt$import androidx.compose.ui.test.*</ID>
+    <ID>WildcardImport:TerminalTest.kt$import org.junit.Assert.*</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,0 +1,5 @@
+proxies:
+  - {name: local, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}
+proxy-groups:
+  - {name: official, type: select, proxies: [local, DIRECT]}
+rules: ['MATCH,official']

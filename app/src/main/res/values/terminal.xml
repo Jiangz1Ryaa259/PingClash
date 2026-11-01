@@ -1,0 +1,8 @@
+<resources>
+    <string name="terminal_keyboard">Keyboard</string>
+    <string name="terminal_output">Terminal output</string>
+    <string name="terminal_copy_output">Copy output</string>
+    <string name="terminal_share_output">Share output</string>
+    <string name="terminal_share_review">Review the output for subscription URLs, passwords and tokens before sharing.</string>
+    <string name="terminal_share_failed">Unable to open the share sheet. You can copy the output instead.</string>
+</resources>

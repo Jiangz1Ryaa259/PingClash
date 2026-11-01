@@ -1,0 +1,10 @@
+<resources>
+    <string name="proxy_layout_grid">紧凑双列</string>
+    <string name="proxy_layout_list">单列列表</string>
+    <string name="proxy_member_details">节点详情</string>
+    <string name="proxy_url_latency">节点延迟</string>
+    <string name="proxy_test_url">测试延迟</string>
+    <string name="proxy_test_tcp">测试 TCP</string>
+    <string name="proxy_diagnose_member">诊断此节点</string>
+    <string name="proxy_diagnostic_target">诊断目标</string>
+</resources>

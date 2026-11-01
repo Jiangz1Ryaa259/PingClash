@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_scene">Home scenery</string>
+    <string name="ui_scene_ocean">Ocean and waves</string>
+    <string name="ui_scene_clouds">Drifting clouds</string>
+    <string name="ui_scene_none">Plain background</string>
+    <string name="ui_reduce_transparency">Reduce transparency</string>
+    <string name="ui_build_identity">v%1$s · build %2$d</string>
+</resources>

@@ -1,0 +1,8 @@
+<resources>
+    <string name="terminal_keyboard">键盘</string>
+    <string name="terminal_output">终端输出</string>
+    <string name="terminal_copy_output">复制输出</string>
+    <string name="terminal_share_output">分享输出</string>
+    <string name="terminal_share_review">分享前请检查输出中是否包含订阅链接、密码或令牌。</string>
+    <string name="terminal_share_failed">无法打开分享面板，可改用复制输出。</string>
+</resources>

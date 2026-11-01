@@ -1,0 +1,15 @@
+proxy-providers:
+  remote:
+    type: http
+    url: https://example.invalid/nodes?token=CANARY-SUB-TOKEN-1234
+    interval: 3600
+    path: ../../CANARY-PATH-1234
+    proxy: DIRECT
+    header: {Authorization: [CANARY-HEADER-1234]}
+    health-check: {enable: true, url: https://example.invalid/check, interval: 600}
+rule-providers:
+  ruleset: {type: inline, behavior: domain, payload: [example.org]}
+proxy-groups:
+  - {name: main, type: select, proxies: [auto, DIRECT]}
+  - {name: auto, type: url-test, use: [remote], filter: ^HK, interval: 60}
+rules: ['MATCH,main']

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vpn_dns_invalid">VPN DNS 地址格式无效，请在“设置 → DNS”填写数字 IP 或 IP:端口。</string>
+    <string name="vpn_node_invalid">当前代理配置未能载入，请重新解析配置或选择其他成员。</string>
+    <string name="vpn_rule_target_invalid">出站规则引用了不可用的代理，或超出目标数量限制，请检查配置中的策略组。</string>
+    <string name="vpn_rule_data_unavailable">内置 GeoIP/GeoSite 数据未通过校验，请重启应用或重新安装此版本。</string>
+    <string name="vpn_geo_unknown">第 %1$d 条规则使用的地理分类不在内置数据中。</string>
+    <string name="vpn_options_invalid">VPN 运行参数无效，请检查网络及 DNS 设置。</string>
+    <string name="vpn_apps_required">已开启“仅代理所选应用”，但未选择任何应用。请在“应用分流”中至少选择一个应用后再连接。</string>
+    <string name="vpn_node_required">未选择可用的节点或策略组，请在“代理”页选择后再连接。</string>
+    <string name="vpn_profile_invalid">内核无法载入此配置，请重新解析配置或更新订阅后重试。</string>
+</resources>

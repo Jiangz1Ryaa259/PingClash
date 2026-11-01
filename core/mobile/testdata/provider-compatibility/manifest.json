@@ -1,0 +1,275 @@
+{
+  "cases": [
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "http-proxy-filtered",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 1
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n",
+        "rule:ruleset": "payload: ['+.example.org']"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "rule-domain",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 2
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n",
+        "rule:ruleset": "192.0.2.0/24\n2001:db8::/32"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "rule-ipcidr",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 2
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n",
+        "rule:ruleset": "payload: ['DOMAIN-SUFFIX,example.net', 'DST-PORT,443']"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "rule-classical",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 2
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "inline-proxy",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 1
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "file-proxy",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 1
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "provider-override",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 1
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "group-download",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 1
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "insecure-source",
+      "nodes": 2,
+      "plan": "failed",
+      "resolve": "failed",
+      "rules": 1
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n",
+        "rule:ruleset": "pingclash-mrs-v1:base64:KLUv/QQAnQIABARNUlMBAAUBAAAAXJAAAlqqqqqqqoKqG2sAJnRzZXQuZGVudOVsbGljrWlwYWGQd21seOQuYXBlvip4LotlKy4rBwA6BwZz4C6wVZMAC7lkTgtd1jSF"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "mrs-rule",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 2
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "inline-rule",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 1
+    },
+    {
+      "bodies": {
+        "proxy:remote": "proxies: [CANARY-MALFORMED-1234]"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "malformed-provider-body",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "failed",
+      "rules": 1
+    },
+    {
+      "bodies": {
+        "proxy:another": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n",
+        "proxy:remote": "proxies:\n  - {name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}\n  - {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}\n"
+      },
+      "groups": {
+        "auto": [
+          "HK-fixture"
+        ],
+        "main": [
+          "auto",
+          "DIRECT"
+        ]
+      },
+      "id": "duplicate-source-members",
+      "nodes": 2,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 1
+    },
+    {
+      "bodies": {},
+      "groups": {
+        "official": [
+          "local",
+          "DIRECT"
+        ]
+      },
+      "id": "local-nodes-and-official-order",
+      "nodes": 1,
+      "plan": "passed",
+      "resolve": "passed",
+      "rules": 1
+    }
+  ],
+  "provenance": {
+    "adaptation": "Public upstream example layouts, minimized and rewritten with .invalid endpoints and synthetic canaries; not collected user subscriptions. Unsupported examples intentionally remain rejection cases.",
+    "sha256": "e57eea09cdfb1851acf2cf130b6ef318827ac02fb6c2ebc64e2c77647e21a363",
+    "source": "https://github.com/MetaCubeX/mihomo/blob/v1.19.32/docs/config.yaml"
+  }
+}

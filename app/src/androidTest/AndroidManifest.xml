@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <application android:name="android.app.Application">
+        <!-- Synthetic peers live in the test APK's separate UID, never in the release APK. -->
+        <activity android:name="dev.pingclash.test.PeerActivity" android:exported="true" />
+        <activity android:name="dev.pingclash.test.PeerVpnActivity" android:exported="true" />
+        <service android:name="dev.pingclash.test.PeerVpnService" android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE">
+            <intent-filter><action android:name="android.net.VpnService" /></intent-filter>
+        </service>
+    </application>
+</manifest>

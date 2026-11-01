@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="deep_link_default_name">导入的订阅</string>
+    <string name="deep_link_title">导入订阅</string>
+    <string name="deep_link_confirm">来源：%1$s\n\n导入订阅及其 HTTPS 提供源？导入后需手动启用。</string>
+    <string name="deep_link_importing">正在下载并检查订阅…</string>
+    <string name="deep_link_saved">已保存，尚未启用。请在配置页另行选择此配置后使用。当前代理选择未改变。</string>
+    <string name="deep_link_failed">无法导入此链接。请使用有效的 HTTPS 订阅，导入前断开 VPN，并检查网络及可用存储空间。没有启用任何配置。</string>
+    <string name="deep_link_import">仅导入</string>
+    <string name="deep_link_close">完成</string>
+    <string name="deep_link_cancel">取消</string>
+    <string name="deep_link_inactive">未启用</string>
+    <string name="latency_udp_na">N/A (UDP)</string>
+</resources>

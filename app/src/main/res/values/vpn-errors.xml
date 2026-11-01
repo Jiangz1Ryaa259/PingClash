@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="vpn_dns_invalid">The VPN DNS address is invalid. Choose a numeric IP address or IP:port in Settings → DNS.</string>
+    <string name="vpn_node_invalid">The selected proxy configuration could not be loaded. Reparse the profile or choose another member.</string>
+    <string name="vpn_rule_target_invalid">A routing rule refers to an unavailable proxy or exceeds the target budget. Check the profile policy groups.</string>
+    <string name="vpn_rule_data_unavailable">Bundled GeoIP/GeoSite data could not be verified. Restart the app or reinstall this build.</string>
+    <string name="vpn_geo_unknown">The geographic list in rule %1$d is not present in the bundled data.</string>
+    <string name="vpn_options_invalid">VPN runtime settings are invalid. Check network and DNS settings.</string>
+    <string name="vpn_apps_required">“Proxy selected apps only” is on, but no app is selected. Choose at least one app in Per-app VPN, then connect.</string>
+    <string name="vpn_node_required">No proxy or policy group is selected. Choose one on the Proxies page, then connect.</string>
+    <string name="vpn_profile_invalid">The core could not load this profile. Re-parse it or update the subscription, then retry.</string>
+</resources>

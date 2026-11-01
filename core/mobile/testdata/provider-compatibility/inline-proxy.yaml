@@ -1,0 +1,13 @@
+proxy-providers:
+  remote:
+    type: inline
+    payload: [{name: HK-fixture, type: anytls, server: example.invalid, port: 443, password: CANARY-PASSWORD-1234}, {name: JP-fixture, type: vless, server: example.invalid, port: 443, uuid: 00000000-0000-4000-8000-000000000001, tls: true}]
+    interval: 3600
+    path: ../../CANARY-PATH-1234
+    proxy: DIRECT
+    header: {Authorization: [CANARY-HEADER-1234]}
+    health-check: {enable: true, url: https://example.invalid/check, interval: 600}
+proxy-groups:
+  - {name: main, type: select, proxies: [auto, DIRECT]}
+  - {name: auto, type: url-test, use: [remote], filter: ^HK, interval: 60}
+rules: ['MATCH,main']

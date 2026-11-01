@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="import_from_url">From URL</string>
+    <string name="import_from_clipboard">From clipboard</string>
+    <string name="import_from_text">Paste configuration</string>
+    <string name="import_from_image">QR code image</string>
+    <string name="import_from_camera">Photograph QR code</string>
+    <string name="import_camera_unavailable">No camera app is available. Choose a QR code image instead.</string>
+    <string name="import_clipboard_empty">No text found in the clipboard.</string>
+    <string name="import_qr_missing">No readable QR code found. Choose a clearer image or paste the link.</string>
+    <string name="vpn_application_unavailable">An app in the VPN application list is unavailable. Update the list in Settings → Applications, then retry.</string>
+    <string name="vpn_applications_skipped">VPN tunnel established · %1$d app(s) in the VPN application list are not installed and were skipped.</string>
+    <string name="vpn_core_busy">The previous VPN session has not stopped. Cleanup is complete; tap the card to retry.</string>
+    <string name="operation_in_progress">Another operation is still running. Try again when it finishes.</string>
+    <string name="local_data_unreadable_title">Local data cannot be read</string>
+    <string name="local_data_unreadable_body">Saved profiles and settings could not be decrypted or read, so profile changes and connecting are locked. The file is kept until you reset. Resetting deletes all local profiles, settings and usage totals on this device.</string>
+    <string name="reset_local_data">Reset local data</string>
+    <string name="local_data_reset_done">Local data was reset. Import a profile to continue.</string>
+    <string name="local_data_repaired">Some saved entries could not be read and were skipped. A copy of the original data file was kept.</string>
+    <string name="update_all_subscriptions">Update all subscriptions</string>
+    <string name="sort_profiles">Reorder profiles</string>
+    <string name="sort_profiles_done">Done reordering</string>
+    <string name="move_profile_up">Move up</string>
+    <string name="move_profile_down">Move down</string>
+    <string name="subscriptions_none_to_update">No subscriptions to update.</string>
+    <string name="subscriptions_all_updated">Updated %1$d subscription(s).</string>
+    <string name="subscriptions_partly_updated">Updated %1$d subscription(s); %2$d could not be updated. Refresh them one by one to see why.</string>
+    <string name="profile_updating">Updating</string>
+</resources>

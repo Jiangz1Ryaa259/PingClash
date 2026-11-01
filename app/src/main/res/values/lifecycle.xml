@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="auto_reconnect">Reconnect automatically</string>
+    <string name="vpn_waiting_network">Waiting for a network · VPN traffic remains captured</string>
+    <string name="vpn_reconnecting">Network changed · Reconnecting VPN</string>
+    <string name="notification_settings">VPN notification settings</string>
+</resources>

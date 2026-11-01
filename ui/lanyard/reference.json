@@ -1,0 +1,18 @@
+{
+  "origin": "User-supplied React Bits Lanyard export",
+  "sha256": "aa6a62212729fab791c965d855e80be55f8237c7c4ebda47f295480a765f5a76",
+  "protectedSections": [
+    "buildCardGeometry",
+    "buildClampGeometry",
+    "buildBandGeometry",
+    "buildEnvironment",
+    "buildGrainTexture",
+    "buildWeaveTexture",
+    "createSimulation",
+    "stepSimulation",
+    "configureSimulation",
+    "updateBand",
+    "FINISHES",
+    "METALS"
+  ]
+}

@@ -1,0 +1,29 @@
+<resources>
+    <string name="issue_reminder">Notice</string>
+    <string name="issue_warning">Needs attention</string>
+    <string name="issue_view">View</string>
+    <string name="issue_dismiss">Dismiss notice</string>
+    <string name="crash_last_title">PingClash closed unexpectedly</string>
+    <string name="crash_last_detail">A crash report was saved on this device. Open Settings › About to read or copy it.</string>
+    <string name="crash_contained_title">PingClash contained an internal error</string>
+    <string name="crash_contained_detail">A connection was closed after an internal error, and the app kept running. A report was saved; open Settings › About to read or copy it.</string>
+    <string name="crash_report">Crash report</string>
+    <string name="crash_report_saved">Saved</string>
+    <string name="crash_report_view">View report</string>
+    <string name="crash_report_copy">Copy</string>
+    <string name="issue_stage_operation">Application operation</string>
+    <string name="issue_stage_import">Configuration import</string>
+    <string name="issue_stage_provider">Subscription / provider retrieval</string>
+    <string name="issue_stage_dns">DNS configuration / resolution</string>
+    <string name="issue_stage_tls">TLS / certificate verification</string>
+    <string name="issue_stage_node">Node / proxy dependency</string>
+    <string name="issue_stage_rule">Rules / outbound selection</string>
+    <string name="issue_stage_vpn">VPN service / tunnel setup</string>
+    <string name="issue_advice_operation">Retry the operation. If it fails again, inspect the relevant configuration or connection diagnostics.</string>
+    <string name="issue_advice_import">Update or reparse the configuration. Check the listed protocol and field categories in configuration details.</string>
+    <string name="issue_advice_provider">Follow the specific cause above to check the provider configuration or download status. A failed update keeps the previous valid configuration.</string>
+    <string name="issue_advice_dns">Check the DNS address and selected resolver mode, then retry on the current network.</string>
+    <string name="issue_advice_tls">Check device time, server name and certificate trust. Verification is not disabled automatically.</string>
+    <string name="issue_advice_node">Check node parameters and referenced groups. Run diagnostics for the affected node to locate the failing connection stage.</string>
+    <string name="issue_advice_rule">Check the rule type, referenced outbound and required rule sources. Invalid routes are not replaced with direct access.</string>
+</resources>

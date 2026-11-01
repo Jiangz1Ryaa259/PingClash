@@ -1,0 +1,29 @@
+<resources>
+    <string name="issue_reminder">提醒</string>
+    <string name="issue_warning">需要处理</string>
+    <string name="issue_view">查看</string>
+    <string name="crash_last_title">PingClash 上次意外关闭</string>
+    <string name="crash_last_detail">崩溃报告已保存在本机。前往 设置 › 关于 查看或复制。</string>
+    <string name="crash_contained_title">PingClash 已拦截一个内部错误</string>
+    <string name="crash_contained_detail">一个连接因内部错误被关闭，应用继续运行。报告已保存，可前往 设置 › 关于 查看或复制。</string>
+    <string name="crash_report">崩溃报告</string>
+    <string name="crash_report_saved">保存时间</string>
+    <string name="crash_report_view">查看报告</string>
+    <string name="crash_report_copy">复制</string>
+    <string name="issue_dismiss">关闭提示</string>
+    <string name="issue_stage_operation">应用操作</string>
+    <string name="issue_stage_import">配置导入</string>
+    <string name="issue_stage_provider">订阅 / 提供源获取</string>
+    <string name="issue_stage_dns">DNS 配置 / 解析</string>
+    <string name="issue_stage_tls">TLS / 证书验证</string>
+    <string name="issue_stage_node">节点 / 代理依赖</string>
+    <string name="issue_stage_rule">规则 / 出站选择</string>
+    <string name="issue_stage_vpn">VPN 服务 / 隧道建立</string>
+    <string name="issue_advice_operation">请重试操作。若仍失败，检查对应配置或连接诊断。</string>
+    <string name="issue_advice_import">更新或重新解析配置，在配置详情中查看列出的协议和字段类别。</string>
+    <string name="issue_advice_provider">请按上方具体原因检查提供源配置或下载状态。更新失败会保留上一份有效配置。</string>
+    <string name="issue_advice_dns">检查 DNS 地址及所选解析模式，再使用当前网络重试。</string>
+    <string name="issue_advice_tls">检查设备时间、服务器名称和证书信任。应用不会自动关闭验证。</string>
+    <string name="issue_advice_node">检查节点参数及引用的策略组；对相关节点运行诊断以定位失败步骤。</string>
+    <string name="issue_advice_rule">检查规则类型、引用的出站及所需规则源。无效路径不会被替换为直连。</string>
+</resources>

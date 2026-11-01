@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="import_from_url">从 URL 导入</string>
+    <string name="import_from_clipboard">从剪贴板导入</string>
+    <string name="import_from_text">粘贴配置文本</string>
+    <string name="import_from_image">从二维码图片导入</string>
+    <string name="import_from_camera">拍摄二维码</string>
+    <string name="import_camera_unavailable">没有可用的相机应用，请选择二维码图片。</string>
+    <string name="import_clipboard_empty">剪贴板中没有可导入的文本。</string>
+    <string name="import_qr_missing">未识别到二维码，请选择更清晰的图片或粘贴链接。</string>
+    <string name="vpn_application_unavailable">VPN 应用列表中有已卸载或不可用的应用，请在“设置 → 应用”更新列表后重试。</string>
+    <string name="vpn_applications_skipped">VPN 隧道已建立 · 应用列表中有 %1$d 个未安装或不可见的应用，已跳过。</string>
+    <string name="vpn_core_busy">上一次 VPN 会话未退出，现已清理，请点按卡片重试。</string>
+    <string name="operation_in_progress">另一项操作仍在进行，请在完成后重试。</string>
+    <string name="local_data_unreadable_title">无法读取本地数据</string>
+    <string name="local_data_unreadable_body">已保存的配置和设置无法解密或读取，因此修改配置与连接已被锁定。重置前原文件会保留。重置将删除本设备上的全部本地配置、设置和用量统计。</string>
+    <string name="reset_local_data">重置本地数据</string>
+    <string name="local_data_reset_done">本地数据已重置，请导入配置后继续。</string>
+    <string name="local_data_repaired">部分已保存的条目无法读取，已跳过；原数据文件已另存一份副本。</string>
+    <string name="update_all_subscriptions">更新全部订阅</string>
+    <string name="sort_profiles">调整配置顺序</string>
+    <string name="sort_profiles_done">完成排序</string>
+    <string name="move_profile_up">上移</string>
+    <string name="move_profile_down">下移</string>
+    <string name="subscriptions_none_to_update">没有可更新的订阅。</string>
+    <string name="subscriptions_all_updated">已更新 %1$d 个订阅。</string>
+    <string name="subscriptions_partly_updated">已更新 %1$d 个订阅，%2$d 个更新失败；可逐个刷新查看原因。</string>
+    <string name="profile_updating">正在更新</string>
+</resources>

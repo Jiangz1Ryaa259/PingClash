@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <queries>
+        <intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent>
+    </queries>
+    <application
+        android:name=".PingClashApplication"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:localeConfig="@xml/locales_config"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
+        android:label="PingClash"
+        android:supportsRtl="true"
+        android:allowTaskReparenting="false"
+        android:theme="@style/Theme.PingClash"
+        android:usesCleartextTraffic="false">
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTask"
+            android:allowTaskReparenting="false"
+            android:taskAffinity=""
+            android:excludeFromRecents="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".ProfileImportActivity" android:exported="false"
+            android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.PingClash.Overlay" />
+        <activity android:name=".SubscriptionImportActivity" android:exported="true"
+            android:excludeFromRecents="true" android:launchMode="singleTop" android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="clash" android:host="install-config" />
+            </intent-filter>
+        </activity>
+        <!-- User-authorized VPNs qualify for systemExempted independently of exact alarms:
+        -->
+        <activity android:name=".TerminalActivity" android:exported="false" android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize" />
+        <!--
+             https://developer.android.com/develop/background-work/services/fgs/service-types#system-exempted -->
+        <service android:name=".PingVpnService" android:permission="android.permission.BIND_VPN_SERVICE"
+            tools:ignore="ForegroundServicePermission"
+            android:exported="false" android:foregroundServiceType="systemExempted">
+            <intent-filter><action android:name="android.net.VpnService" /></intent-filter>
+        </service>
+        <!-- Removal marker only: no class is instantiated. Lint otherwise checks
+             this runtime dependency reference as if it were a new component. -->
+        <receiver android:name="androidx.profileinstaller.ProfileInstallReceiver"
+            tools:node="remove" tools:ignore="MissingClass" />
+    </application>
+</manifest>
+
