@@ -1,0 +1,701 @@
+{
+  "core": "github.com/metacubex/mihomo v1.19.32",
+  "scope": "Reviewed integration inventory; integrated means within documented input/resource bounds, not full-config or live-server parity.",
+  "surface": {
+    "rules": {
+      "AND": {
+        "state": "partial",
+        "reason": "Bounded native boolean engine: depth 8 / 64 construction nodes; private RULE-SET leaves supported, SUB-RULE leaves forbidden by native logic."
+      },
+      "DOMAIN": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "DOMAIN-KEYWORD": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "DOMAIN-REGEX": {
+        "state": "partial",
+        "reason": "RE2 preferred; regexp2 fallback has a matching deadline and input-length cap."
+      },
+      "DOMAIN-SUFFIX": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "DOMAIN-WILDCARD": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "DSCP": {
+        "state": "integrated",
+        "reason": "Observe IPv4/IPv6 traffic class in the Android-owned TUN wrapper; bounded ephemeral five-tuple cache supplies six-bit DSCP to native matcher. ECN excluded; fragments/extension headers tested."
+      },
+      "DST-PORT": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "GEOIP": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "GEOSITE": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "IN-NAME": {
+        "state": "partial",
+        "reason": "Single TUN inbound metadata only: port 0, no authenticated inbound user/rematch name, name PingClash. Other inbound contexts do not exist."
+      },
+      "IN-PORT": {
+        "state": "partial",
+        "reason": "Single TUN inbound metadata only: port 0, no authenticated inbound user/rematch name, name PingClash. Other inbound contexts do not exist."
+      },
+      "IN-TYPE": {
+        "state": "partial",
+        "reason": "Single TUN inbound metadata only: port 0, no authenticated inbound user/rematch name, name PingClash. Other inbound contexts do not exist."
+      },
+      "IN-USER": {
+        "state": "partial",
+        "reason": "Single TUN inbound metadata only: port 0, no authenticated inbound user/rematch name, name PingClash. Other inbound contexts do not exist."
+      },
+      "IP-ASN": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "IP-CIDR": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "IP-CIDR6": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "IP-SUFFIX": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "MATCH": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "NETWORK": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "NOT": {
+        "state": "partial",
+        "reason": "Bounded native boolean engine: depth 8 / 64 construction nodes; private RULE-SET leaves supported, SUB-RULE leaves forbidden by native logic."
+      },
+      "OR": {
+        "state": "partial",
+        "reason": "Bounded native boolean engine: depth 8 / 64 construction nodes; private RULE-SET leaves supported, SUB-RULE leaves forbidden by native logic."
+      },
+      "PROCESS-NAME": {
+        "state": "partial",
+        "reason": "Android UID/package lookup only; visibility/shared UID restrictions apply. PROCESS-PATH uses package identity, not Linux executable paths."
+      },
+      "PROCESS-NAME-REGEX": {
+        "state": "partial",
+        "reason": "RE2 preferred; regexp2 fallback has a matching deadline and input-length cap."
+      },
+      "PROCESS-NAME-WILDCARD": {
+        "state": "partial",
+        "reason": "Android UID/package lookup only; visibility/shared UID restrictions apply. PROCESS-PATH uses package identity, not Linux executable paths."
+      },
+      "PROCESS-PATH": {
+        "state": "partial",
+        "reason": "Android UID/package lookup only; visibility/shared UID restrictions apply. PROCESS-PATH uses package identity, not Linux executable paths."
+      },
+      "PROCESS-PATH-REGEX": {
+        "state": "partial",
+        "reason": "RE2 preferred; regexp2 fallback has a matching deadline and input-length cap."
+      },
+      "PROCESS-PATH-WILDCARD": {
+        "state": "partial",
+        "reason": "Android UID/package lookup only; visibility/shared UID restrictions apply. PROCESS-PATH uses package identity, not Linux executable paths."
+      },
+      "REMATCH-NAME": {
+        "state": "partial",
+        "reason": "Single TUN inbound metadata only: port 0, no authenticated inbound user/rematch name, name PingClash. Other inbound contexts do not exist."
+      },
+      "RULE-SET": {
+        "state": "partial",
+        "reason": "Private domain/ipcidr/classical sets with YAML/text/MRS, native src/no-resolve parameters and bounded boolean references. Full native resolver integration is pending."
+      },
+      "SRC-GEOIP": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "SRC-IP-ASN": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "SRC-IP-CIDR": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "SRC-IP-SUFFIX": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "SRC-PORT": {
+        "state": "integrated",
+        "reason": "Pinned native leaf constructor; numeric, input-size and offline-data bounds apply."
+      },
+      "SUB-RULE": {
+        "state": "partial",
+        "reason": "Pinned native matcher with private named registry and dynamic actual exits; cycles rejected, 64 sections / 2000 nested rows / depth 8. Android TUN and loopback TCP/UDP regressions apply; not all metadata contexts exist."
+      },
+      "UID": {
+        "state": "partial",
+        "reason": "Android UID/package lookup only; visibility/shared UID restrictions apply. PROCESS-PATH uses package identity, not Linux executable paths."
+      }
+    },
+    "outbounds": {
+      "anytls": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "direct": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "dns": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "easytier": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "gost-relay": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "http": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "hysteria": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "hysteria2": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "masque": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "mieru": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "openvpn": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "reject": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "rematch": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "shadowquic": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "snell": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "socks5": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "ss": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "ssh": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "ssr": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "sudoku": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "tailscale": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "trojan": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "trusttunnel": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "tuic": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "vless": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "vmess": {
+        "state": "integrated",
+        "reason": "Pinned native option schema and constructor; documented field, file, route and resource boundaries still apply. Live-server coverage varies by protocol.",
+        "registered": true
+      },
+      "wireguard": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      },
+      "zerotier": {
+        "state": "partial",
+        "reason": "Pinned native option schema and constructor; synthetic constructor parity tests, not a live-server interoperability claim. Android-owned file/listener/state policy and input budgets apply.",
+        "registered": true
+      }
+    },
+    "groups": {
+      "fallback": {
+        "state": "integrated",
+        "reason": "Pinned native group constructor over private graph; original member order and explicit local choices retained, with graph/work budgets."
+      },
+      "load-balance": {
+        "state": "integrated",
+        "reason": "Pinned native group constructor over private graph; original member order and explicit local choices retained, with graph/work budgets."
+      },
+      "relay": {
+        "state": "disabled",
+        "reason": "Pinned native core explicitly removed relay groups; use dialer-proxy. This is not a bridge-only rejection."
+      },
+      "select": {
+        "state": "integrated",
+        "reason": "Pinned native group constructor over private graph; original member order and explicit local choices retained, with graph/work budgets."
+      },
+      "url-test": {
+        "state": "integrated",
+        "reason": "Pinned native group constructor over private graph; original member order and explicit local choices retained, with graph/work budgets."
+      }
+    },
+    "configuration": {
+      "allow-lan": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "authentication": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "bind-address": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "clash-for-android": {
+        "state": "app-managed",
+        "reason": "Foreign-client UI metadata is retained privately; does not override PingClash UI or Android DNS preferences."
+      },
+      "disable-keep-alive": {
+        "state": "integrated",
+        "reason": "Live VPN uses pinned ParseRawConfig and ApplyConfig. Network-affecting general settings and QUIC environment restore at final stop; no extra listeners or updater."
+      },
+      "dns": {
+        "state": "partial",
+        "reason": "Private configuration document retained across imports/selections. Native component parser/runtime is integrated within documented Android/resource bounds; no full-config/sniffer/additional-outbound parity claim. Legacy discarded fields require update/reimport."
+      },
+      "etag-support": {
+        "state": "integrated",
+        "reason": "Live VPN uses pinned ParseRawConfig and ApplyConfig. Network-affecting general settings and QUIC environment restore at final stop; no extra listeners or updater."
+      },
+      "experimental": {
+        "state": "integrated",
+        "reason": "Live VPN uses pinned ParseRawConfig and ApplyConfig. Network-affecting general settings and QUIC environment restore at final stop; no extra listeners or updater."
+      },
+      "external-controller": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "external-controller-cors": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "external-controller-pipe": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "external-controller-routing-mark": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "external-controller-tls": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "external-controller-unix": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "external-doh-server": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "external-ui": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "external-ui-name": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "external-ui-url": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "find-process-mode": {
+        "state": "app-managed",
+        "reason": "Android app settings/service owns this value; raw subscription does not override the whole runtime."
+      },
+      "geo-auto-update": {
+        "state": "app-managed",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "geo-update-interval": {
+        "state": "app-managed",
+        "reason": "Bundled verified offline Geo data and loader policy; imports cannot replace database paths or enable an updater. Native rule matching uses this installed data."
+      },
+      "geodata-loader": {
+        "state": "app-managed",
+        "reason": "Bundled verified offline Geo data and loader policy; imports cannot replace database paths or enable an updater. Native rule matching uses this installed data."
+      },
+      "geodata-mode": {
+        "state": "app-managed",
+        "reason": "Bundled verified offline Geo data and loader policy; imports cannot replace database paths or enable an updater. Native rule matching uses this installed data."
+      },
+      "geosite-matcher": {
+        "state": "app-managed",
+        "reason": "Bundled verified offline Geo data and loader policy; imports cannot replace database paths or enable an updater. Native rule matching uses this installed data."
+      },
+      "geox-url": {
+        "state": "app-managed",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "global-client-fingerprint": {
+        "state": "disabled",
+        "reason": "Deprecated/unused by the pinned native parser; supported per-node fingerprint fields remain available."
+      },
+      "global-ua": {
+        "state": "integrated",
+        "reason": "Live VPN uses pinned ParseRawConfig and ApplyConfig. Network-affecting general settings and QUIC environment restore at final stop; no extra listeners or updater."
+      },
+      "hosts": {
+        "state": "partial",
+        "reason": "Private configuration document retained across imports/selections. Native component parser/runtime is integrated within documented Android/resource bounds; no full-config/sniffer/additional-outbound parity claim. Legacy discarded fields require update/reimport."
+      },
+      "inbound-mptcp": {
+        "state": "app-managed",
+        "reason": "No native HTTP/SOCKS listener is enabled; Android owns the TUN. These listener socket options have no inbound service to configure."
+      },
+      "inbound-tfo": {
+        "state": "app-managed",
+        "reason": "No native HTTP/SOCKS listener is enabled; Android owns the TUN. These listener socket options have no inbound service to configure."
+      },
+      "interface-name": {
+        "state": "app-managed",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "iptables": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "ipv6": {
+        "state": "app-managed",
+        "reason": "Android app settings/service owns this value; raw subscription does not override the whole runtime."
+      },
+      "keep-alive-idle": {
+        "state": "integrated",
+        "reason": "Live VPN uses pinned ParseRawConfig and ApplyConfig. Network-affecting general settings and QUIC environment restore at final stop; no extra listeners or updater."
+      },
+      "keep-alive-interval": {
+        "state": "integrated",
+        "reason": "Live VPN uses pinned ParseRawConfig and ApplyConfig. Network-affecting general settings and QUIC environment restore at final stop; no extra listeners or updater."
+      },
+      "lan-allowed-ips": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "lan-disallowed-ips": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "listeners": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "log-level": {
+        "state": "app-managed",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "mixed-port": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "mode": {
+        "state": "app-managed",
+        "reason": "Android app settings/service owns this value; raw subscription does not override the whole runtime."
+      },
+      "ntp": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "port": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "profile": {
+        "state": "app-managed",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "proxies": {
+        "state": "partial",
+        "reason": "Imported into a bounded private graph/rule pipeline; consult per-type scope and provider download limits."
+      },
+      "proxy-groups": {
+        "state": "partial",
+        "reason": "Imported into a bounded private graph/rule pipeline; consult per-type scope and provider download limits."
+      },
+      "proxy-providers": {
+        "state": "partial",
+        "reason": "Imported into a bounded private graph/rule pipeline; consult per-type scope and provider download limits."
+      },
+      "redir-port": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "routing-mark": {
+        "state": "app-managed",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "rule-providers": {
+        "state": "partial",
+        "reason": "Imported into a bounded private graph/rule pipeline; consult per-type scope and provider download limits."
+      },
+      "rules": {
+        "state": "partial",
+        "reason": "Imported into a bounded private graph/rule pipeline; consult per-type scope and provider download limits."
+      },
+      "secret": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "skip-auth-prefixes": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "sniffer": {
+        "state": "partial",
+        "reason": "Native HTTP/TLS/QUIC sniffing on actual VPN TCP/UDP paths, bounded payloads, domain/IP/classical private provider filters. Protocol and policy options follow the pinned parser."
+      },
+      "socks-port": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "ss-config": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "sub-rules": {
+        "state": "partial",
+        "reason": "Private configuration document retained across imports/selections. Native component parser/runtime is integrated within documented Android/resource bounds; no full-config/sniffer/additional-outbound parity claim. Legacy discarded fields require update/reimport."
+      },
+      "tcp-concurrent": {
+        "state": "integrated",
+        "reason": "Live VPN uses pinned ParseRawConfig and ApplyConfig. Network-affecting general settings and QUIC environment restore at final stop; no extra listeners or updater."
+      },
+      "tls": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "tproxy-port": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "tuic-server": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "tun": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "tunnels": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      },
+      "unified-delay": {
+        "state": "app-managed",
+        "reason": "Android app settings/service owns this value; raw subscription does not override the whole runtime."
+      },
+      "vmess-config": {
+        "state": "disabled",
+        "reason": "Android listener/path/privacy policy deliberately owns this field. Imported semantics cannot open controllers/listeners, read arbitrary trust/key files or enable an updater."
+      }
+    },
+    "dns": {
+      "cache-algorithm": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "cache-max-size": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "default-nameserver": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "direct-nameserver": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "direct-nameserver-follow-policy": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "enable": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "enhanced-mode": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "fake-ip-filter": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "fake-ip-filter-mode": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "fake-ip-range": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "fake-ip-range6": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "fake-ip-ttl": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "fallback": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "fallback-filter": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "fallback-lazy-query": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "ipv6": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "ipv6-timeout": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "listen": {
+        "state": "disabled",
+        "reason": "Android intercepts TUN DNS and calls the native service directly. No DNS listening socket is opened from a subscription."
+      },
+      "listen-routing-mark": {
+        "state": "app-managed",
+        "reason": "No DNS listener exists; Android protects/binds underlying outbound sockets."
+      },
+      "nameserver": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "nameserver-policy": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "prefer-h3": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "proxy-server-nameserver": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "proxy-server-nameserver-policy": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "respect-rules": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "use-hosts": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      },
+      "use-system-hosts": {
+        "state": "partial",
+        "reason": "Pinned native DNS parser/resolver/enhancer, private ordered policy document and rule sets; loopback DNS/TUN TCP/UDP and restart tests. Cache <=16384, total resolver entries <=512, host alias depth <=16, no exhaustive transport/value-combination guarantee."
+      }
+    }
+  },
+  "sourceHashes": {
+    "adapter/parser.go": "e57a1b05b809a1f0fea0c283711d5e36f5e75ed334bd76762b4a7e9b28a270c8",
+    "rules/parser.go": "37fec1769290c86f39e50004a2dc51537d81a11e17d44e5adff21bfcf19a1d12",
+    "adapter/outboundgroup/parser.go": "d1e2b899250b7e2fe28895e8e95e5e463e77ba04e876a7cd3b37c8db348ca759",
+    "config/config.go": "a242e1fd06378e01371153122d51b20862af24b4904fdec2a7b54843e70b1203",
+    "hub/executor/executor.go": "183595fd58704d60d2137463e751938c1a02a23b57ef1d977b647e3640b64849",
+    "tunnel/tunnel.go": "bd0818dddd04779aad3f078819b3ca050bd8bdce29ba57e5a377770539278596",
+    "tunnel/connection.go": "1e48fbdff3551c8d0dcbe5265088c3b56db0b66eb9c7512af5aaa31e8e65af1b"
+  }
+}

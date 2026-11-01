@@ -10,7 +10,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT = ROOT / 'docs' / 'mihomo-compatibility.json'
+CONTRACT = ROOT / 'config' / 'mihomo-compatibility.json'
 FILES = {
     'rules': ('rules/parser.go', None),
     'outbounds': ('adapter/parser.go', None),
