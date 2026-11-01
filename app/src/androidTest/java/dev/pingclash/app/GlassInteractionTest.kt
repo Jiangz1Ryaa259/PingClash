@@ -25,23 +25,30 @@ class GlassInteractionTest {
         val app = compose.activity.application as PingClashApplication
         val before = app.repository.data.value
         val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
+        // The API 33+ ocean uses a continuous frame loop. Drive the clock ourselves
+        // so Espresso does not try to finish that loop before delivering a gesture.
+        compose.mainClock.autoAdvance = false
         try {
             // Exercise the spring as well as the production system-motion observer.
             device.executeShellCommand("settings put global animator_duration_scale 1")
+            compose.mainClock.advanceTimeBy(64)
             compose.onNodeWithTag("nav-0").performClick().assertIsSelected()
             compose.onNodeWithTag("glass-navigation").performTouchInput {
                 down(Offset(width / 8f, centerY))
                 moveBy(Offset(width * .52f, 0f), 240)
                 up()
             }
+            compose.mainClock.advanceTimeBy(800)
             compose.onNodeWithTag("nav-2").assertIsSelected()
             compose.onNodeWithTag("glass-navigation").performTouchInput {
                 down(center)
                 moveBy(Offset(-width * .45f, 0f), 240)
                 cancel()
             }
+            compose.mainClock.advanceTimeBy(800)
             compose.onNodeWithTag("nav-2").assertIsSelected()
             compose.onNodeWithTag("nav-0").performSemanticsAction(SemanticsActions.OnClick) { it() }
+            compose.mainClock.advanceTimeBy(800)
             compose.onNodeWithTag("nav-0").assertIsSelected()
             compose.onNodeWithTag("vpn-power").assertIsDisplayed()
             // A cancelled press and navigation never start a VPN or change profile data.
@@ -54,11 +61,16 @@ class GlassInteractionTest {
             assertEquals(before, app.repository.data.value)
             captureSyntheticFixture(compose, device, "minimal-home-light.png")
             device.executeShellCommand("settings put global animator_duration_scale 0")
-            compose.onNodeWithTag("nav-3").performClick().assertIsSelected()
-            compose.onNodeWithTag("nav-0").performClick().assertIsSelected()
+            compose.onNodeWithTag("nav-3").performClick()
+            compose.mainClock.advanceTimeBy(800)
+            compose.onNodeWithTag("nav-3").assertIsSelected()
+            compose.onNodeWithTag("nav-0").performClick()
+            compose.mainClock.advanceTimeBy(800)
+            compose.onNodeWithTag("nav-0").assertIsSelected()
             assertFalse(model.vpn.value.active)
         } finally {
             device.executeShellCommand("settings put global animator_duration_scale 0")
+            compose.mainClock.autoAdvance = true
         }
     }
 }

@@ -123,6 +123,9 @@ class OceanDesignTest {
         val before = app.repository.data.value.client
         val originalScale =
             device.executeShellCommand("settings get global animator_duration_scale").trim()
+        // A continuously animated shader never becomes globally idle. Advance
+        // real animation frames while waiting for the external settings observer.
+        compose.mainClock.autoAdvance = false
         try {
             device.executeShellCommand("settings put global animator_duration_scale 1")
             app.repository.appearance("zh", "light", dynamicColor = false, reduceEffects = false)
@@ -137,7 +140,7 @@ class OceanDesignTest {
                     }
                 }
             }
-            compose.waitUntil(5000) { effectRunning() }
+            awaitEffectRunning(true)
             app.repository.appearance(
                 "zh",
                 "light",
@@ -145,7 +148,7 @@ class OceanDesignTest {
                 dynamicColor = true,
                 scenery = ScenePreferenceChange(scene = "clouds", reduceTransparency = true),
             )
-            compose.waitUntil(5000) { !effectRunning() }
+            awaitEffectRunning(false)
             val restored = ProfileRepository(app).data.value.client
             assertTrue(restored.reduceEffects)
             assertTrue(restored.dynamicColor)
@@ -153,7 +156,7 @@ class OceanDesignTest {
             assertTrue(restored.reduceTransparency)
             device.executeShellCommand("settings put global animator_duration_scale 0")
             app.repository.appearance("zh", "light", reduceEffects = false)
-            compose.waitUntil(5000) { !effectRunning() }
+            awaitEffectRunning(false)
         } finally {
             app.repository.appearance(
                 before.language,
@@ -166,6 +169,7 @@ class OceanDesignTest {
                 if (originalScale == "null") "settings delete global animator_duration_scale"
                 else "settings put global animator_duration_scale $originalScale"
             device.executeShellCommand(command)
+            compose.mainClock.autoAdvance = true
         }
     }
 
@@ -191,6 +195,13 @@ class OceanDesignTest {
 
     private fun effectRunning() =
         compose.onNodeWithTag("ocean-backdrop").fetchSemanticsNode().config[DecorativeEffectRunning]
+
+    private fun awaitEffectRunning(expected: Boolean) {
+        compose.waitUntil(5000) {
+            compose.mainClock.advanceTimeBy(64)
+            effectRunning() == expected
+        }
+    }
 
     private fun report(vararg steps: Models.Step) =
         DiagnosticUiState(
