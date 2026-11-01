@@ -37,6 +37,7 @@ def main():
     adb('shell', 'settings', 'put', 'global', 'private_dns_mode', 'off')
     adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0')
     adb('shell', 'cmd', 'uimode', 'night', 'no')
+    adb('shell', 'setprop', 'debug.hwui.renderer', 'skiagl')
     adb('shell', 'input', 'keyevent', '82')
     adb('install', '-r', str(app))
     adb('install', '-r', str(tests))
@@ -71,10 +72,24 @@ def main():
                 for key, field in [('hy2Port', 'hy2Port'), ('hy2HttpPort', 'httpPort'), ('hy2DnsPort', 'dnsPort'), ('hy2Host', 'host')]:
                     args += ['-e', key, str(data[field])]
                 args += ['dev.pingclash.app.test/androidx.test.runner.AndroidJUnitRunner']
-                result = subprocess.run(args, capture_output=True, text=True, timeout=1200)
+                live = OUT / ('ci-' + test_class.rsplit('.', 1)[-1] + '-live-logcat.txt')
+                with live.open('w', encoding='utf-8') as live_output:
+                    logger = subprocess.Popen(
+                        ['adb', '-s', SERIAL, 'logcat', '-T', '1', '-v', 'brief', '*:W'],
+                        stdout=live_output, stderr=live_output)
+                    try:
+                        result = subprocess.run(args, capture_output=True, text=True, timeout=1200)
+                    finally:
+                        logger.terminate()
+                        try:
+                            logger.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            logger.kill()
+                            logger.wait()
                 output = result.stdout + result.stderr
                 (OUT / ('ci-' + test_class.rsplit('.', 1)[-1] + '.txt')).write_text(output, encoding='utf-8')
                 if result.returncode:
+                    print(output, flush=True)
                     raise RuntimeError('Instrumentation command failed')
                 try:
                     checked = validate_output(output, expected, sdk)

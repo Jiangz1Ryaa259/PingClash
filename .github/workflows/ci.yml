@@ -81,13 +81,18 @@ jobs:
         shell: pwsh
         run: ./tools/verify-security.ps1 -Fuzz
   integration:
+    name: integration (${{ matrix.api }})
     needs: android
     runs-on: ubuntu-latest
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        api: [31, 33, 34, 35]
+        include:
+          - {api: 31, emulator: '13610412', gpu: swiftshader_indirect}
+          - {api: 33, emulator: '16428233', gpu: software}
+          - {api: 34, emulator: '16428233', gpu: software}
+          - {api: 35, emulator: '16428233', gpu: software}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -117,9 +122,20 @@ jobs:
           cores: 2
           ram-size: 2048M
           disable-animations: true
-          emulator-build: '13610412' # 35.6.11; 37.2.12 exited at the first WebView test on all four APIs.
-          emulator-options: -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect -feature -Vulkan -no-metrics -prop persist.sys.locale=zh-CN
+          # Supported direct software backend on current APIs; retain API31 compatibility.
+          emulator-build: ${{ matrix.emulator }}
+          emulator-options: -no-window -no-audio -no-snapshot -no-boot-anim -gpu ${{ matrix.gpu }} -feature -Vulkan -no-metrics -prop persist.sys.locale=zh-CN
           script: python3 tools/verify-android-ci.py
+      - name: Collect host graphics shutdown evidence
+        if: failure()
+        shell: bash
+        run: |
+          mkdir -p .tools/test-results
+          {
+            free -m
+            df -h / /dev/shm
+            dmesg 2>/dev/null | tail -250 | grep -Ei 'oom|out of memory|killed process|segfault|emulator|qemu' || true
+          } > .tools/test-results/ci-host-graphics.txt
       - name: Upload synthetic validation results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
