@@ -90,9 +90,9 @@ jobs:
       matrix:
         include:
           - {api: 31, emulator: '13610412', gpu: swiftshader_indirect}
-          - {api: 33, emulator: '16428233', gpu: software}
-          - {api: 34, emulator: '16428233', gpu: software}
-          - {api: 35, emulator: '16428233', gpu: software}
+          - {api: 33, emulator: '16428233', gpu: lavapipe}
+          - {api: 34, emulator: '16428233', gpu: lavapipe}
+          - {api: 35, emulator: '16428233', gpu: lavapipe}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -122,9 +122,9 @@ jobs:
           cores: 2
           ram-size: 2048M
           disable-animations: true
-          # Supported direct software backend on current APIs; retain API31 compatibility.
+          # Mesa software Vulkan handles AGSL on current APIs; retain the API31 GLES fallback.
           emulator-build: ${{ matrix.emulator }}
-          emulator-options: -no-window -no-audio -no-snapshot -no-boot-anim -gpu ${{ matrix.gpu }} -feature -Vulkan -no-metrics -prop persist.sys.locale=zh-CN
+          emulator-options: -no-window -no-audio -no-snapshot -no-boot-anim -gpu ${{ matrix.gpu }} ${{ matrix.api == 31 && '-feature -Vulkan' || '' }} -no-metrics -prop persist.sys.locale=zh-CN
           script: python3 tools/verify-android-ci.py
       - name: Collect host graphics shutdown evidence
         if: failure()
