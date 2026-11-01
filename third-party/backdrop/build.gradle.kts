@@ -23,5 +23,5 @@ dependencies {
     implementation(libs.lifecycle.runtime)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.coroutines.android)
-    constraints { implementation("androidx.startup:startup-runtime:1.1.1") }
+    constraints { implementation("androidx.startup:startup-runtime:1.2.0") }
 }
