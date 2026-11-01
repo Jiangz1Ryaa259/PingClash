@@ -13,7 +13,7 @@ detekt = "1.23.8"
 graphics-shapes = "1.0.1"
 haze = "1.6.8"
 
-zxing = "3.5.3"
+zxing = "3.5.4"
 
 [libraries]
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
