@@ -539,12 +539,16 @@ internal fun captureSyntheticFixture(
     compose.waitForIdle()
     device.waitForIdle(1000)
     Thread.sleep(300)
-    check(activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE == 0) {
+    check(
+        activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE ==
+            0
+    ) {
         "Synthetic evidence must never bypass a protected window"
     }
-    val evidence = File(activity.getExternalFilesDir(null), "synthetic-test-evidence").apply {
-        check(isDirectory || mkdirs()) { "Synthetic evidence directory unavailable" }
-    }
+    val evidence =
+        File(activity.getExternalFilesDir(null), "synthetic-test-evidence").apply {
+            check(isDirectory || mkdirs()) { "Synthetic evidence directory unavailable" }
+        }
     val destination = File(evidence, name)
     if (!device.takeScreenshot(destination)) {
         captureSyntheticWindow(activity, destination)
@@ -552,27 +556,39 @@ internal fun captureSyntheticFixture(
     check(destination.isFile && destination.length() > 0) { "Synthetic screenshot was not saved" }
     // Visual assertions read the original path; CI also collects the evidence directory.
     destination.copyTo(File(activity.getExternalFilesDir(null), name), overwrite = true)
-
 }
 
-/** Consent is scoped to the verified project emulator and synthetic VPN fixture. */
-internal fun approveSyntheticVpn(
+/** Android 13+ asks for notifications before the VPN consent in the app's connect flow. */
+private fun approveSyntheticNotifications(
     device: UiDevice,
     compose: AndroidComposeTestRule<*, MainActivity>,
 ) {
-    if (android.os.Build.VERSION.SDK_INT >= 33 &&
-        compose.activity.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
-            android.content.pm.PackageManager.PERMISSION_GRANTED
+    if (
+        android.os.Build.VERSION.SDK_INT >= 33 &&
+            compose.activity.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED
     ) {
-        val allow = device.wait(
-            androidx.test.uiautomator.Until.findObject(
-                androidx.test.uiautomator.By.res("com.android.permissioncontroller", "permission_allow_button")
-            ), 3000,
-        )
+        val allow =
+            device.wait(
+                androidx.test.uiautomator.Until.findObject(
+                    androidx.test.uiautomator.By.res(
+                        "com.android.permissioncontroller",
+                        "permission_allow_button",
+                    )
+                ),
+                3000,
+            )
         if (allow != null) {
-            val message = device.findObject(
-                androidx.test.uiautomator.By.res("com.android.permissioncontroller", "permission_message")
-            )?.text.orEmpty()
+            val message =
+                device
+                    .findObject(
+                        androidx.test.uiautomator.By.res(
+                            "com.android.permissioncontroller",
+                            "permission_message",
+                        )
+                    )
+                    ?.text
+                    .orEmpty()
             check(message.contains("notification", ignoreCase = true) || message.contains("通知")) {
                 "Unexpected runtime permission in synthetic VPN flow"
             }
@@ -580,6 +596,14 @@ internal fun approveSyntheticVpn(
             device.waitForIdle()
         }
     }
+}
+
+/** Consent is scoped to the verified project emulator and synthetic VPN fixture. */
+internal fun approveSyntheticVpn(
+    device: UiDevice,
+    compose: AndroidComposeTestRule<*, MainActivity>,
+) {
+    approveSyntheticNotifications(device, compose)
     if (android.net.VpnService.prepare(compose.activity) == null) return
     val present =
         device.wait(
@@ -626,23 +650,43 @@ internal fun openProfileDetails(
 
 /** PixelCopy captures the actual window surface when shell screenshot output is unavailable. */
 internal fun captureSyntheticWindow(activity: MainActivity, destination: File) {
-    check(activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE == 0)
+    check(
+        activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE ==
+            0
+    )
     val view = activity.window.decorView
     check(view.width > 0 && view.height > 0)
-    val bitmap = android.graphics.Bitmap.createBitmap(view.width, view.height, android.graphics.Bitmap.Config.ARGB_8888)
+    val bitmap =
+        android.graphics.Bitmap.createBitmap(
+            view.width,
+            view.height,
+            android.graphics.Bitmap.Config.ARGB_8888,
+        )
     val completed = java.util.concurrent.CountDownLatch(1)
     val result = java.util.concurrent.atomic.AtomicInteger(-1)
     try {
         activity.runOnUiThread {
-            android.view.PixelCopy.request(activity.window, bitmap, { status ->
-                result.set(status)
-                completed.countDown()
-            }, android.os.Handler(android.os.Looper.getMainLooper()))
+            android.view.PixelCopy.request(
+                activity.window,
+                bitmap,
+                { status ->
+                    result.set(status)
+                    completed.countDown()
+                },
+                android.os.Handler(android.os.Looper.getMainLooper()),
+            )
         }
-        check(completed.await(10, java.util.concurrent.TimeUnit.SECONDS)) { "Synthetic PixelCopy timed out" }
+        check(completed.await(10, java.util.concurrent.TimeUnit.SECONDS)) {
+            "Synthetic PixelCopy timed out"
+        }
         check(result.get() == android.view.PixelCopy.SUCCESS) { "Synthetic PixelCopy failed" }
-        check(activity.window.attributes.flags and android.view.WindowManager.LayoutParams.FLAG_SECURE == 0)
-        destination.outputStream().use { check(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)) }
+        check(
+            activity.window.attributes.flags and
+                android.view.WindowManager.LayoutParams.FLAG_SECURE == 0
+        )
+        destination.outputStream().use {
+            check(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it))
+        }
     } finally {
         bitmap.recycle()
     }

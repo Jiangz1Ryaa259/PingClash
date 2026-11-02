@@ -9,12 +9,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.ResultReceiver
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -138,6 +138,17 @@ class NativeConfigurationTest {
                             .putExtra("receiver", receiver)
                     )
                     assertTrue(done.await(25, TimeUnit.SECONDS))
+                    // The peer runs in another task and UID. Android 14+ does not bring this
+                    // task back when it finishes, so return explicitly, as a user would.
+                    compose.runOnUiThread {
+                        compose.activity.startActivity(
+                            Intent(app, MainActivity::class.java)
+                                .addFlags(
+                                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                )
+                        )
+                    }
                     assertTrue(
                         "Native path failed at ${result?.getString("stage")}",
                         result?.getBoolean("success") == true,
@@ -168,8 +179,12 @@ class NativeConfigurationTest {
         // its actual enabled state before attempting the next user action.
         compose.waitUntil(15_000) {
             compose.activity.lifecycle.currentState == androidx.lifecycle.Lifecycle.State.RESUMED &&
-                compose.onAllNodesWithTag("vpn-power").fetchSemanticsNodes().singleOrNull()
-                    ?.config?.contains(SemanticsProperties.Disabled) == false
+                compose
+                    .onAllNodesWithTag("vpn-power")
+                    .fetchSemanticsNodes()
+                    .singleOrNull()
+                    ?.config
+                    ?.contains(SemanticsProperties.Disabled) == false
         }
     }
 }

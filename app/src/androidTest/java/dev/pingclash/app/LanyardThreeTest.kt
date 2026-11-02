@@ -352,7 +352,9 @@ class LanyardThreeTest {
     fun rendererCannotReadLocalFilesNavigateOrConnectToRemoteHosts() {
         fixture { LanyardPowerControl("idle", true, "Fixture action") {} }
         val view = renderer()
-        await { status(view).optBoolean("ready") }
+        // Wait for the host's acknowledgement too: until then it re-offers its latest
+        // frame, which would resume the scene this test pauses directly below.
+        await { control.ready && status(view).optBoolean("ready") }
         compose.runOnUiThread {
             assertFalse(view.settings.allowFileAccess)
             assertFalse(view.settings.allowContentAccess)

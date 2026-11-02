@@ -9,16 +9,21 @@ $stage=[IO.Path]::GetFullPath((Join-Path $projectRoot ('.tools\source-package\'+
 if(-not $stage.StartsWith($allowed,[StringComparison]::OrdinalIgnoreCase)){throw 'Source staging escaped project tools.'}
 $root=Join-Path $stage $packageName
 New-Item -ItemType Directory -Path $root -Force|Out-Null
+# Published documentation is the overview (README.md) and docs/user-guide.md; licence and
+# attribution files ship as required, including docs/rule-data.md, which NOTICE.md cites.
+# Review, test and status notes stay local.
 foreach($relative in @('README.md','NOTICE.md','LICENSE','.editorconfig','.gitattributes','.gitignore','settings.gradle.kts','build.gradle.kts','gradle.properties','gradlew','gradlew.bat',
     'app\build.gradle.kts','app\proguard-rules.pro','app\proguard-test-rules.pro','app\proguard-instrumentation.pro',
-    'diagnostics\build.gradle.kts','core\go.mod','core\go.sum','core\README.md','core\NOTICE.md','core\LICENSE')){
+    'diagnostics\build.gradle.kts','core\go.mod','core\go.sum','core\NOTICE.md','core\LICENSE','docs\user-guide.md','docs\rule-data.md')){
     $target=Join-Path $root $relative;New-Item -ItemType Directory -Path (Split-Path -Parent $target) -Force|Out-Null
     Copy-Item -LiteralPath (Join-Path $projectRoot $relative) -Destination $target
 }
-foreach($relative in @('.github','config','app\src','terminal-emulator','terminal-view','third-party','ui\lanyard','diagnostics\src','core\mobile','core\tools','tools','docs','gradle')){
+foreach($relative in @('.github','config','app\src','terminal-emulator','terminal-view','third-party','ui\lanyard','diagnostics\src','core\mobile','core\tools','tools','gradle')){
     $source=[IO.Path]::GetFullPath((Join-Path $projectRoot $relative)).TrimEnd('\')+'\'
     foreach($file in (Get-ChildItem -LiteralPath $source -File -Recurse)){
         if($file.FullName.Substring($source.Length) -match '(^|\\)(build|node_modules|__pycache__|\.gradle|\.cxx|\.git)(\\|$)' -or $file.Extension -in @('.pyc','.pyo')){continue}
+        # Inside code folders only licence/attribution Markdown is published.
+        if($file.Extension -eq '.md' -and $file.Name -notmatch '^(LICENSE.*|NOTICE|UPSTREAM|ReactBits)\.md$' -and $file.FullName -notmatch '\\assets\\licenses\\'){continue}
         $target=Join-Path (Join-Path $root $relative) $file.FullName.Substring($source.Length)
         New-Item -ItemType Directory -Path (Split-Path -Parent $target) -Force|Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $target

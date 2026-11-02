@@ -129,6 +129,11 @@ class DeepLinkSecurityTest {
                 compose.waitUntil(15000) {
                     app.repository.data.value.profiles.size == before.profiles.size + 1
                 }
+                // The stored profile can precede the result page finishing its transition.
+                compose.waitUntil(5000) {
+                    runCatching { compose.onNodeWithTag("deep-link-close").assertIsDisplayed() }
+                        .isSuccess
+                }
                 compose.onNodeWithTag("deep-link-close").assertIsDisplayed()
                 assertInactiveThenActivate(before)
             } finally {

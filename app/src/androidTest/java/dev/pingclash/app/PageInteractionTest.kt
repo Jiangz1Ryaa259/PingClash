@@ -108,6 +108,10 @@ class PageInteractionTest {
         compose.onNodeWithTag("settings-back").performClick()
         compose.onNodeWithTag("settings-connections").performScrollTo().performClick()
         singleScroll()
+        // The detail page slides in; slower emulators can still be mid-transition here.
+        compose.waitUntil(5000) {
+            runCatching { compose.onNodeWithTag("connections-list").assertIsDisplayed() }.isSuccess
+        }
         compose.onNodeWithTag("connections-list").assertIsDisplayed()
     }
 

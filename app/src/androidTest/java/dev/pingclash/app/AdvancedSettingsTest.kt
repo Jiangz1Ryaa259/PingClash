@@ -252,6 +252,7 @@ class AdvancedSettingsTest {
             repo.clientSettings(before.client, before.dnsAddress, before.probeUrl)
         }
     }
+
     @Test
     fun windowEvidenceFallbackContainsRenderedPixels() {
         compose.waitForIdle()
@@ -262,9 +263,15 @@ class AdvancedSettingsTest {
             assertNotNull(bitmap)
             try {
                 assertTrue(bitmap.width > 0 && bitmap.height > 0)
-                val colors = (1..9).map { y ->
-                    (1..9).map { x -> bitmap.getPixel(bitmap.width * x / 10, bitmap.height * y / 10) }
-                }.flatten().toSet()
+                val colors =
+                    (1..9)
+                        .map { y ->
+                            (1..9).map { x ->
+                                bitmap.getPixel(bitmap.width * x / 10, bitmap.height * y / 10)
+                            }
+                        }
+                        .flatten()
+                        .toSet()
                 assertTrue("Window capture must contain rendered content", colors.size > 1)
             } finally {
                 bitmap.recycle()
@@ -273,5 +280,4 @@ class AdvancedSettingsTest {
             output.delete()
         }
     }
-
 }

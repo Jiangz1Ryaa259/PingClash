@@ -13,8 +13,8 @@ android {
         applicationId = "dev.pingclash.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 109
-        versionName = "0.1.0-beta"
+        versionCode = 110
+        versionName = "0.2.0-beta.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         testProguardFiles("proguard-test-rules.pro")
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }

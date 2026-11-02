@@ -53,6 +53,12 @@ class NetworkReconnectionTest {
             val profile = repo.importProfile("Synthetic network test", config)
             try {
                 repo.settings("127.0.0.1:${fixture.dns.localPort}", "https://${fixture.host}/")
+                // The app asks for this before connecting on Android 13+; without it the
+                // system keeps the foreground-service notification out of the active list.
+                if (android.os.Build.VERSION.SDK_INT >= 33)
+                    device.executeShellCommand(
+                        "pm grant dev.pingclash.app android.permission.POST_NOTIFICATIONS"
+                    )
                 val permission = VpnService.prepare(app)
                 if (permission != null) {
                     compose.runOnUiThread { compose.activity.startActivity(permission) }

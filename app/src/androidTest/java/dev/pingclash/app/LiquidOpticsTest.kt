@@ -160,12 +160,27 @@ class LiquidOpticsTest {
     }
 
     private fun capture(name: String): Bitmap {
-        compose.runOnUiThread { compose.activity.window.decorView.invalidate() }
-        compose.waitForIdle()
-        Thread.sleep(250)
         val file = File(compose.activity.getExternalFilesDir(null), "synthetic-test-evidence/$name")
         file.parentFile?.mkdirs()
-        captureSyntheticWindow(compose.activity, file)
+        if (Build.VERSION.SDK_INT >= 33) {
+            // The backdrop lens needs the window's own pixels after a fresh frame.
+            compose.runOnUiThread { compose.activity.window.decorView.invalidate() }
+            compose.waitForIdle()
+            Thread.sleep(250)
+            captureSyntheticWindow(compose.activity, file)
+        } else {
+            // The legacy blur backend animates continuously, so waiting for idle never
+            // returns here; the settled screen is captured with the shell screenshot.
+            Thread.sleep(250)
+            check(
+                androidx.test.uiautomator.UiDevice.getInstance(
+                        androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
+                    )
+                    .takeScreenshot(file)
+            ) {
+                "Synthetic screenshot was not saved"
+            }
+        }
         return requireNotNull(BitmapFactory.decodeFile(file.absolutePath))
     }
 

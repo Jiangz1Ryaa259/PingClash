@@ -86,6 +86,11 @@ jobs:
     needs: android
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    # API 31 is the release gate: it runs the complete inventory on the same software
+    # renderer as the local release acceptance. Newer images run the same inventory and
+    # upload their results, but their hosted software-GPU emulators also fail on their
+    # own (lost devices, frozen render threads), so they report without blocking.
+    continue-on-error: ${{ !matrix.required }}
     env:
       DISPLAY: ':99'
       LIBGL_ALWAYS_SOFTWARE: 'true'
@@ -94,10 +99,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {api: 31, emulator: '13610412', gpu: swiftshader_indirect}
-          - {api: 33, emulator: '16428233', gpu: host}
-          - {api: 34, emulator: '16428233', gpu: host}
-          - {api: 35, emulator: '16428233', gpu: host}
+          - {api: 31, emulator: '13610412', gpu: swiftshader_indirect, required: true}
+          - {api: 33, emulator: '16428233', gpu: host, required: false}
+          - {api: 34, emulator: '16428233', gpu: host, required: false}
+          - {api: 35, emulator: '16428233', gpu: host, required: false}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

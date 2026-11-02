@@ -1336,6 +1336,7 @@
   public boolean getDragging();
   public boolean getHasControl();
   public boolean getReady();
+  public boolean getUnavailable();
   public void pose-38CYSgM(java.lang.Object,dev.pingclash.app.LanyardPose,long,androidx.compose.ui.unit.Density,dev.pingclash.app.ThreeControlText);
   public static void slot$default(dev.pingclash.app.LanyardThreeState,java.lang.Object,float,float,java.lang.Float,int,java.lang.Object);
   public void slot(java.lang.Object,float,float,java.lang.Float);
@@ -2103,6 +2104,7 @@
 }
 -keep class kotlin.collections.CollectionsKt__IterablesKt {
   public static int collectionSizeOrDefault(java.lang.Iterable,int);
+  public static java.util.List flatten(java.lang.Iterable);
 }
 -keep class kotlin.collections.CollectionsKt__MutableCollectionsKt {
   public static boolean addAll(java.util.Collection,java.lang.Iterable);
@@ -2123,6 +2125,7 @@
   public static java.util.List plus(java.util.Collection,java.lang.Object);
   public static java.util.List reversed(java.lang.Iterable);
   public static java.lang.Object single(java.util.List);
+  public static java.lang.Object singleOrNull(java.util.List);
   public static java.util.List sorted(java.lang.Iterable);
   public static java.util.List sortedWith(java.lang.Iterable,java.util.Comparator);
   public static java.util.List take(java.lang.Iterable,int);
