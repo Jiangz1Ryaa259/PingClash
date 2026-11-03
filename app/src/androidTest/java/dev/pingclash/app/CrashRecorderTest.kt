@@ -89,6 +89,17 @@ class CrashRecorderTest {
                     .contains("capacity 32768,start 0, need 2")
             )
             assertEquals("", CrashText.sanitize(""))
+            // Shrunk release builds name most frames "Unknown Source:N"; they locate the fault.
+            val shrunk =
+                CrashText.sanitize(
+                    "java.lang.IllegalArgumentException: CANARY-MESSAGE\n" +
+                        "at dev.pingclash.app.BackgroundFrame.a(Unknown Source:83)\n" +
+                        "at V.c.invoke(Unknown Source)\n" +
+                        "at android.view.View.draw(View.java:26719)"
+                )
+            assertTrue(shrunk.contains("at dev.pingclash.app.BackgroundFrame.a(Unknown Source:83)"))
+            assertTrue(shrunk.contains("at V.c.invoke(Unknown Source)"))
+            assertFalse(shrunk.contains("CANARY-MESSAGE"))
         } finally {
             CrashRecorder.clear(context)
             backup?.let { File(dir, "last.txt").writeText(it.text) }

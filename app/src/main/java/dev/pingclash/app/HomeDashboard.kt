@@ -49,7 +49,11 @@ private data class Metric(val icon: PcIcon, val label: String, val value: String
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun HomeDashboardSheet(state: DashboardState, onDismiss: () -> Unit) {
+internal fun HomeDashboardSheet(
+    state: DashboardState,
+    onRefreshExit: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Panel) {
         Column(
             Modifier.fillMaxWidth()
@@ -61,6 +65,7 @@ internal fun HomeDashboardSheet(state: DashboardState, onDismiss: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             DashboardHeader(state)
+            ExitSection(state, onRefreshExit)
             if (state.vpn.active) {
                 SpeedPanel(state.vpn)
                 MetricGrid(sessionMetrics(state.vpn))

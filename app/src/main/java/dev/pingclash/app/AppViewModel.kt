@@ -116,19 +116,27 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             data.map(::requestKey).distinctUntilChanged().drop(1).collect {
                 // Independent node measurements are still valid when the chosen route changes.
                 // A real dialer-chain snapshot depends on those choices, so cancel that batch.
-                if (chainedBatch && mutableProxyTests.value.running) {
-                    cancelProxyTests()
-                    mutableProxyTests.value = ProxyTestState()
-                }
+                if (chainedBatch && mutableProxyTests.value.running) cancelProxyTests()
                 serviceChecks.cancel()
                 if (mutableDiagnosis.value.running) cancelDiagnosis()
                 else mutableDiagnosis.value = DiagnosticUiState()
             }
         }
         viewModelScope.launch {
+            var before = data.value
             data.map(::ProxyTestInputs).distinctUntilChanged().drop(1).collect {
                 cancelProxyTests()
-                mutableProxyTests.value = ProxyTestState()
+                // A profile update keeps every result whose node is unchanged; only removed
+                // or edited nodes, or different test settings, lose theirs.
+                val after = data.value
+                mutableProxyTests.update { state ->
+                    state.copy(
+                        values = state.values.filterKeys { delayStillValid(it, before, after) },
+                        tcpValues =
+                            state.tcpValues.filterKeys { delayStillValid(it, before, after) },
+                    )
+                }
+                before = after
             }
         }
     }
@@ -219,6 +227,53 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         )
                 } ?: tr(R.string.operation_incomplete_check_the_configurati)
         }
+
+    private val mutableExit = MutableStateFlow(ExitState())
+    /** The address the internet sees from this phone right now; in memory only. */
+    internal val exit = mutableExit.asStateFlow()
+    private var exitJob: Job? = null
+
+    /**
+     * Asks which address the internet sees, over the route traffic really takes now, and classifies
+     * it with the bundled data. One check at a time; a failure keeps the last result for that
+     * route.
+     */
+    fun refreshExit(force: Boolean = false) {
+        val route = exitRoute(vpn.value, data.value)
+        if (!app.nativeReady || route == null || exitJob?.isActive == true) return
+        // Coming back to the app re-checks at most once a minute; the refresh button always does.
+        val last = mutableExit.value.info
+        val fresh =
+            last?.route == route && System.currentTimeMillis() - last.checkedAt < EXIT_FRESH_MS
+        // Automatic checks never compete with latency tests or a diagnosis.
+        val measuring = mutableProxyTests.value.running || mutableDiagnosis.value.running
+        if (!force && (fresh || measuring)) return
+        val main = data.value.selected
+        mutableExit.update { it.copy(checking = true) }
+        exitJob =
+            viewModelScope.launch(Dispatchers.IO) {
+                val info =
+                    runCatching {
+                            val reply = Mobile.exitDetails(fetchExitTrace(EXIT_TIMEOUT_MS))
+                            ExitInfo.read(
+                                JSONObject(reply),
+                                route,
+                                main,
+                                System.currentTimeMillis(),
+                            )
+                        }
+                        .getOrNull()
+                        // The route changed while checking: this answer belongs to the old one.
+                        ?.takeIf { exitRoute(vpn.value, data.value) == route }
+                mutableExit.update { previous ->
+                    ExitState(
+                        info ?: previous.info?.takeIf { it.route == route },
+                        checking = false,
+                        failed = info == null,
+                    )
+                }
+            }
+    }
 
     fun importCompleted(id: String) {
         val profile = data.value.profiles.firstOrNull { it.id == id } ?: return
@@ -518,6 +573,82 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private val editingBackground = MutableStateFlow(false)
+    /** True while the picture framing editor is open. */
+    val backgroundEditing = editingBackground.asStateFlow()
+
+    fun editBackground(open: Boolean) {
+        editingBackground.value = open
+    }
+
+    private val stagedBackground = MutableStateFlow<BackgroundFrame?>(null)
+    /** A picked picture waiting for Done in the editor, with its starting framing. */
+    internal val backgroundStaged = stagedBackground.asStateFlow()
+
+    /**
+     * Checks a picked image and opens the framing editor on it. The current background stays until
+     * Done; failures and Cancel keep it.
+     */
+    fun importBackground(uri: android.net.Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                stagedBackground.value = CustomBackground.stage(app, uri)
+                editingBackground.value = true
+            } catch (c: kotlinx.coroutines.CancellationException) {
+                throw c
+            } catch (rejected: BackgroundImportException) {
+                message(backgroundRejectionMessage(rejected.reason))
+            } catch (_: Exception) {
+                message(backgroundRejectionMessage(BackgroundRejection.UNREADABLE))
+            }
+        }
+    }
+
+    /** Done in the editor: saves the framing; a picked picture also becomes the background. */
+    internal fun saveBackground(frame: BackgroundFrame) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                    if (stagedBackground.value == null) BackgroundFrames.save(app, frame)
+                    else {
+                        CustomBackground.commit(app, frame)
+                        stagedBackground.value = null
+                        val client = app.repository.data.value.client
+                        app.repository.appearance(
+                            client.language,
+                            client.theme,
+                            scenery = ScenePreferenceChange(scene = "image"),
+                        )
+                    }
+                }
+                .onFailure { message(backgroundRejectionMessage(BackgroundRejection.UNREADABLE)) }
+            editingBackground.value = false
+        }
+    }
+
+    /** Cancel in the editor: a picked picture is thrown away and nothing else changes. */
+    fun cancelBackground() {
+        editingBackground.value = false
+        if (stagedBackground.value == null) return
+        stagedBackground.value = null
+        viewModelScope.launch(Dispatchers.IO) { CustomBackground.discard(app) }
+    }
+
+    /** Deletes the stored picture and returns to the default scene. */
+    fun removeBackground() {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                    CustomBackground.clear(app)
+                    val client = app.repository.data.value.client
+                    app.repository.appearance(
+                        client.language,
+                        client.theme,
+                        scenery = ScenePreferenceChange(scene = "ocean"),
+                    )
+                }
+                .onFailure { message(tr(R.string.could_not_save_settings)) }
+        }
+    }
+
     fun resetLocalData() = operation {
         app.repository.resetLocalData()
         tr(R.string.local_data_reset_done)
@@ -564,6 +695,96 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         app.contentResolver.openOutputStream(uri, "wt")?.use { it.write(bytes) }
             ?: error("export_unavailable")
         tr(R.string.configuration_exported_the_file_contains_p)
+    }
+
+    /** Saves settings (and, when asked, profiles with their links) to a file the user chose. */
+    fun exportBackup(uri: Uri, withProfiles: Boolean) = noticeOperation {
+        val bytes = SettingsBackup.export(data.value, withProfiles).toByteArray(Charsets.UTF_8)
+        require(bytes.size <= SettingsBackup.MAX_BYTES)
+        app.contentResolver.openOutputStream(uri, "wt")?.use { it.write(bytes) }
+            ?: error("export_unavailable")
+        tr(if (withProfiles) R.string.ui_backup_saved_private else R.string.ui_backup_saved)
+    }
+
+    /**
+     * Restores settings from a backup, then adds its profiles that are not here yet: subscriptions
+     * are downloaded again, local profiles imported from their configuration.
+     */
+    fun restoreBackup(uri: Uri) = noticeOperation {
+        val text =
+            app.contentResolver.openInputStream(uri)?.use(SettingsBackup::readFile)
+                ?: error("input_unavailable")
+        val backup = SettingsBackup.read(text)
+        if (vpn.value.active)
+            throw SettingsFailure(tr(R.string.disconnect_the_vpn_before_changing_profile))
+        app.repository.clientSettings(backup.settings, backup.dns, backup.probe)
+        val (added, failed) = restoreProfiles(backup.profiles)
+        when {
+            added + failed == 0 -> tr(R.string.ui_backup_restored)
+            failed == 0 -> tr(R.string.ui_backup_restored_profiles, added)
+            else ->
+                throw ProfileImportFailure(tr(R.string.ui_backup_restored_partly, added, failed))
+        }
+    }
+
+    private fun restoreProfiles(profiles: List<BackupProfile>): Pair<Int, Int> {
+        val present = data.value.profiles
+        var added = 0
+        var failed = 0
+        profiles
+            .filterNot { entry ->
+                present.any {
+                    entry.subscription != null && it.source == entry.subscription ||
+                        entry.configuration != null && it.source == null && it.name == entry.name
+                }
+            }
+            .forEach { entry ->
+                runCatching {
+                        val link = entry.subscription
+                        if (link != null) {
+                            val response =
+                                SubscriptionDownloader.fetchResponse(link, entry.userAgent)
+                            app.repository.importWithProviders(
+                                entry.name,
+                                response.content,
+                                link,
+                                userAgent = entry.userAgent,
+                                response = response,
+                            )
+                        } else
+                            app.repository.importWithProviders(
+                                entry.name,
+                                requireNotNull(entry.configuration),
+                            )
+                    }
+                    .onSuccess { added++ }
+                    .onFailure { failed++ }
+            }
+        return added to failed
+    }
+
+    /** Like [operation], and also shows the result when it succeeded. */
+    private fun noticeOperation(block: () -> String) {
+        if (!app.nativeReady) return message(tr(R.string.the_native_core_could_not_load_install))
+        if (mutableUi.value.busy)
+            return message(tr(R.string.operation_in_progress), warning = false)
+        mutableUi.update { it.copy(busy = true, message = null) }
+        viewModelScope.launch(Dispatchers.IO) {
+            val (text, warning) =
+                try {
+                    block() to false
+                } catch (failure: Exception) {
+                    publicFailure(failure) to true
+                }
+            mutableUi.update {
+                it.copy(
+                    busy = false,
+                    message = text.takeIf(String::isNotBlank),
+                    messageWarning = warning,
+                    messageStage = IssueStage.OPERATION,
+                )
+            }
+        }
     }
 
     fun testProxies(profile: LocalProfile, names: List<String>, groupName: String = "") {
@@ -760,7 +981,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             return
         proxyEnvironment = currentProxyEnvironment()
         chainedBatch = false
-        val candidates = names.distinct().take(500)
+        val candidates = names.distinct().take(MAX_PROFILE_NODES)
         if (candidates.isEmpty()) return
         val version = proxyVersion
         val settings = data.value.client
@@ -923,14 +1144,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private fun invalidateProxyEnvironment() {
         // Network/service notifications can arrive after a new user-triggered
         // batch. Cancel only measurements captured under a different route.
+        // Finished results stay: tests dial the nodes themselves, with or without the VPN.
         if (proxyEnvironment == currentProxyEnvironment()) return
         cancelProxyTests()
-        mutableProxyTests.value = ProxyTestState()
     }
 
     fun prepareVpnTransition() {
         cancelProxyTests()
-        mutableProxyTests.value = ProxyTestState()
         serviceChecks.cancel()
         cancelDiagnosis()
     }
@@ -1276,5 +1496,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 }
 
 private const val MAX_EXPORTED_PROFILE_BYTES = 32 * 1024 * 1024
+
+// An automatic group may spend half of it picking a member first.
+private const val EXIT_TIMEOUT_MS = 12_000
+private const val EXIT_FRESH_MS = 60_000L
 
 private data class ProxyEnvironment(val phase: VpnPhase, val session: Long, val network: Long?)

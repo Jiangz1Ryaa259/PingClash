@@ -11,6 +11,8 @@
     <string name="subscription_expired">Subscription expired</string>
     <string name="provider_redirect">The source redirect is invalid, uses non-HTTPS or exceeds the redirect limit.</string>
     <string name="provider_failure">Provider %1$d (%2$s): %3$s</string>
+    <string name="provider_configuration_failure">Subscription provider configuration: %1$s</string>
+    <string name="provider_count_limit">Combined proxy and rule providers exceed the limit of 128</string>
     <string name="provider_invalid">Unsupported or invalid provider configuration</string>
     <string name="provider_payload">Invalid, unsupported or oversized provider content</string>
     <string name="provider_network">Download failed; check network, certificate and server response</string>
@@ -23,13 +25,13 @@
     <string name="latency_skipped">Not applicable</string>
     <string name="terminal_start_failed">Unable to start the terminal. No command was executed. Try creating a new session.</string>
     <string name="terminal_process_exit">\n[Session ended: %1$d]</string>
-    <string name="provider_size_limit">Provider exceeds the app limit (rule source: 16 MiB; proxy source or subscription: 2 MiB)</string>
+    <string name="provider_size_limit">Provider exceeds the app limit (rule source: 16 MiB; proxy source or subscription: 8 MiB)</string>
     <string name="provider_total_limit">Combined uncompressed provider content exceeds 32 MiB</string>
     <string name="provider_config_limit">The packed runtime configuration exceeds the app capacity</string>
     <string name="provider_rule_limit">The rule sources contain more than 500,000 entries in total</string>
-    <string name="provider_rule_document">The rule document cannot be decoded; YAML requires a payload list. Check format: yaml/text</string>
+    <string name="provider_rule_document">The rule document cannot be decoded; YAML requires a payload or rules list. Check format: yaml/text</string>
     <string name="provider_rule_syntax">A rule entry does not match its declared behavior (domain/ipcidr/classical)</string>
-    <string name="provider_rule_type">The classical source contains a rule type not supported by this runtime</string>
+    <string name="provider_rule_type">Rule-set type does not match its declared behavior, or this format does not support that behavior</string>
     <string name="provider_html">The server returned an HTML page instead of rules; check login, expiry or the source URL</string>
     <string name="provider_declared_size_limit">Provider exceeds the subscription\'s declared size-limit; check that source setting</string>
     <string name="provider_cache_limit">Combined packed provider cache exceeds 24 MiB</string>
@@ -46,4 +48,15 @@
     <string name="provider_rule_database_missing">Required rule database or classification is unavailable</string>
     <string name="provider_rule_entry_invalid">Invalid rule entry</string>
     <string name="provider_rule_entry_unsupported">Unrecognized rule type</string>
+    <string name="provider_document_syntax">The subscription YAML/JSON cannot be decoded: check syntax, duplicate keys and document structure</string>
+    <string name="provider_document_limit">The subscription exceeds the document size, nesting or expanded-node limit</string>
+    <string name="provider_dns_document">The subscription DNS section could not be preserved; check its YAML aliases and structure</string>
+    <string name="provider_group_keys">A policy group contains conflicting field names</string>
+    <string name="provider_group_filter">A policy group filter expression is invalid or exceeds the matching limit</string>
+    <string name="provider_group_use">The policy group use field must be a list of proxy provider names or empty</string>
+    <string name="provider_group_reference">A policy group use field refers to a missing proxy provider</string>
+    <string name="provider_rule_reference">A RULE-SET rule refers to a missing rule provider</string>
+    <string name="provider_rule_entry">The subscription rules list contains a non-text entry or an invalid RULE-SET reference</string>
+    <string name="provider_bridge_invalid">The local provider cache could not be decoded; update the subscription again</string>
+    <string name="provider_internal">Provider expansion encountered an internal error; the previous valid configuration is unchanged</string>
 </resources>

@@ -29,7 +29,7 @@ data class RemoteProfile(
         fun read(value: JSONObject?): RemoteProfile? =
             value?.let {
                 val original = it.getString("original")
-                require(original.toByteArray().size <= 2 * 1024 * 1024)
+                require(original.toByteArray().size <= MAX_FEED_BYTES)
                 val bodies = it.getJSONObject("bodies")
                 val times = it.getJSONObject("updated")
                 require(
@@ -169,7 +169,7 @@ internal object RemoteProfiles {
     }
 }
 
-private const val MAX_REMOTE_PROVIDERS = 128
+internal const val MAX_REMOTE_PROVIDERS = 128
 
 /** Stored body of a rule provider deferred at import; the core resolves it to an empty set. */
 internal const val DEFERRED_PROVIDER_BODY = ""

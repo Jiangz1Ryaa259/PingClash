@@ -83,27 +83,25 @@ internal fun ScenicFrame(
             }
         }
     }
-    val frame: @Composable () -> Unit = {
-        CompositionLocalProvider(
-            LocalNavigationClearance provides clearance,
-            LocalSceneDepth provides depth,
-            LocalImmersiveScene provides immersive,
-            LocalNavHaze provides if (legacyBlur) haze else null,
-            LocalNavigationBackdrop provides backdrop,
-            LocalLanyardCable provides cable,
-            LocalLanyardThree provides three,
-        ) {
-            Box(Modifier.fillMaxSize().sceneBackground(scene, LocalSolidBackground.current, Ink)) {
-                Box(Modifier.fillMaxSize().navigationSource(backdrop, haze, legacyBlur)) {
-                    OceanBackdrop(TrailTone.PENDING, false, Modifier.fillMaxSize(), scene)
-                    LanyardSceneLayers(three, cable, selected, secure)
-                    Box(Modifier.fillMaxSize().testTag("scenic-content")) { content() }
-                }
-                GlassNavigation(selected, Modifier.align(Alignment.BottomCenter), onSelect)
+    CompositionLocalProvider(
+        LocalNavigationClearance provides clearance,
+        LocalSceneDepth provides depth,
+        LocalImmersiveScene provides immersive,
+        LocalNavHaze provides if (legacyBlur) haze else null,
+        LocalNavigationBackdrop provides backdrop,
+        LocalLanyardCable provides cable,
+        LocalLanyardThree provides three,
+    ) {
+        Box(Modifier.fillMaxSize().sceneBackground(scene, LocalSolidBackground.current, Ink)) {
+            Box(Modifier.fillMaxSize().navigationSource(backdrop, haze, legacyBlur)) {
+                if (scene == "image") CustomImageBackdrop(Modifier.fillMaxSize())
+                else OceanBackdrop(TrailTone.PENDING, false, Modifier.fillMaxSize(), scene)
+                LanyardSceneLayers(three, cable, selected, secure)
+                Box(Modifier.fillMaxSize().testTag("scenic-content")) { content() }
             }
+            GlassNavigation(selected, Modifier.align(Alignment.BottomCenter), onSelect)
         }
     }
-    frame()
 }
 
 private fun Modifier.navigationSource(backdrop: LayerBackdrop?, haze: HazeState, legacy: Boolean) =

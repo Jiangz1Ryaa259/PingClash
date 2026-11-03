@@ -47,7 +47,7 @@ func TestRuntimeOptionsRejectDuplicatesLimitsUnsupportedRulesAndTargets(t *testi
 		}
 	}
 	raw := optionJSON(t, func(o *runtimeOptions) {
-		for i := 0; i < 2001; i++ {
+		for i := 0; i < maxRuntimeRules+1; i++ {
 			o.Rules = append(o.Rules, "MATCH,PROXY")
 		}
 	})

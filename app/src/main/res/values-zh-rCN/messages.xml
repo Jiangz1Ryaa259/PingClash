@@ -34,7 +34,7 @@
     <string name="attempt_ms">"%1$s · 尝试 %2$s · %3$s ms"</string>
     <string name="show_speed_in_notification">"通知栏显示速度"</string>
     <string name="saved">"已保存"</string>
-    <string name="rules_exceed_the_limit_of_2_000">"规则超过 2000 条或 64 个自定义出站目标的限制"</string>
+    <string name="rules_exceed_the_limit_of_2_000">"规则超过 55000 条或 64 个自定义出站目标的限制"</string>
     <string name="show_destinations_session_memory_only">"显示连接目标（仅本次会话内存）"</string>
     <string name="running">"运行中"</string>
     <string name="clear_usage_totals">"清除累计用量"</string>

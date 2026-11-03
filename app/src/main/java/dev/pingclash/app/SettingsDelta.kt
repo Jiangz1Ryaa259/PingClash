@@ -16,6 +16,10 @@ internal val liveAppearanceFields =
         "showService",
         "notificationSpeed",
         "keepUsage",
+        "startOnBoot",
+        "subscriptionHours",
+        "wifiAuto",
+        "trustedWifi",
     )
 
 /** Apply only the edited keys, preserving concurrent appearance/local edits. */

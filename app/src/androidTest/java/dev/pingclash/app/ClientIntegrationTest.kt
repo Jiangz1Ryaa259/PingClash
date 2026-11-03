@@ -115,11 +115,10 @@ class ClientIntegrationTest {
             compose.onNodeWithTag("profile-add").performClick()
             compose.onNodeWithTag("import-method-url").performClick()
             compose.onNodeWithText("节点配置").performClick()
-            compose.onNodeWithText("名称（可选）").performTextInput(name)
-            compose.onNodeWithText("节点 JSON / Clash YAML").performTextInput(config)
+            compose.onNodeWithTag("field-名称（可选）").performTextInput(name)
+            compose.onNodeWithTag("subscription-content").performTextInput(config)
             hideFixtureKeyboard() // Dismiss only IME before scrolling on small displays.
-            compose.onNodeWithText("下一步").performScrollTo().performClick()
-            compose.onNodeWithText("导入", useUnmergedTree = false).performScrollTo().performClick()
+            compose.onNodeWithTag("import-submit").performScrollTo().performClick()
             compose.waitUntil(10_000) { app.repository.data.value.nodes.isNotEmpty() }
             // Repository commit may precede the import Activity closing and the
             // MainActivity Compose root becoming available again.
@@ -134,7 +133,14 @@ class ClientIntegrationTest {
             }
             compose.onNodeWithTag("issue-popup").assertDoesNotExist()
             compose.onNodeWithTag("nav-1").performClick()
-            compose.onNodeWithText("本地 SOCKS5").assertIsDisplayed()
+            // The list screen was stopped behind the import page and redraws on return.
+            compose.waitUntil(10_000) {
+                runCatching {
+                        compose.onNodeWithText("本地 SOCKS5").assertIsDisplayed()
+                        true
+                    }
+                    .getOrDefault(false)
+            }
             captureSyntheticFixture(compose, device, "nodes-light.png")
             val encrypted =
                 File(app.filesDir, "profiles.enc").readBytes().toString(Charsets.ISO_8859_1)

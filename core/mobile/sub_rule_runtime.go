@@ -37,7 +37,7 @@ func compileSubRuleRegistry(definition string, base nativeRuleCompiler) (nativeR
 			bytes += len(line)
 		}
 	}
-	if total > 2000 || bytes > 256*1024 {
+	if total > maxRuntimeRules || bytes > maxRuntimeRuleBytes {
 		return nil, nil, "rule_limit"
 	}
 	registry := map[string][]C.Rule{}

@@ -12,7 +12,6 @@ internal class ImportFormState(initial: ImportDraft) {
     var subscription by mutableStateOf(initial.subscription)
     var name by mutableStateOf("")
     var nameEdited = false
-    var review by mutableStateOf(false)
     var visible by mutableStateOf(false)
     var agent by mutableStateOf(DEFAULT_SUBSCRIPTION_UA)
     var error by mutableStateOf<String?>(null)
@@ -34,8 +33,7 @@ internal class ImportFormState(initial: ImportDraft) {
                     tr(R.string.enter_a_complete_https_subscription_link_w)
                 else -> null
             }
-        if (error == null) {
-            if (review) onSubmit(name.trim(), content, subscription) else review = true
-        }
+        // One explicit tap downloads: the page already shows the host the link points to.
+        if (error == null) onSubmit(name.trim(), content, subscription)
     }
 }

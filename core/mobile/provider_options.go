@@ -38,13 +38,11 @@ func canonicalProviderOptions(input map[string]any, kind string) map[string]any 
 			source, _ = m["path"].(string)
 		}
 		if source != "" {
-			if u, e := url.Parse(source); e == nil {
-				switch strings.ToLower(path.Ext(u.Path)) {
-				case ".mrs":
-					m["format"] = "mrs"
-				case ".list", ".txt":
-					m["format"] = "text"
-				}
+			// Only the binary format is taken from the name. Text and YAML are
+			// told apart by content when the body arrives: many ".txt" rule
+			// lists are YAML payload documents.
+			if u, e := url.Parse(source); e == nil && strings.ToLower(path.Ext(u.Path)) == ".mrs" {
+				m["format"] = "mrs"
 			}
 		}
 	}

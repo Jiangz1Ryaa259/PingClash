@@ -1,0 +1,16 @@
+<!-- Single-colour badge for Android 13+ themed icons: the prompt is cut out of the card. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:pivotX="54" android:pivotY="51.5" android:scaleX="0.78" android:scaleY="0.78"
+        android:translateY="2.5">
+        <path android:strokeColor="#FFFFFF" android:strokeWidth="5"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:fillColor="@android:color/transparent"
+            android:pathData="M39,13 L54,32 L69,13" />
+        <path android:fillColor="#FFFFFF" android:fillType="evenOdd"
+            android:pathData="M44,32 H64 A13,13 0 0 1 77,45 V77 A13,13 0 0 1 64,90 H44 A13,13 0 0 1 31,77 V45 A13,13 0 0 1 44,32 Z
+                M40.2,55.1 L46.9,61 L40.2,66.9 L43.8,71.1 L54.7,61 L43.8,50.9 Z
+                M56,68.25 H67 A2.75,2.75 0 0 1 67,73.75 H56 A2.75,2.75 0 0 1 56,68.25 Z" />
+    </group>
+</vector>

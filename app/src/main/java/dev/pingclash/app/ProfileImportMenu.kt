@@ -8,18 +8,20 @@ import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,7 +44,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
-/** Accordion panels unfold from the FAB upward; no modal sheet or input-blocking scrim. */
+/**
+ * The add button unfolds a menu above it, origami-style: one strip per way to add a profile,
+ * unfolding one after another from the button upward. Unfolded, the strips meet as one rounded card
+ * in three groups (links, text and files, QR codes). No modal sheet or input-blocking scrim.
+ */
 @Composable
 internal fun ProfileImportMenu(
     compact: Boolean,
@@ -63,11 +69,7 @@ internal fun ProfileImportMenu(
     }
     androidx.activity.compose.BackHandler(expanded) { expanded = false }
     LaunchedEffect(locked) { if (locked) expanded = false }
-    Column(
-        modifier.widthIn(max = 300.dp),
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
+    Column(modifier.widthIn(max = 300.dp), horizontalAlignment = Alignment.End) {
         if (present)
             ImportMethod.entries.forEachIndexed { index, method ->
                 OrigamiPanel(index, method, expanded, !locked && expanded) {
@@ -75,25 +77,28 @@ internal fun ProfileImportMenu(
                     onImport(method)
                 }
             }
-        Spacer(Modifier.height(if (expanded) 8.dp else 0.dp))
+        Spacer(Modifier.height(if (expanded) 10.dp else 0.dp))
         ExtendedFloatingActionButton(
             onClick = { if (!locked) expanded = !expanded },
             expanded = !compact || expanded,
-            icon = { AppGlyph(if (expanded) BACK_GLYPH else PcIcon.Add) },
+            icon = { AppGlyph(if (expanded) PcIcon.Minus else PcIcon.Add) },
             text = { Text(tr(if (expanded) R.string.cancel else R.string.add_subscription)) },
             modifier =
                 Modifier.testTag("profile-add").semantics {
                     contentDescription = tr(R.string.add_subscription)
                     if (locked) disabled()
                 },
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            shape = RoundedCornerShape(28.dp),
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
         )
     }
 }
 
 /**
- * Paper-strip origami: panels unfold one after another from the button upward, alternating crease
- * direction, with a slight overshoot and a crease shadow that lifts as each panel opens.
+ * Paper-strip origami: strips unfold one after another from the button upward, alternating crease
+ * direction, with a slight overshoot and a crease shadow that lifts as each one opens. The first
+ * strip of a group carries the grey band that separates it from the group above.
  */
 @Composable
 private fun OrigamiPanel(
@@ -106,7 +111,8 @@ private fun OrigamiPanel(
     val motion = LocalMotionAllowed.current
     var entered by remember { mutableStateOf(false) }
     LaunchedEffect(expanded) { entered = expanded }
-    val order = ImportMethod.entries.size - 1 - index
+    val methods = ImportMethod.entries
+    val order = methods.size - 1 - index
     val unfold by
         animateFloatAsState(
             if (entered) 1f else 0f,
@@ -116,36 +122,64 @@ private fun OrigamiPanel(
             label = "import-fold",
         )
     val crease = if (order % 2 == 0) -1f else 1f
+    val radius = 16.dp
+    val shape =
+        RoundedCornerShape(
+            topStart = if (index == 0) radius else 0.dp,
+            topEnd = if (index == 0) radius else 0.dp,
+            bottomStart = if (index == methods.lastIndex) radius else 0.dp,
+            bottomEnd = if (index == methods.lastIndex) radius else 0.dp,
+        )
+    val groupStart = index > 0 && methods[index - 1].section != method.section
     Surface(
-        onClick = onClick,
-        enabled = enabled,
-        shape = UiCorners.Compact,
+        shape = shape,
         color = Panel.copy(alpha = .98f),
-        border = BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier =
-            Modifier.width(248.dp)
-                .height(48.dp)
-                .graphicsLayer {
-                    transformOrigin = TransformOrigin(.5f, 1f)
-                    cameraDistance = 14 * density
-                    rotationX = crease * 88f * (1f - unfold)
-                    alpha = unfold.coerceIn(0f, 1f)
-                    translationY = (1f - unfold).coerceAtLeast(0f) * size.height
-                }
-                .drawWithContent {
-                    drawContent()
-                    val shade = (1f - unfold).coerceIn(0f, 1f) * .32f
-                    if (shade > 0f) drawRect(Color.Black.copy(alpha = shade))
-                }
-                .testTag("import-method-${method.name.lowercase()}"),
+            Modifier.width(264.dp).graphicsLayer {
+                transformOrigin = TransformOrigin(.5f, 1f)
+                cameraDistance = 14 * density
+                rotationX = crease * 88f * (1f - unfold)
+                alpha = unfold.coerceIn(0f, 1f)
+                translationY = (1f - unfold).coerceAtLeast(0f) * size.height
+            },
     ) {
-        Row(
-            Modifier.fillMaxSize().padding(horizontal = 18.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        Column(
+            Modifier.drawWithContent {
+                drawContent()
+                val shade = (1f - unfold).coerceIn(0f, 1f) * .32f
+                if (shade > 0f) drawRect(Color.Black.copy(alpha = shade))
+            }
         ) {
-            AppGlyph(method.glyph, Modifier.size(20.dp))
-            Text(tr(method.title), style = MaterialTheme.typography.bodyMedium)
+            // A thicker band between groups, thin lines within one, as in iOS menus.
+            if (groupStart)
+                Spacer(
+                    Modifier.fillMaxWidth()
+                        .height(7.dp)
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = .06f))
+                )
+            else if (index > 0)
+                HorizontalDivider(
+                    thickness = .5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+            ImportMenuRow(method, enabled, onClick)
+        }
+    }
+}
+
+@Composable
+private fun ImportMenuRow(method: ImportMethod, enabled: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth()
+            .height(48.dp)
+            .fluidClickable(enabled, depth = .98f, onClick = onClick)
+            .padding(horizontal = 16.dp)
+            .testTag("import-method-${method.name.lowercase()}"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(tr(method.title), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+            AppGlyph(method.glyph, Modifier.size(20.dp), MaterialTheme.colorScheme.onSurface)
         }
     }
 }

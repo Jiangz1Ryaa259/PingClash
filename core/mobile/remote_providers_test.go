@@ -102,11 +102,11 @@ func TestRemoteProviderFailuresAreBoundedAndDoNotExposePrivateData(t *testing.T)
 		}
 	}
 	bodies := remoteBodies()
-	// A literal slash is accepted by native domain matching; exercise an
-	// actually unsupported wildcard form instead of a hostname-syntax gate.
 	bodies["rule:domains"] = "payload: ['invalid..domain']"
-	if resolveFixture(t, remoteFixture, bodies)["state"] != "failed" {
-		t.Fatal("unsupported wildcard silently changed")
+	resolved := resolveFixture(t, remoteFixture, bodies)
+	var imported importedProfile
+	if resolved["state"] != "passed" || json.Unmarshal([]byte(ImportProfile(resolved["content"].(string))), &imported) != nil || imported.State != "passed" || imported.ProviderRulesSkipped != 1 {
+		t.Fatal("invalid native rule entry must remain an explicit warning, not reject the subscription")
 	}
 }
 func TestRemoteProviderMembershipFiltersAndNoImplicitFlattening(t *testing.T) {

@@ -51,6 +51,13 @@ data class ClientSettings(
     val solidColor: String = DEFAULT_SOLID_COLOR,
     /** The user's palette: presets they kept plus their own colours; never empty. */
     val solidSwatches: List<String> = DEFAULT_SOLID_SWATCHES,
+    /** Connect after the phone starts, when Android already allows this VPN. */
+    val startOnBoot: Boolean = false,
+    /** Hours between automatic subscription updates; 0 updates only when asked. */
+    val subscriptionHours: Int = DEFAULT_SUBSCRIPTION_HOURS,
+    /** Disconnect on [trustedWifi] networks and connect on any other network. */
+    val wifiAuto: Boolean = false,
+    val trustedWifi: List<String> = emptyList(),
 ) {
     /** A solid background is designed for the light theme; dark mode is off while it is used. */
     val effectiveTheme
@@ -95,6 +102,10 @@ data class ClientSettings(
             put("solidColor", solidColor)
             put("solidPaletteVersion", SOLID_PALETTE_VERSION)
             put("solidSwatches", org.json.JSONArray(solidSwatches))
+            put("startOnBoot", startOnBoot)
+            put("subscriptionHours", subscriptionHours)
+            put("wifiAuto", wifiAuto)
+            put("trustedWifi", JSONArray(trustedWifi))
         }
 
     companion object {
@@ -104,54 +115,74 @@ data class ClientSettings(
             val packages = p.optJSONArray("packages") ?: JSONArray()
             require(packages.length() <= 300)
             return ClientSettings(
-                p.optString("mode", "rule"),
-                p.optInt("mtu", 1500),
-                p.optBoolean("ipv6", true),
-                p.optBoolean("udp", true),
-                p.optString("lan", "direct"),
-                p.optInt("connectTimeout", 10),
-                p.optInt("udpTimeout", 60),
-                p.optInt("maxConnections", 256),
-                p.optString("dnsMode", "tcp"),
-                p.optString("dnsHttps", defaults.dnsHttps),
-                p.optString("appMode", "all"),
-                (0 until packages.length()).map(packages::getString),
-                p.optBoolean("useProviderRules", true),
-                p.optString("customRules"),
-                p.optBoolean("inspectConnections"),
-                p.optString("language", "system"),
-                p.optString("theme", "system"),
-                p.optBoolean("keepUsage"),
-                p.optBoolean("showSpeed", true),
-                p.optBoolean("showTraffic", true),
-                p.optBoolean("showMemory", false),
-                p.optBoolean("showService", true),
-                p.optBoolean("notificationSpeed", true),
-                p.optInt("probeTimeout", 5000),
-                p.optInt("probeConcurrency", 10).let {
-                    if (p.optInt("probeSettingsVersion") < 2 && it == 2) 10 else it
-                },
-                p.optBoolean("unifiedDelay", true),
-                p.optString("delayUrl"),
-                p.optBoolean("autoReconnect", true),
-                p.optBoolean("dynamicColor"),
-                p.optBoolean("reduceEffects"),
-                p.optString("scene", "ocean").takeIf { it in setOf("ocean", "clouds", "none") }
-                    ?: "ocean",
-                p.optBoolean("reduceTransparency"),
-                p.optBoolean("useSubscriptionDns", true),
-                p.optString("solidColor", DEFAULT_SOLID_COLOR).takeIf(::validHexColor)?.takeUnless {
-                    p.optInt("solidPaletteVersion") < SOLID_PALETTE_VERSION &&
-                        it.equals(RETIRED_DOVE_COLOR, ignoreCase = true)
-                } ?: DEFAULT_SOLID_COLOR,
-                p.optJSONArray("solidSwatches")?.let { list ->
-                    migrateSolidSwatches(
-                        (0 until list.length()).map(list::optString),
-                        p.optInt("solidPaletteVersion"),
-                    )
-                } ?: DEFAULT_SOLID_SWATCHES,
-            )
+                    p.optString("mode", "rule"),
+                    p.optInt("mtu", 1500),
+                    p.optBoolean("ipv6", true),
+                    p.optBoolean("udp", true),
+                    p.optString("lan", "direct"),
+                    p.optInt("connectTimeout", 10),
+                    p.optInt("udpTimeout", 60),
+                    p.optInt("maxConnections", 256),
+                    p.optString("dnsMode", "tcp"),
+                    p.optString("dnsHttps", defaults.dnsHttps),
+                    p.optString("appMode", "all"),
+                    (0 until packages.length()).map(packages::getString),
+                    p.optBoolean("useProviderRules", true),
+                    p.optString("customRules"),
+                    p.optBoolean("inspectConnections"),
+                    p.optString("language", "system"),
+                    p.optString("theme", "system"),
+                    p.optBoolean("keepUsage"),
+                    p.optBoolean("showSpeed", true),
+                    p.optBoolean("showTraffic", true),
+                    p.optBoolean("showMemory", false),
+                    p.optBoolean("showService", true),
+                    p.optBoolean("notificationSpeed", true),
+                    p.optInt("probeTimeout", 5000),
+                    p.optInt("probeConcurrency", 10).let {
+                        if (p.optInt("probeSettingsVersion") < 2 && it == 2) 10 else it
+                    },
+                    p.optBoolean("unifiedDelay", true),
+                    p.optString("delayUrl"),
+                    p.optBoolean("autoReconnect", true),
+                    p.optBoolean("dynamicColor"),
+                    p.optBoolean("reduceEffects"),
+                    p.optString("scene", "ocean").takeIf { it in SCENES } ?: "ocean",
+                    p.optBoolean("reduceTransparency"),
+                    p.optBoolean("useSubscriptionDns", true),
+                    p.optString("solidColor", DEFAULT_SOLID_COLOR)
+                        .takeIf(::validHexColor)
+                        ?.takeUnless {
+                            p.optInt("solidPaletteVersion") < SOLID_PALETTE_VERSION &&
+                                it.equals(RETIRED_DOVE_COLOR, ignoreCase = true)
+                        } ?: DEFAULT_SOLID_COLOR,
+                    p.optJSONArray("solidSwatches")?.let { list ->
+                        migrateSolidSwatches(
+                            (0 until list.length()).map(list::optString),
+                            p.optInt("solidPaletteVersion"),
+                        )
+                    } ?: DEFAULT_SOLID_SWATCHES,
+                )
+                .withAutomation(p)
         }
+
+        /** Start on boot, background updates and the Wi-Fi rule; unknown values fall back. */
+        private fun ClientSettings.withAutomation(p: JSONObject) =
+            copy(
+                startOnBoot = p.optBoolean("startOnBoot"),
+                subscriptionHours =
+                    p.optInt("subscriptionHours", DEFAULT_SUBSCRIPTION_HOURS).takeIf {
+                        it in SUBSCRIPTION_HOURS
+                    } ?: DEFAULT_SUBSCRIPTION_HOURS,
+                wifiAuto = p.optBoolean("wifiAuto"),
+                trustedWifi =
+                    p.optJSONArray("trustedWifi")?.let { list ->
+                        (0 until minOf(list.length(), MAX_TRUSTED_WIFI))
+                            .map(list::optString)
+                            .filter(::validWifiName)
+                            .distinct()
+                    } ?: emptyList(),
+            )
     }
 }
 
@@ -219,9 +250,23 @@ internal fun validPackageName(name: String) =
         name != "dev.pingclash.app" &&
         name.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+"))
 
+internal const val DEFAULT_SUBSCRIPTION_HOURS = 24
+@Suppress("MagicNumber") // Off, then 6 hours to a week.
+internal val SUBSCRIPTION_HOURS = listOf(0, 6, 12, 24, 48, 72, 168)
+internal const val MAX_TRUSTED_WIFI = 32
+
+/** A Wi-Fi network name as Android reports it: 1 to 32 bytes, no control characters. */
+internal fun validWifiName(name: String) =
+    name.toByteArray().size in 1..MAX_SSID_BYTES && name.none { it.isISOControl() }
+
+private const val MAX_SSID_BYTES = 32
+
+/** "image" is the user's own picture, stored by [CustomBackground]. */
+internal val SCENES = setOf("ocean", "clouds", "none", "image")
+
 internal fun validateClientSettings(value: ClientSettings) {
     require(
-        value.scene in setOf("ocean", "clouds", "none") &&
+        value.scene in SCENES &&
             validHexColor(value.solidColor) &&
             value.solidSwatches.size in 1..MAX_SOLID_SWATCHES &&
             value.solidSwatches.all(::validHexColor) &&
@@ -271,5 +316,17 @@ internal fun validateClientSettings(value: ClientSettings) {
             value.probeConcurrency in 1..16
     ) {
         tr(R.string.display_or_latency_options_are_invalid_or)
+    }
+    validateAutomation(value)
+}
+
+private fun validateAutomation(value: ClientSettings) {
+    require(
+        value.subscriptionHours in SUBSCRIPTION_HOURS &&
+            value.trustedWifi.size <= MAX_TRUSTED_WIFI &&
+            value.trustedWifi.all(::validWifiName) &&
+            value.trustedWifi.distinct().size == value.trustedWifi.size
+    ) {
+        tr(R.string.ui_auto_invalid)
     }
 }

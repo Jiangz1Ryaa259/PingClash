@@ -138,7 +138,7 @@ class ProviderDownloadTest {
     fun largeRuleSourceImportsReloadsAndReportsSpecificFailures() {
         SubscriptionFixture().use { fixture ->
             fixture.bodies["/large-rules"] =
-                "payload:\n" + (0 until 100000).joinToString("\n") { " - '+.host$it.example.test'" }
+                "payload:\n" + (0 until 320000).joinToString("\n") { " - '+.host$it.example.test'" }
             assertTrue(fixture.bodies.getValue("/large-rules").toByteArray().size > MAX_FEED_BYTES)
             val raw =
                 """

@@ -151,14 +151,14 @@ func compileRules(lines []string) ([]outboundRule, int, string) {
 type nativeRuleCompiler func(string, string, string, []string) (C.Rule, string)
 
 func compileRulesUsing(lines []string, leaf nativeRuleCompiler) ([]outboundRule, int, string) {
-	if len(lines) > 2000 {
+	if len(lines) > maxRuntimeRules {
 		return nil, 0, "rule_limit"
 	}
 	total := 0
 	rules := []outboundRule{}
 	for i, line := range lines {
 		total += len(line)
-		if total > 256*1024 || len(line) > 2048 {
+		if total > maxRuntimeRuleBytes || len(line) > 2048 {
 			return nil, i + 1, "rule_limit"
 		}
 		line = strings.TrimSpace(line)

@@ -165,26 +165,28 @@ class InteractionUpgradeTest {
     }
 
     @Test
-    fun invalidImportAndReviewCannotDownloadBeforeConfirmation() {
+    fun invalidLinksNeverDownloadAndTheHostIsShownBeforeTheOneTap() {
         var submits = 0
         fixture { ImportDialog(AppUiState(), {}, onSubmit = { _, _, _ -> submits++ }) }
         compose
             .onNodeWithTag("subscription-content")
             .performTextInput("http://fixture.invalid/feed")
         hideFixtureKeyboard()
-        compose.onNodeWithText("下一步").performScrollTo().performClick()
+        compose.onNodeWithTag("import-submit").performScrollTo().performClick()
         assertEquals(0, submits)
         compose
             .onNodeWithText(tr(R.string.enter_a_complete_https_subscription_link_w))
             .assertExists()
+        // A loose but valid link: an underscore host, a pipe and a provider's #name.
         compose
             .onNodeWithTag("subscription-content")
-            .performTextReplacement("https://fixture.invalid/feed")
+            .performTextReplacement("https://my_sub.fixture.invalid/feed?a=1|2#Airport")
         hideFixtureKeyboard()
-        compose.onNodeWithText("下一步").performScrollTo().performClick()
-        compose.onNodeWithText("确认导入").assertExists()
+        compose
+            .onNodeWithText(tr(R.string.ui_import_downloads_from, "my_sub.fixture.invalid"))
+            .assertExists()
         assertEquals(0, submits)
-        compose.onNodeWithText("下载并导入").performScrollTo().performClick()
+        compose.onNodeWithTag("import-submit").performScrollTo().performClick()
         assertEquals(1, submits)
     }
 

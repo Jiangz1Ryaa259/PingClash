@@ -158,9 +158,10 @@ func newImportGraph(candidates []any, root any, profile *importedProfile) *impor
 		profile.GroupsUnsupported++
 	}
 	picks, _ := object["pingclash-selections"].(map[string]any)
-	if len(list) > 64 {
-		list = nil
-		profile.GroupsUnsupported++
+	// Past the limit only the extra groups are dropped; the rest keep working.
+	if extra := len(list) - maxImportGroups; extra > 0 {
+		list = list[:maxImportGroups]
+		profile.GroupsUnsupported += extra
 	}
 	for _, raw := range list {
 		m, ok := raw.(map[string]any)
@@ -172,7 +173,7 @@ func newImportGraph(candidates []any, root any, profile *importedProfile) *impor
 		name, _ := options["name"].(string)
 		kind, _ := options["type"].(string)
 		members, ok := options["proxies"].([]any)
-		if name == "" || len(name) > 512 || hasControl(name) || !ok || len(members) == 0 || len(members) > 500 {
+		if name == "" || len(name) > 512 || hasControl(name) || !ok || len(members) == 0 || len(members) > maxImportNodes {
 			profile.GroupsUnsupported++
 			continue
 		}

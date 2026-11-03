@@ -151,6 +151,44 @@ class ResponsiveTasksTest {
         }
     }
 
+    @Test
+    fun finishedLatencyResultsSurviveConnectingAndDisconnecting() {
+        val before = app.repository.data.value
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        ControlledServers().use { fast ->
+            HangingEndpoint().use { slow ->
+                val p = fixture(fast, slow, before)
+                try {
+                    model.testProxies(p, listOf("Ready"))
+                    compose.waitUntil(20000) {
+                        !model.proxyTests.value.running &&
+                            model.proxyTests.value.values.isNotEmpty()
+                    }
+                    val results = model.proxyTests.value.values
+                    compose.onNodeWithTag("nav-0").performClick()
+                    compose.onNodeWithTag("vpn-power").assertIsEnabled().performClick()
+                    approveSyntheticVpn(device, compose)
+                    compose.waitUntil(20000) {
+                        VpnRuntime.state.value.phase in setOf("established", "error")
+                    }
+                    assertEquals("results lost on connect", results, model.proxyTests.value.values)
+                    compose.onNodeWithTag("vpn-power").assertIsEnabled().performClick()
+                    compose.waitUntil(10000) { !VpnRuntime.state.value.active }
+                    compose.waitForIdle()
+                    assertEquals(
+                        "results lost on disconnect",
+                        results,
+                        model.proxyTests.value.values,
+                    )
+                } finally {
+                    VpnRuntime.disconnect(app)
+                    compose.waitUntil(10000) { !VpnRuntime.state.value.active }
+                    restore(p, before)
+                }
+            }
+        }
+    }
+
     private fun socks(fast: ControlledServers) =
         JSONObject()
             .put("name", "Ready")

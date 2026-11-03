@@ -100,7 +100,7 @@ func TestProviderRuleFailuresAreSpecificAndPrivate(t *testing.T) {
 	text := `proxies: [{name: local, type: socks5, server: example.invalid, port: 1080}]
 rule-providers: {third: {type: http, url: https://example.invalid/CANARY-SUB-TOKEN-1234, behavior: domain}}
 rules: ['RULE-SET,third,DIRECT', 'MATCH,REJECT']`
-	cases := map[string]string{"<!doctype html><html>CANARY-PASSWORD-1234</html>": "provider_html", "proxies: []": "provider_rule_document", "payload: [123]": "provider_rule_syntax", "payload: ['invalid..domain']": "provider_rule_syntax"}
+	cases := map[string]string{"<!doctype html><html>CANARY-PASSWORD-1234</html>": "provider_html", "proxies: []": "provider_rule_document", "payload: [123]": "provider_rule_syntax"}
 	for body, code := range cases {
 		r := resolveFixture(t, text, map[string]string{"rule:third": body})
 		if r["code"] != code || r["index"] != float64(1) || r["kind"] != "rule" {

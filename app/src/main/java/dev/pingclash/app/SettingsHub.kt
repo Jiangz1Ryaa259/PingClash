@@ -2,14 +2,15 @@
 package dev.pingclash.app
 
 import android.content.Intent
-import android.provider.Settings
 import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -18,12 +19,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import dev.pingclash.mobile.Mobile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -99,29 +101,8 @@ internal fun SettingsHub(
             val listPage = shown in setOf("apps", "connections")
             val scroll = rememberScrollState()
             val heading: @Composable () -> Unit = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (shown.isNotEmpty())
-                        IconButton(
-                            { back() },
-                            Modifier.testTag("settings-back").semantics {
-                                contentDescription = tr(R.string.back)
-                            },
-                        ) {
-                            AppGlyph(BACK_GLYPH)
-                        }
-                    PageHeading(
-                        settingsTitle(shown),
-                        Modifier.weight(1f),
-                        if (shown.isEmpty()) "page-title-settings" else "settings-detail-title",
-                    )
-                    if (textDirty)
-                        TextButton(
-                            { model.clientSettings(draft, dns.trim(), target.trim()) },
-                            enabled = !locked,
-                            modifier = Modifier.testTag("settings-save"),
-                        ) {
-                            Text(tr(R.string.save_settings))
-                        }
+                SettingsHeading(shown, textDirty, !locked, ::back) {
+                    model.clientSettings(draft, dns.trim(), target.trim())
                 }
             }
             Column(
@@ -134,9 +115,10 @@ internal fun SettingsHub(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 if (!listPage) heading()
+                val editor = SettingsDraft(draft, !locked, ::changeDraft) { draft = it }
                 when (shown) {
                     "" ->
-                        SettingsMenu { id ->
+                        SettingsMenu(draft) { id ->
                             when (id) {
                                 "diagnosis" -> onDiagnose()
                                 "terminal" ->
@@ -147,304 +129,20 @@ internal fun SettingsHub(
                             }
                         }
                     "connections" -> ConnectionsPanel(vpn, model, heading)
-                    "dns" ->
-                        SettingsCard {
-                            SettingSwitch(
-                                tr(R.string.use_subscription_dns),
-                                draft.useSubscriptionDns,
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(useSubscriptionDns = it))
-                            }
-                            Choices(
-                                tr(R.string.mode),
-                                draft.dnsMode,
-                                listOf("tcp" to "DNS over TCP", "https" to "DNS over HTTPS"),
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(dnsMode = it))
-                            }
-                            SettingField("VPN DNS", dns, !locked) { if (it.length <= 80) dns = it }
-                            if (draft.dnsMode == "https")
-                                SettingField(
-                                    tr(R.string.encrypted_dns_url),
-                                    draft.dnsHttps,
-                                    !locked,
-                                ) {
-                                    if (it.length <= 2048) draft = draft.copy(dnsHttps = it)
-                                }
-                        }
-                    "network" -> {
-                        SettingsCard {
-                            SettingSwitch(
-                                tr(R.string.auto_reconnect),
-                                draft.autoReconnect,
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(autoReconnect = it))
-                            }
-
-                            SettingSwitch(tr(R.string.enable_ipv6), draft.ipv6, !locked) {
-                                changeDraft(draft.copy(ipv6 = it))
-                            }
-
-                            SettingSwitch(tr(R.string.enable_udp), draft.udp, !locked) {
-                                changeDraft(draft.copy(udp = it))
-                            }
-                            NumberSetting("MTU", draft.mtu, 1280..9000, !locked) {
-                                changeDraft(draft.copy(mtu = it))
-                            }
-                            NumberSetting(
-                                tr(R.string.connect_timeout_seconds),
-                                draft.connectTimeout,
-                                3..60,
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(connectTimeout = it))
-                            }
-                            NumberSetting(
-                                tr(R.string.udp_idle_timeout_seconds),
-                                draft.udpTimeout,
-                                10..300,
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(udpTimeout = it))
-                            }
-                            NumberSetting(
-                                tr(R.string.max_active_connections),
-                                draft.maxConnections,
-                                16..512,
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(maxConnections = it))
-                            }
-                        }
-                        SettingsCard {
-                            SettingField(tr(R.string.diagnostic_test_url), target, !locked) {
-                                if (it.length <= 2048) target = it
-                            }
-                            SettingField(
-                                tr(R.string.latency_target_empty_follows_group),
-                                draft.delayUrl,
-                                !locked,
-                            ) {
-                                if (it.length <= 2048) draft = draft.copy(delayUrl = it)
-                            }
-                            NumberSetting(
-                                tr(R.string.test_timeout_milliseconds),
-                                draft.probeTimeout,
-                                1000..20000,
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(probeTimeout = it))
-                            }
-                            NumberSetting(
-                                tr(R.string.concurrent_tests),
-                                draft.probeConcurrency,
-                                1..16,
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(probeConcurrency = it))
-                            }
-                            SettingSwitch(tr(R.string.unified_delay), draft.unifiedDelay, !locked) {
-                                changeDraft(draft.copy(unifiedDelay = it))
-                            }
-                        }
-                    }
-                    "lan" ->
-                        SettingsCard {
-                            Choices(
-                                tr(R.string.local_network),
-                                draft.lan,
-                                listOf(
-                                    "proxy" to tr(R.string.proxy_lan),
-                                    "direct" to tr(R.string.direct_lan),
-                                    "block" to tr(R.string.block_lan),
-                                ),
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(lan = it))
-                            }
-                        }
-                    "rules" -> {
-                        SettingsCard {
-                            ModeSegments(draft.mode, !locked) { changeDraft(draft.copy(mode = it)) }
-
-                            SettingSwitch(
-                                tr(R.string.include_provider_rules),
-                                draft.useProviderRules,
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(useProviderRules = it))
-                            }
-                            StatLine(tr(R.string.profiles), data.activeProfile?.name ?: "—")
-                            TextButton(
-                                { showProviderRules = true },
-                                enabled = !data.activeProfile?.rules.isNullOrEmpty(),
-                            ) {
-                                Text((tr(R.string.view_provider_rules)))
-                            }
-                        }
-                        SettingsCard {
-                            OutlinedTextField(
-                                draft.customRules,
-                                {
-                                    if (it.toByteArray().size <= 64 * 1024)
-                                        draft = draft.copy(customRules = it)
-                                },
-                                Modifier.fillMaxWidth()
-                                    .heightIn(min = 200.dp, max = 400.dp)
-                                    .testTag("custom-rules"),
-                                enabled = !locked,
-                                label = { Text((tr(R.string.custom_rules))) },
-                                shape = UiCorners.Compact,
-                            )
-                        }
-                    }
+                    "dns" -> DnsPage(editor, dns) { dns = it }
+                    "network" -> NetworkPage(editor, target) { target = it }
+                    "lan" -> LanPage(editor)
+                    "rules" -> RulesPage(editor, data.activeProfile) { showProviderRules = true }
                     "apps" -> AppRoutingPanel(draft, !locked, heading) { changeDraft(it) }
-                    "appearance" -> {
-                        SettingsCard {
-                            Choices(
-                                tr(R.string.language),
-                                data.client.language,
-                                listOf(
-                                    "system" to tr(R.string.system_default),
-                                    "zh" to tr(R.string.text),
-                                    "en" to tr(R.string.english),
-                                ),
-                                true,
-                            ) {
-                                model.appearance(it, data.client.theme)
-                            }
-                            // A solid background is always light, so it has no theme choice.
-                            if (data.client.scene != "none")
-                                ThemePicker(data.client.theme) {
-                                    model.appearance(data.client.language, it)
-                                }
-
-                            SettingSwitch(
-                                tr(R.string.ui_reduce_effects),
-                                data.client.reduceEffects,
-                                true,
-                            ) {
-                                model.appearance(
-                                    data.client.language,
-                                    data.client.theme,
-                                    reduceEffects = it,
-                                )
-                            }
-
-                            Choices(
-                                tr(R.string.ui_scene),
-                                data.client.scene,
-                                listOf(
-                                    "ocean" to tr(R.string.ui_scene_ocean),
-                                    "clouds" to tr(R.string.ui_scene_clouds),
-                                    "none" to tr(R.string.ui_scene_none),
-                                ),
-                                true,
-                            ) {
-                                model.appearance(
-                                    data.client.language,
-                                    data.client.theme,
-                                    scenery = ScenePreferenceChange(scene = it),
-                                )
-                            }
-                            if (data.client.scene == "none")
-                                SolidColorPicker(
-                                    data.client.solidColor,
-                                    data.client.solidSwatches,
-                                ) { color, swatches ->
-                                    model.appearance(
-                                        data.client.language,
-                                        data.client.theme,
-                                        scenery =
-                                            ScenePreferenceChange(
-                                                solidColor = color,
-                                                solidSwatches = swatches,
-                                            ),
-                                    )
-                                }
-                            SettingSwitch(
-                                tr(R.string.ui_reduce_transparency),
-                                data.client.reduceTransparency,
-                                true,
-                            ) {
-                                model.appearance(
-                                    data.client.language,
-                                    data.client.theme,
-                                    scenery = ScenePreferenceChange(reduceTransparency = it),
-                                )
-                            }
-                        }
-                    }
-                    "control" -> {
-                        SettingsCard {
-                            TextButton({
-                                runCatching {
-                                    context.startActivity(Intent(Settings.ACTION_VPN_SETTINGS))
-                                }
-                            }) {
-                                Text((tr(R.string.system_vpn_settings)))
-                            }
-                            TextButton({
-                                runCatching {
-                                    context.startActivity(
-                                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                                            .putExtra(
-                                                Settings.EXTRA_APP_PACKAGE,
-                                                context.packageName,
-                                            )
-                                    )
-                                }
-                            }) {
-                                Text(tr(R.string.notification_settings))
-                            }
-                            SettingSwitch(
-                                tr(R.string.show_speed_in_notification),
-                                draft.notificationSpeed,
-                                appearanceEditable,
-                            ) {
-                                changeDraft(draft.copy(notificationSpeed = it))
-                            }
-                            TextButton({
-                                runCatching {
-                                    context.startActivity(
-                                        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                                    )
-                                }
-                            }) {
-                                Text((tr(R.string.system_battery_settings)))
-                            }
-
-                            TextButton({ reset = true }, enabled = !locked) {
-                                Text((tr(R.string.restore_defaults)))
-                            }
-                        }
-                    }
-                    "privacy" -> {
-                        SettingsCard {
-                            SettingSwitch(
-                                tr(R.string.show_destinations_session_memory_only),
-                                draft.inspectConnections,
-                                !locked,
-                            ) {
-                                changeDraft(draft.copy(inspectConnections = it))
-                            }
-                        }
-                        SettingsCard {
-                            SettingSwitch(
-                                tr(R.string.keep_aggregate_usage_on_this_device),
-                                draft.keepUsage,
-                                appearanceEditable,
-                            ) {
-                                changeDraft(draft.copy(keepUsage = it))
-                            }
-                            OutlinedButton(model::resetUsage, enabled = !locked) {
-                                Text(tr(R.string.clear_usage_totals))
-                            }
-                        }
-                    }
+                    "appearance" -> AppearancePage(data, model)
+                    "control" -> ControlPage(editor, appearanceEditable) { reset = true }
+                    "automation" ->
+                        AutomationPage(
+                            SettingsDraft(draft, appearanceEditable, ::changeDraft) { draft = it },
+                            appearanceEditable,
+                        )
+                    "backup" -> BackupPage(model, !uiBusy, vpn.active)
+                    "privacy" -> PrivacyPage(editor, appearanceEditable, model::resetUsage)
                     "about" -> AboutPanel(model.nativeReady)
                 }
                 Spacer(Modifier.height(8.dp))
@@ -515,75 +213,15 @@ internal fun Choices(
     enabled: Boolean,
     onChange: (String) -> Unit,
 ) {
-    Text((title), color = Muted, style = MaterialTheme.typography.labelLarge)
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-        choices.forEachIndexed { index, (id, name) ->
-            SegmentedButton(
-                selected = value == id,
-                onClick = { if (value != id) onChange(id) },
-                enabled = enabled,
-                shape = SegmentedButtonDefaults.itemShape(index, choices.size),
-                modifier = Modifier.testTag("choice-$title-$id"),
-                // The filled segment marks the choice; a checkmark would cost a line wrap.
-                icon = {},
-            ) {
-                // One line in every language: equal segments, shrink rather than wrap.
-                val style = LocalTextStyle.current
-                BasicText(
-                    name,
-                    style = style.copy(color = LocalContentColor.current),
-                    maxLines = 1,
-                    autoSize =
-                        TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = style.fontSize),
-                )
-            }
-        }
+    // Segments suit a short fixed set; a longer list opens as a menu instead.
+    if (choices.size > 3) {
+        PopUpChoice(title, value, choices, enabled, onChange)
+        return
     }
-}
-
-@Composable
-internal fun SettingField(
-    title: String,
-    value: String,
-    enabled: Boolean,
-    onChange: (String) -> Unit,
-) {
-    OutlinedTextField(
-        value,
-        onChange,
-        Modifier.fillMaxWidth().testTag("field-$title"),
-        enabled = enabled,
-        singleLine = true,
-        label = { Text((title)) },
-        shape = UiCorners.Compact,
-    )
-}
-
-@Composable
-private fun NumberSetting(
-    title: String,
-    value: Int,
-    range: IntRange,
-    enabled: Boolean,
-    onChange: (Int) -> Unit,
-) {
-    var position by remember(value) { mutableFloatStateOf(value.toFloat()) }
-    val step = if (range.first == 1000 && range.last == 20000) 1000 else 1
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, Modifier.weight(1f), color = Muted)
-        Text(position.toInt().toString(), style = MaterialTheme.typography.bodyMedium)
+    Column(Modifier.padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(title, style = MaterialTheme.typography.bodyLarge)
+        SegmentedControl(choices, value, enabled, { "choice-$title-$it" }, onChange)
     }
-    Slider(
-        value = position,
-        onValueChange = { position = (it / step).toInt().times(step).coerceIn(range).toFloat() },
-        onValueChangeFinished = {
-            val next = position.toInt()
-            if (next != value) onChange(next)
-        },
-        enabled = enabled,
-        valueRange = range.first.toFloat()..range.last.toFloat(),
-        modifier = Modifier.fillMaxWidth().testTag("number-$title"),
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -642,15 +280,23 @@ private fun ConnectionsPanel(
 
 @Composable
 private fun ConnectionControls(count: Int, vpn: VpnUiState, model: AppViewModel) {
-    SettingsCard {
-        StatLine(tr(R.string.active_connections), count.toString())
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton({ model.closeConnection(0) }, enabled = count > 0) {
-                Text(tr(R.string.close_all_connections))
-            }
-            OutlinedButton(model::restartVpn, enabled = vpn.stage == VpnPhase.ESTABLISHED) {
-                Text(tr(R.string.reconnect))
-            }
+    SettingsSection {
+        InfoRow(tr(R.string.active_connections), count.toString())
+        RowDivider(underIcons = false)
+        ActionRow(
+            tr(R.string.reconnect),
+            "connections-reconnect",
+            enabled = vpn.stage == VpnPhase.ESTABLISHED,
+            onClick = model::restartVpn,
+        )
+        RowDivider(underIcons = false)
+        ActionRow(
+            tr(R.string.close_all_connections),
+            "connections-close-all",
+            color = MaterialTheme.colorScheme.error,
+            enabled = count > 0,
+        ) {
+            model.closeConnection(0)
         }
     }
 }
@@ -670,13 +316,13 @@ internal data class ConnectionRow(
 private fun AboutPanel(ready: Boolean) {
     val context = LocalContext.current
     var license by remember { mutableStateOf<String?>(null) }
-    SettingsCard {
-        Text("PingClash", style = MaterialTheme.typography.titleLarge)
-        Text(buildIdentity() + " · GPL-3.0", color = Muted)
-        StatLine(tr(R.string.proxy_core), if (ready) "mihomo v1.19.32" else "—")
-
-        listOf("NOTICE.md", "GPL-3.0.txt", "Apache-2.0.txt").forEach { file ->
-            TextButton({ license = file }) { Text(file) }
+    AboutHeader()
+    SettingsSection { InfoRow(tr(R.string.proxy_core), if (ready) "mihomo v1.19.32" else "—") }
+    SettingsSection(tr(R.string.ui_group_licenses)) {
+        val files = listOf("NOTICE.md", "GPL-3.0.txt", "Apache-2.0.txt")
+        files.forEachIndexed { index, file ->
+            if (index > 0) RowDivider(underIcons = false)
+            NavRow(file, "license-$file") { license = file }
         }
     }
     CrashReportCard()
@@ -699,6 +345,37 @@ private fun AboutPanel(ready: Boolean) {
                 )
             },
             confirmButton = { TextButton({ license = null }) { Text((tr(R.string.close))) } },
+        )
+    }
+}
+
+/** The app's tile, name and build, centred at the top of About as on iOS. */
+@Composable
+private fun AboutHeader() {
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            Modifier.size(76.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(Color.White)
+                .border(.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(18.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            // The launcher foreground is drawn on a 108 dp canvas around a 66 dp safe zone.
+            Image(
+                painterResource(R.drawable.ic_launcher_foreground),
+                null,
+                Modifier.requiredSize(124.dp),
+            )
+        }
+        Text("PingClash", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            buildIdentity() + " · GPL-3.0",
+            color = Muted,
+            style = MaterialTheme.typography.bodyMedium,
         )
     }
 }

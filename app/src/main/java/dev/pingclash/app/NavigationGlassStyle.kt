@@ -31,7 +31,9 @@ internal fun navigationGlassStyle(dark: Boolean) =
 
 internal fun navLabelColor(dark: Boolean) = if (dark) Color.White else Color.Black
 
-internal fun navAccentColor(dark: Boolean) = if (dark) Color(0xFFA0D1D3) else Color(0xFF123D52)
+// Deeper (light) and paler (dark) than the accent: the label must hold 4.5:1 on glass over any
+// page.
+internal fun navAccentColor(dark: Boolean) = if (dark) Color(0xFFA4D0FF) else Color(0xFF00377A)
 
 // Concentrate legibility under the fixed labels while leaving the rim translucent.
 internal fun navReadabilityTint(dark: Boolean) =

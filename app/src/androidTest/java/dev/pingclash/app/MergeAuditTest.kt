@@ -121,7 +121,7 @@ class MergeAuditTest {
                 archive("config.yaml" to "{}", "../escape" to "CANARY-ESCAPE"),
                 archive("config.yaml" to "{}", "config.json" to "{}"),
                 archive("config.yaml" to "{}", "./config.yaml" to "{}"),
-                archive("config.yaml" to "x".repeat(2 * 1024 * 1024 + 1)),
+                archive("config.yaml" to "x".repeat(MAX_FEED_BYTES + 1)),
             )
         invalid.forEach { bytes ->
             assertTrue(runCatching { ProfileDocument.read(bytes.inputStream()) }.isFailure)

@@ -79,7 +79,6 @@ class ImportRecoveryTest {
             open("url")
             compose.onNodeWithTag("subscription-content").performTextInput(fixture.address("/slow"))
             hideFixtureKeyboard()
-            compose.onNodeWithText(tr(R.string.ui_next)).performScrollTo().performClick()
             compose
                 .onNodeWithText(tr(R.string.download_and_import))
                 .performScrollTo()

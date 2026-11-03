@@ -35,7 +35,7 @@ func TestImportRejectsAliasesDuplicatesMultipleDocumentsAndOversize(t *testing.T
 		"type: anytls\ntype: socks5\nserver: localhost\nport: 443\npassword: test",
 		"type: anytls\nserver: localhost\nport: 443\npassword: test\n---\nother: document",
 		strings.Repeat("x", 2*1024*1024+1),
-		"[" + strings.Repeat("x,", 50001) + "x]",
+		"[" + strings.Repeat("x,", maxYAMLElements+1) + "x]",
 	} {
 		var profile importedProfile
 		if json.Unmarshal([]byte(ImportProfile(input)), &profile) != nil || profile.Code != "profile_invalid" {

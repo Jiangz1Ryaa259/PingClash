@@ -10,7 +10,7 @@ import (
 // Decode data only. URI feeds are never treated as URLs to fetch recursively.
 func providerProxyNodes(body string, sourceIndex int) ([]any, error) {
 	invalid := errors.New("provider_payload")
-	if len(body) == 0 || len(body) > 2*1024*1024 || strings.Count(body, "\n") > 50000 {
+	if len(body) == 0 || len(body) > maxImportNodeBytes || strings.Count(body, "\n") > maxImportRules {
 		return nil, invalid
 	}
 	text, _ := unwrapSubscription(body)
@@ -23,13 +23,13 @@ func providerProxyNodes(body string, sourceIndex int) ([]any, error) {
 			}
 			node, err := parseShareLink(line)
 			if err != nil {
-				if len(nodes) >= 500 {
+				if len(nodes) >= maxImportNodes {
 					return nil, invalid
 				}
 				nodes = append(nodes, map[string]any{"name": "Provider " + strconv.Itoa(sourceIndex) + " / skipped " + strconv.Itoa(len(nodes)+1), "type": "unsupported"})
 				continue
 			}
-			if len(nodes) >= 500 {
+			if len(nodes) >= maxImportNodes {
 				return nil, invalid
 			}
 			if name, _ := node["name"].(string); name == "" {
@@ -51,7 +51,7 @@ func providerProxyNodes(body string, sourceIndex int) ([]any, error) {
 		}
 	}
 	nodes, ok := v.([]any)
-	if !ok || len(nodes) == 0 || len(nodes) > 500 {
+	if !ok || len(nodes) == 0 || len(nodes) > maxImportNodes {
 		return nil, invalid
 	}
 	valid := false

@@ -68,24 +68,24 @@ func compileProviderRuleSet(s storedRuleSet) (*providerRuleMatcher, string) {
 		return nil, "provider_rule_type"
 	}
 	for ordinal, raw := range s.Entries {
-		line := strings.TrimSpace(raw)
+		line, header := unwrapYAMLListLine(strings.TrimSpace(raw))
+		if header {
+			continue
+		}
 		if line == "" || len(line) > 2048 || hasControl(line) {
-			if s.Behavior == "classical" {
-				m.skip(s.Source, ordinal+1, "UNRECOGNIZED", "rule_invalid")
-				continue
-			}
-			return nil, "provider_rule_syntax"
+			m.skip(s.Source, ordinal+1, "UNRECOGNIZED", "rule_invalid")
+			continue
 		}
 		switch s.Behavior {
 		case "domain":
 			// Same builder as Mihomo's domain provider: '+.', '.', and '*' have
 			// their native label semantics, rather than a broad regex conversion.
 			if domains.Insert(line) != nil {
-				return nil, "provider_rule_syntax"
+				m.skip(s.Source, ordinal+1, "DOMAIN", "rule_invalid")
 			}
 		case "ipcidr":
 			if m.networks.AddIpCidrForString(line) != nil {
-				return nil, "provider_rule_syntax"
+				m.skip(s.Source, ordinal+1, "IP-CIDR", "rule_invalid")
 			}
 		case "classical":
 			tp, payload, _, params := RC.ParseRulePayload(line, false)
@@ -139,7 +139,7 @@ func parseStoredRuleSets(raw []byte) (map[string]storedRuleSet, error) {
 		if e != nil || !ok || name == "" || len(name) > 512 || hasControl(name) {
 			return nil, invalid
 		}
-		if _, exists := sets[name]; exists || len(sets) >= 16 {
+		if _, exists := sets[name]; exists || len(sets) >= maxRemoteProviders {
 			return nil, invalid
 		}
 		token, e = d.Token()
@@ -157,7 +157,7 @@ func parseStoredRuleSets(raw []byte) (map[string]storedRuleSet, error) {
 			seen[key] = true
 			switch key {
 			case "index":
-				if d.Decode(&s.Source) != nil || s.Source < 0 || s.Source > 16 {
+				if d.Decode(&s.Source) != nil || s.Source < 0 || s.Source > maxRemoteProviders {
 					return nil, invalid
 				}
 			case "behavior":
@@ -202,4 +202,22 @@ func parseStoredRuleSets(raw []byte) (map[string]storedRuleSet, error) {
 		return nil, invalid
 	}
 	return sets, nil
+}
+
+// Before rule sources were told apart by content, YAML lists served as ".txt"
+// were stored line by line: "payload:" then "- '+.example.com'". Read such
+// saved lines as the entries they hold, so reparsing repairs them without a
+// download. No real domain, CIDR or rule starts with "- " or is a bare header.
+func unwrapYAMLListLine(line string) (string, bool) {
+	if line == "payload:" || line == "rules:" {
+		return "", true
+	}
+	if !strings.HasPrefix(line, "- ") {
+		return line, false
+	}
+	line = strings.TrimSpace(line[2:])
+	if len(line) >= 2 && (line[0] == '\'' || line[0] == '"') && line[len(line)-1] == line[0] {
+		line = line[1 : len(line)-1]
+	}
+	return line, false
 }

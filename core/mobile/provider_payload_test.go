@@ -62,7 +62,7 @@ proxy-groups: [{name: Official, type: select, use: [source]}]
 	if len(importedPartial.Nodes) != 2 || importedPartial.Unsupported != 1 {
 		t.Fatal("bad URI was not isolated and counted")
 	}
-	for _, bad := range []string{strings.Repeat(body+"\n", 501)} {
+	for _, bad := range []string{strings.Repeat(body+"\n", maxImportNodes+1)} {
 		r := resolveFixture(t, profile, map[string]string{"proxy:source": bad})
 		encoded, _ := json.Marshal(r)
 		if r["state"] != "failed" || strings.Contains(string(encoded), "CANARY-") || r["content"] != nil {

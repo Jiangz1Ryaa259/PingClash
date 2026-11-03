@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -129,15 +128,7 @@ internal fun ProfilesOverview(
                 }
             }
             ui.importIssue?.let { issue -> item(key = "issue") { InputIssue(issue) } }
-            if (data.profiles.isEmpty())
-                item(key = "empty") {
-                    Box(
-                        Modifier.fillMaxWidth().heightIn(min = 148.dp).testTag("profiles-empty"),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(tr(R.string.no_proxy_profiles_yet), color = Muted)
-                    }
-                }
+            if (data.profiles.isEmpty()) item(key = "empty") { ProfilesEmpty() }
             profileItems(data, locked, actions, if (sorting) reorder else null)
         }
         ProfileImportMenu(
@@ -457,6 +448,31 @@ internal fun ProfileDetailsSheet(
                 ) {
                     Text(tr(R.string.provider_refresh))
                 }
+        }
+    }
+}
+
+/** No profiles yet: a card saying so and where to add one, readable over any scene. */
+@Composable
+private fun ProfilesEmpty() {
+    GroupCard {
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = 28.dp).testTag("profiles-empty"),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            IconSquare(PcIcon.Profile, MaterialTheme.colorScheme.primary)
+            Text(
+                tr(R.string.ui_profiles_empty_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            )
+            Text(
+                tr(R.string.ui_profiles_empty_hint),
+                color = Muted,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
         }
     }
 }

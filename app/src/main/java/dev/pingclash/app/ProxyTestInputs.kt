@@ -32,3 +32,26 @@ internal class ProxyTestInputs(data: AppData) {
 
     override fun toString() = "ProxyTestInputs(redacted)"
 }
+
+/**
+ * Whether a finished latency result ([delayKey]) still describes its node after the data changed
+ * from [before] to [after]: the profile still exists, a node keeps its configuration, and the test
+ * settings are the same. Group results stay with their profile.
+ */
+internal fun delayStillValid(key: String, before: AppData, after: AppData): Boolean {
+    fun settings(data: AppData) =
+        listOf(
+            data.client.probeTimeout,
+            data.client.delayUrl,
+            data.client.unifiedDelay,
+            data.dnsAddress,
+            data.probeUrl,
+        )
+    if (settings(before) != settings(after)) return false
+    val parts = key.split('\u0000')
+    val old = before.profiles.firstOrNull { it.id == parts.first() }
+    val new = after.profiles.firstOrNull { it.id == parts.first() }
+    val name = parts.last()
+    fun config(profile: LocalProfile?) = profile?.nodes?.firstOrNull { it.name == name }?.config
+    return new != null && config(old) == config(new)
+}

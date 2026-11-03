@@ -6,6 +6,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Only for the opt-in Wi-Fi rule: Android shares the network's name with location access. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <queries>
         <intent><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent>
     </queries>
@@ -35,8 +41,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ProfileImportActivity" android:exported="false"
-            android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.PingClash.Overlay" />
+            android:excludeFromRecents="true" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".SubscriptionImportActivity" android:exported="true"
             android:excludeFromRecents="true" android:launchMode="singleTop" android:taskAffinity="">
             <intent-filter>
@@ -56,6 +61,23 @@
             android:exported="false" android:foregroundServiceType="systemExempted">
             <intent-filter><action android:name="android.net.VpnService" /></intent-filter>
         </service>
+        <service android:name=".ConnectTileService" android:exported="true"
+            android:icon="@drawable/ic_status" android:label="PingClash"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+            <meta-data android:name="android.service.quicksettings.TOGGLEABLE_TILE" android:value="true" />
+        </service>
+        <service android:name=".SubscriptionUpdateJob" android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+        <receiver android:name=".BootReceiver" android:exported="true">
+            <intent-filter><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
+        </receiver>
+        <receiver android:name=".NetworkChangeReceiver" android:exported="false" />
+        <receiver android:name=".WidgetToggleReceiver" android:exported="false" />
+        <receiver android:name=".ConnectWidget" android:exported="true" android:label="PingClash">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_connect_info" />
+        </receiver>
         <!-- Removal marker only: no class is instantiated. Lint otherwise checks
              this runtime dependency reference as if it were a new component. -->
         <receiver android:name="androidx.profileinstaller.ProfileInstallReceiver"

@@ -39,6 +39,7 @@ internal data class DashboardState(
     val ready: Boolean,
     val busy: Boolean,
     val services: ServiceCheckState = ServiceCheckState(),
+    val exit: ExitState = ExitState(),
 )
 
 internal data class DashboardActions(
@@ -50,6 +51,8 @@ internal data class DashboardActions(
     val selectProfile: (String) -> Unit = {},
     val themeMode: (String) -> Unit = {},
     val serviceTest: (List<String>) -> Unit = {},
+    /** Checks the main proxy's exit; true checks even when a fresh result exists. */
+    val refreshExit: (Boolean) -> Unit = {},
 )
 
 @Composable

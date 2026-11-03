@@ -13,17 +13,19 @@ internal fun redirectedSubscriptionHeaders(
     from: URI,
     to: URI,
 ): Map<String, String> {
-    val same = from.host.equals(to.host, true) && httpsPort(from) == httpsPort(to)
+    val origin = httpsAuthority(from)
+    val target = httpsAuthority(to)
+    val same =
+        origin != null &&
+            target != null &&
+            origin.first.equals(target.first, true) &&
+            origin.second == target.second
     return if (same) headers
     else
         headers.filterKeys {
             it.lowercase(java.util.Locale.ROOT) in setOf("user-agent", "accept", "accept-language")
         }
 }
-
-private fun httpsPort(uri: URI) = uri.port.takeIf { it >= 0 } ?: HTTPS_PORT
-
-private const val HTTPS_PORT = 443
 
 internal fun subscriptionRedirect(from: URI, location: String?): URI =
     runCatching {
@@ -62,7 +64,7 @@ internal fun requireSubscriptionSuccess(status: Int) {
 private const val SUCCESS_STATUS = 200
 private const val MIN_STATUS = 100
 private const val MAX_STATUS = 599
-internal const val MAX_FEED_BYTES = 2 * 1024 * 1024
+internal const val MAX_FEED_BYTES = 8 * 1024 * 1024
 
 internal fun validateSubscriptionFetch(source: String, userAgent: String) {
     if (!validSubscriptionUa(userAgent)) throw SettingsFailure(tr(R.string.subscription_ua_invalid))

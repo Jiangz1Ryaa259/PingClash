@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 
 /**
- * Event-driven foreground maintenance of subscriptions (daily) and their providers. No background
- * minute alarm/poll loop.
+ * Event-driven foreground maintenance of subscriptions (at the user's interval) and their
+ * providers. No background minute alarm/poll loop; [SubscriptionUpdateJob] covers the background.
  */
 internal class ProviderRefreshCoordinator(
     private val app: Application,
@@ -65,7 +65,8 @@ internal class ProviderRefreshCoordinator(
                     networkAvailable(),
                     VpnRuntime.state.map { it.active }.distinctUntilChanged(),
                     repository.data.map { it.profiles }.distinctUntilChanged(),
-                ) { shown, connected, _, profiles ->
+                    repository.data.map { it.client.subscriptionHours }.distinctUntilChanged(),
+                ) { shown, connected, _, profiles, _ ->
                     // Also while the VPN runs: downloads follow the tunnel, and the result is
                     // applied through the hot routing update instead of waiting for a reconnect.
                     profiles.filter { shown && connected && (it.remote != null || it.autoUpdates) }
@@ -107,15 +108,11 @@ internal class ProviderRefreshCoordinator(
     private fun now() = java.time.Instant.now().epochSecond
 
     private fun subscriptionDelay(profile: LocalProfile): Long {
-        if (!profile.autoUpdates) return Long.MAX_VALUE
         val now = now()
-        val updated = profile.subscriptionUpdated.takeIf { it <= now } ?: 0
+        val due = subscriptionDueIn(profile, repository.data.value.client.subscriptionHours, now)
+        if (due == Long.MAX_VALUE) return due
         val attempted = subscriptionAttempts[profile.id] ?: 0
-        return maxOf(
-                updated + SUBSCRIPTION_INTERVAL_SECONDS - now,
-                attempted + SUBSCRIPTION_RETRY_SECONDS - now,
-            )
-            .coerceAtLeast(0)
+        return maxOf(due, attempted + SUBSCRIPTION_RETRY_SECONDS - now).coerceAtLeast(0)
     }
 
     private fun networkAvailable() =
@@ -148,6 +145,5 @@ internal class ProviderRefreshCoordinator(
 
 private const val INITIAL_DELAY = 5000L
 private const val MIN_RECHECK_SECONDS = 30L
-private const val SUBSCRIPTION_INTERVAL_SECONDS = 24 * 60 * 60L
 private const val SUBSCRIPTION_RETRY_SECONDS = 30 * 60L
 private const val MILLIS_PER_SECOND = 1000L

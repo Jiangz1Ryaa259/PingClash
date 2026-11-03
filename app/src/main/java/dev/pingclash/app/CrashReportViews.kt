@@ -5,14 +5,12 @@ package dev.pingclash.app
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -58,22 +56,18 @@ internal fun CrashReportCard() {
     var report by remember { mutableStateOf(CrashRecorder.last(context)) }
     var open by remember { mutableStateOf(false) }
     val saved = report ?: return
-    SettingsCard {
-        Text(tr(R.string.crash_report), style = MaterialTheme.typography.titleMedium)
-        StatLine(tr(R.string.crash_report_saved), localDateTime(saved.savedAt / 1000))
-        Row {
-            OutlinedButton({ open = true }, Modifier.testTag("crash-report-view")) {
-                Text(tr(R.string.crash_report_view))
-            }
-            TextButton(
-                {
-                    CrashRecorder.clear(context)
-                    report = null
-                },
-                Modifier.testTag("crash-report-delete"),
-            ) {
-                Text(tr(R.string.delete))
-            }
+    SettingsSection(tr(R.string.crash_report)) {
+        InfoRow(tr(R.string.crash_report_saved), localDateTime(saved.savedAt / 1000))
+        RowDivider(underIcons = false)
+        ActionRow(tr(R.string.crash_report_view), "crash-report-view") { open = true }
+        RowDivider(underIcons = false)
+        ActionRow(
+            tr(R.string.delete),
+            "crash-report-delete",
+            color = MaterialTheme.colorScheme.error,
+        ) {
+            CrashRecorder.clear(context)
+            report = null
         }
     }
     if (open) CrashReportDialog(saved.text) { open = false }

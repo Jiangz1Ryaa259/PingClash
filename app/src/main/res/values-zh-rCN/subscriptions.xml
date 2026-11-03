@@ -11,6 +11,8 @@
     <string name="subscription_expired">订阅已到期</string>
     <string name="provider_redirect">来源重定向无效、跳转至非 HTTPS 地址或超过跳转次数。</string>
     <string name="provider_failure">提供源 %1$d（%2$s）：%3$s</string>
+    <string name="provider_configuration_failure">订阅提供源配置：%1$s</string>
+    <string name="provider_count_limit">代理与规则提供源的总数超过 128 个</string>
     <string name="provider_invalid">提供源配置无效或尚不支持</string>
     <string name="provider_payload">提供源内容无效、不支持或超出限制</string>
     <string name="provider_network">下载失败，请检查网络、证书和服务端响应</string>
@@ -23,13 +25,13 @@
     <string name="latency_skipped">不适用</string>
     <string name="terminal_start_failed">终端无法启动，未执行命令。请尝试新建会话。</string>
     <string name="terminal_process_exit">\n[会话已结束：%1$d]</string>
-    <string name="provider_size_limit">提供源文件超过应用容量上限（规则源 16 MiB；代理源及订阅 2 MiB）</string>
+    <string name="provider_size_limit">提供源文件超过应用容量上限（规则源 16 MiB；代理源及订阅 8 MiB）</string>
     <string name="provider_total_limit">提供源解压后的正文总量超过 32 MiB</string>
     <string name="provider_config_limit">压缩后的运行配置超过应用容量限制</string>
     <string name="provider_rule_limit">规则源条目总数超过 500,000 条</string>
-    <string name="provider_rule_document">规则文档无法解析；YAML 需要 payload 列表。请核对 format: yaml/text</string>
+    <string name="provider_rule_document">规则文档无法解析；YAML 需要 payload 或 rules 列表。请核对 format: yaml/text</string>
     <string name="provider_rule_syntax">规则条目的格式与声明的 behavior（domain/ipcidr/classical）不符</string>
-    <string name="provider_rule_type">classical 规则源包含当前运行模式尚未支持的规则类型</string>
+    <string name="provider_rule_type">规则集类型与声明的 behavior 不符，或该格式不支持此 behavior</string>
     <string name="provider_html">服务器返回了网页而非规则；请检查登录、有效期或来源地址</string>
     <string name="provider_declared_size_limit">提供源超过订阅声明的 size-limit；这是来源配置限制，请核对该项</string>
     <string name="provider_cache_limit">提供源压缩缓存总量超过 24 MiB</string>
@@ -44,4 +46,15 @@
     <string name="provider_rule_database_missing">所需规则数据库或分类尚不可用</string>
     <string name="provider_rule_entry_invalid">规则条目无效</string>
     <string name="provider_rule_entry_unsupported">未识别的规则类型</string>
+    <string name="provider_document_syntax">订阅 YAML/JSON 无法解析：请检查语法、重复键和文档结构</string>
+    <string name="provider_document_limit">订阅超过文档大小、嵌套深度或展开节点数量限制</string>
+    <string name="provider_dns_document">无法保留订阅中的 DNS 配置：请检查 YAML 引用和结构</string>
+    <string name="provider_group_keys">策略组含有互相冲突的字段名称</string>
+    <string name="provider_group_filter">策略组过滤表达式无效或超过匹配限制</string>
+    <string name="provider_group_use">策略组 use 字段应为代理提供源名称列表，也可留空</string>
+    <string name="provider_group_reference">策略组 use 字段引用了不存在的代理提供源</string>
+    <string name="provider_rule_reference">RULE-SET 规则引用了不存在的规则提供源</string>
+    <string name="provider_rule_entry">订阅 rules 列表含有非文本条目或格式无效的 RULE-SET 引用</string>
+    <string name="provider_bridge_invalid">本地提供源缓存无法解析，请重新更新订阅</string>
+    <string name="provider_internal">展开提供源时发生内部错误，上一份有效配置未被替换</string>
 </resources>

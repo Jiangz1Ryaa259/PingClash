@@ -138,21 +138,7 @@ class SubscriptionGroupsPriorityTest {
             repo.activate(pool.id)
             val declared = repo.importProfile(pool.name, fixture(), replaceId = pool.id)
             assertEquals(declared.groupId("服务商主组"), repo.data.value.selectedId)
-            for (raw in
-                listOf(
-                    JSONArray(),
-                    JSONObject().put("invalid", true),
-                    JSONArray().apply {
-                        repeat(65) {
-                            put(
-                                JSONObject()
-                                    .put("name", "组$it")
-                                    .put("type", "select")
-                                    .put("proxies", JSONArray(listOf("A")))
-                            )
-                        }
-                    },
-                )) {
+            for (raw in listOf(JSONArray(), JSONObject().put("invalid", true))) {
                 val input = JSONObject(fixture()).put("proxy-groups", raw).toString()
                 val profile = repo.importProfile("不可用分组回归", input).also { ids.add(it.id) }
                 assertTrue(profile.hasSubscriptionGroups)

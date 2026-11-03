@@ -55,11 +55,20 @@ try {
     if ($null -eq $manifestPath) { throw 'Merged release manifest not found.' }
     [xml]$manifest = Get-Content -LiteralPath $manifestPath -Raw
     $androidNamespace = 'http://schemas.android.com/apk/res/android'
+    # System-facing components are allowed only with the protection that keeps other apps out:
+    # the tile is bindable by the system alone, the boot receiver takes only the protected boot
+    # broadcast, and the widget provider only redraws (its switch is a non-exported receiver).
+    $guarded = @{
+        'dev.pingclash.app.ConnectTileService' = { param($c) $c.GetAttribute('permission', $androidNamespace) -eq 'android.permission.BIND_QUICK_SETTINGS_TILE' }
+        'dev.pingclash.app.BootReceiver' = { param($c) @($c.'intent-filter'.action | ForEach-Object { $_.GetAttribute('name', $androidNamespace) }) -join ',' -eq 'android.intent.action.BOOT_COMPLETED' }
+        'dev.pingclash.app.ConnectWidget' = { param($c) @($c.'intent-filter'.action | ForEach-Object { $_.GetAttribute('name', $androidNamespace) }) -join ',' -eq 'android.appwidget.action.APPWIDGET_UPDATE' }
+    }
     foreach ($component in $manifest.manifest.application.ChildNodes) {
-        if ($component -is [Xml.XmlElement] -and $component.GetAttribute('exported', $androidNamespace) -eq 'true' -and
-            $component.GetAttribute('name', $androidNamespace) -notin @('dev.pingclash.app.MainActivity','dev.pingclash.app.SubscriptionImportActivity')) {
-            throw 'Unexpected exported release component; review before signing.'
-        }
+        if ($component -isnot [Xml.XmlElement] -or $component.GetAttribute('exported', $androidNamespace) -ne 'true') { continue }
+        $name = $component.GetAttribute('name', $androidNamespace)
+        if ($name -in @('dev.pingclash.app.MainActivity','dev.pingclash.app.SubscriptionImportActivity')) { continue }
+        if ($guarded.ContainsKey($name) -and (& $guarded[$name] $component)) { continue }
+        throw ('Unexpected exported release component ' + $name + '; review before signing.')
     }
     $buildTools = Join-Path $projectRoot '.tools\android-sdk\build-tools\35.0.0'
     $dist = Join-Path $projectRoot 'dist'

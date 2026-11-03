@@ -67,7 +67,7 @@ func ImportProfile(text string) (result string) {
 	for _, c := range text {
 		if strings.ContainsRune("\n[]{}:,", c) {
 			structural++
-			if structural > 200000 {
+			if structural > maxYAMLStructure {
 				return invalid()
 			}
 		}
@@ -113,7 +113,7 @@ func ImportProfile(text string) (result string) {
 			if rules, ok := raw.([]any); ok {
 				bytes := 0
 				for _, item := range rules {
-					if rule, ok := item.(string); ok && len(rule) <= 2048 && len(profile.Rules) < 2000 && bytes+len(rule) <= 256*1024 {
+					if rule, ok := item.(string); ok && len(rule) <= 2048 && len(profile.Rules) < maxImportRules && bytes+len(rule) <= maxImportRuleBytes {
 						profile.Rules = append(profile.Rules, rule)
 						bytes += len(rule)
 					} else {
@@ -145,8 +145,14 @@ func ImportProfile(text string) (result string) {
 	default:
 		return invalid()
 	}
-	if len(candidates) == 0 || len(candidates) > 500 {
+	if len(candidates) == 0 {
 		return invalid()
+	}
+	// Keep the first nodes and count the rest, as for any node that cannot load.
+	if extra := len(candidates) - maxImportNodes; extra > 0 {
+		candidates = candidates[:maxImportNodes]
+		profile.Unsupported += extra
+		profile.Rejections["resource_limit"] += extra
 	}
 	graph := newImportGraph(candidates, decoded, &profile)
 	if profile.State == "failed" {
@@ -186,7 +192,7 @@ func ImportProfile(text string) (result string) {
 				resolveErr = runtimeErr
 			}
 		}
-		if resolveErr == nil && (configBytes+len(config) > maxPrivateProfileBytes || nodeBytes+len(config) > 2*1024*1024) {
+		if resolveErr == nil && (configBytes+len(config) > maxPrivateProfileBytes || nodeBytes+len(config) > maxImportNodeBytes) {
 			profile.Unsupported++
 			profile.Rejections["resource_limit"]++
 			continue
@@ -330,7 +336,7 @@ func removeUnusedVLESSFields(mapping map[string]any) {
 // Count the expanded alias graph before decoding. Shared templates are allowed;
 // cycles, exponential alias bombs and excessive depth remain bounded.
 func safeYAML(node *yaml.Node, depth int, count *int) bool {
-	return safeYAMLWithBudget(node, depth, count, 50000)
+	return safeYAMLWithBudget(node, depth, count, maxYAMLElements)
 }
 func safeYAMLWithBudget(node *yaml.Node, depth int, count *int, budget int) bool {
 	active := map[*yaml.Node]bool{}

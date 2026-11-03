@@ -7,7 +7,8 @@ internal object CrashText {
         Regex("^(?:(Caused by: |Suppressed: ))?([A-Za-z0-9_.$]+(?:Exception|Error))(?::.*)?$")
     private val javaFrame =
         Regex(
-            "^at ([A-Za-z0-9_.$/<>-]+)\\(([A-Za-z0-9_.$-]+(?::[0-9]+)?|Native Method|Unknown Source)\\)$"
+            // Shrunk release builds report most app and library frames as "Unknown Source:83".
+            "^at ([A-Za-z0-9_.$/<>-]+)\\(([A-Za-z0-9_.$-]+(?::[0-9]+)?|Native Method|Unknown Source(?::[0-9]+)?)\\)$"
         )
     private val goFrame = Regex("^([A-Za-z0-9_./*()\\[\\]-]+)\\(.*\\)(?: \\+0x[0-9a-f]+)?$")
     private val goFile =

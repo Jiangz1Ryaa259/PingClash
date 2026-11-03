@@ -43,6 +43,7 @@ class PingClashApplication : Application() {
         repository = ProfileRepository(this)
         UiStrings.migrate(repository.data.value.client.language)
         if (nativeReady) ProviderRefreshCoordinator(this, repository).start()
+        Automation.start(this)
     }
 }
 

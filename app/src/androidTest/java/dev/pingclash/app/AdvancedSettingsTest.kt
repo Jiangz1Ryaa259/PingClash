@@ -113,12 +113,14 @@ class AdvancedSettingsTest {
             section("appearance")
             visibleControl("theme-toggle").performClick()
             compose.waitUntil(10000) { repo.data.value.client.theme == "dark" }
-            visibleControl("choice-语言-en").performClick()
+            // Language is a pop-up menu: open it, then pick the entry.
+            visibleControl("choice-语言").performClick()
+            compose.onNodeWithTag("choice-语言-en").performClick()
             compose.waitUntil(10000) { repo.data.value.client.language == "en" }
             compose.waitUntil(10000) {
-                compose.onAllNodesWithText("Theme").fetchSemanticsNodes().isNotEmpty()
+                compose.onAllNodesWithText("Dark mode").fetchSemanticsNodes().isNotEmpty()
             }
-            compose.onNodeWithText("Theme").assertIsDisplayed()
+            compose.onNodeWithText("Dark mode").assertIsDisplayed()
             compose.onNodeWithText("Language").assertIsDisplayed()
             captureSyntheticFixture(compose, device, "settings-english-dark.png")
             repo.appearance("zh", "system")

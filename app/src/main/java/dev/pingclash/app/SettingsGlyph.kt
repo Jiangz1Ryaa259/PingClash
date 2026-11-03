@@ -16,6 +16,8 @@ private val settingsGlyphs =
         "about" to PcIcon.Info,
         "privacy" to PcIcon.Shield,
         "control" to PcIcon.Power,
+        "automation" to PcIcon.Bolt,
+        "backup" to PcIcon.Archive,
         "appearance" to PcIcon.Appearance,
         "groups" to PcIcon.Layers,
         "terminal" to PcIcon.Terminal,

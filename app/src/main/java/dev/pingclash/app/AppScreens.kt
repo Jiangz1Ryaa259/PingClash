@@ -55,6 +55,10 @@ internal fun PingClashApp(model: AppViewModel = viewModel()) {
                 storedData.copy(client = storedData.client.copy(language = UiStrings.preference()))
             else storedData
         }
+    // Pages read the data through State: a change made while the Activity was stopped (an
+    // import page on top, a background refresh) then reaches them on return, instead of the
+    // content lambda's captured copy from before the stop.
+    val currentData = rememberUpdatedState(data)
     // Renew just the collector on resume so its initial snapshot is the current service
     // projection, rather than a cached value from before the Activity stopped.
     val foreground = rememberForeground()
@@ -63,6 +67,7 @@ internal fun PingClashApp(model: AppViewModel = viewModel()) {
     val diagnosis by model.diagnosis.collectAsStateWithLifecycle()
     val tests by model.proxyTests.collectAsStateWithLifecycle()
     val serviceTests by model.serviceChecks.state.collectAsStateWithLifecycle()
+    val exit by model.exit.collectAsStateWithLifecycle()
     var tool by rememberSaveable { mutableIntStateOf(1) }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var diagnosisOrigin by rememberSaveable { mutableIntStateOf(SETTINGS_TAB) }
@@ -151,6 +156,7 @@ internal fun PingClashApp(model: AppViewModel = viewModel()) {
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
             ) { padding ->
                 Box(Modifier.fillMaxSize().padding(padding).statusBarsPadding()) {
+                    @Suppress("NAME_SHADOWING") val data = currentData.value
                     AnimatedContent(
                         tab,
                         transitionSpec = {
@@ -179,6 +185,7 @@ internal fun PingClashApp(model: AppViewModel = viewModel()) {
                                             model.nativeReady,
                                             ui.busy,
                                             serviceTests,
+                                            exit,
                                         ),
                                         DashboardActions(
                                             nodes = {
@@ -196,6 +203,7 @@ internal fun PingClashApp(model: AppViewModel = viewModel()) {
                                                 }
                                             },
                                             mode = model::routeMode,
+                                            refreshExit = model::refreshExit,
                                             selectProfile = model::activate,
                                             themeMode = {
                                                 model.appearance(data.client.language, it)
@@ -448,16 +456,10 @@ private fun ProfilesScreen(
                 command = commands,
                 add = {
                     importPicker.launch(
-                        ProfileImportActivity.intent(importContext, ImportMethod.URL),
-                        ProfileImportActivity.unfoldOptions(importContext),
+                        ProfileImportActivity.intent(importContext, ImportMethod.URL)
                     )
                 },
-                import = {
-                    importPicker.launch(
-                        ProfileImportActivity.intent(importContext, it),
-                        ProfileImportActivity.unfoldOptions(importContext),
-                    )
-                },
+                import = { importPicker.launch(ProfileImportActivity.intent(importContext, it)) },
                 refreshAll = model::refreshAll,
                 reorder = model::reorderProfiles,
             ),

@@ -8,11 +8,7 @@ import (
 
 func TestGroupDeclarationRetainedWithoutInventingReplacement(t *testing.T) {
 	nodes := []any{map[string]any{"name": "A", "type": "trojan", "server": "example.invalid", "port": 443, "password": "fixture"}}
-	tooMany := []any{}
-	for i := 0; i < 65; i++ {
-		tooMany = append(tooMany, map[string]any{"name": "A", "type": "select", "proxies": []any{"DIRECT"}})
-	}
-	for _, groups := range []any{nil, "invalid", map[string]any{"invalid": true}, []any{}, tooMany} {
+	for _, groups := range []any{nil, "invalid", map[string]any{"invalid": true}, []any{}} {
 		raw, _ := json.Marshal(map[string]any{"proxies": nodes, "proxy-groups": groups})
 		p := imported(t, string(raw))
 		if !p.GroupsDeclared || len(p.Nodes) != 1 || len(p.Groups) != 0 || p.Definition == "" {

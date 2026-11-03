@@ -131,7 +131,12 @@ func TestUnsupportedSubscriptionFormatsHaveSpecificErrors(t *testing.T) {
 }
 
 func TestShareSubscriptionsRetainInputLimitsAndPolicies(t *testing.T) {
-	for _, input := range []string{strings.Repeat("anytls://x@example.invalid:443\n", 501), "anytls://x@example.invalid:443?dialer-proxy=DIRECT", "anytls://x@example.invalid:443#trusted%0Aforged"} {
+	// Past the node limit only the excess is dropped and counted.
+	many := imported(t, strings.Repeat("anytls://x@example.invalid:443\n", maxImportNodes+1))
+	if len(many.Nodes) != maxImportNodes || many.Rejections["resource_limit"] != 1 {
+		t.Fatalf("share list limit: nodes=%d rejections=%v", len(many.Nodes), many.Rejections)
+	}
+	for _, input := range []string{"anytls://x@example.invalid:443?dialer-proxy=DIRECT", "anytls://x@example.invalid:443#trusted%0Aforged"} {
 		if imported(t, input).State == "passed" {
 			t.Fatal("unsafe or oversized share subscription accepted")
 		}

@@ -45,7 +45,7 @@ internal fun OceanBackdrop(
     modifier: Modifier = Modifier,
     scene: String = "ocean",
 ) {
-    if (scene == "none") return
+    if (scene == "none" || scene == "image") return
     if (android.os.Build.VERSION.SDK_INT >= 33) {
         RealtimeOcean(modifier, scene == "clouds")
         return

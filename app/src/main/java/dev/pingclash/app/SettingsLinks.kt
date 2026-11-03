@@ -4,25 +4,33 @@
 package dev.pingclash.app
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 private val settingGroups =
     listOf(
         listOf("network", "dns", "rules", "apps", "lan"),
         listOf("connections", "diagnosis", "terminal"),
-        listOf("appearance", "control", "privacy", "about"),
+        listOf("appearance", "control", "automation", "backup", "privacy", "about"),
     )
 private val settingTitles =
     mapOf(
@@ -35,6 +43,8 @@ private val settingTitles =
         "diagnosis" to R.string.connection_diagnostics,
         "terminal" to R.string.terminal,
         "control" to R.string.ui_settings_background,
+        "automation" to R.string.ui_settings_automation,
+        "backup" to R.string.ui_settings_backup,
         "privacy" to R.string.privacy_security,
         "about" to R.string.about_licenses,
     )
@@ -42,35 +52,157 @@ private val settingTitles =
 internal fun settingsTitle(id: String) =
     if (id == "dns") "DNS" else tr(settingTitles[id] ?: R.string.settings)
 
+/** The tinted square behind each entry's glyph, as in iOS Settings. */
+private val settingTints =
+    mapOf(
+        "network" to 0xFF0A84FF,
+        "dns" to 0xFF5E5CE6,
+        "rules" to 0xFFFF9500,
+        "apps" to 0xFF34C759,
+        "lan" to 0xFF30B0C7,
+        "connections" to 0xFFFF2D55,
+        "diagnosis" to 0xFFFF3B30,
+        "terminal" to 0xFF3A3A3C,
+        "appearance" to 0xFFAF52DE,
+        "control" to 0xFFFF9F0A,
+        "automation" to 0xFF5856D6,
+        "backup" to 0xFF32ADE6,
+        "privacy" to 0xFF636366,
+        "about" to 0xFF8E8E93,
+    )
+
+private val groupTitles =
+    listOf(R.string.ui_group_proxy, R.string.ui_group_tools, R.string.ui_group_general)
+
+/** The settings home: three groups of entries, each showing its current value. */
 @Composable
-internal fun SettingsMenu(onOpen: (String) -> Unit) {
-    settingGroups.forEach { group ->
-        SettingsCard {
-            group.forEachIndexed { index, id ->
-                SettingLink(id, settingsTitle(id)) { onOpen(id) }
-                if (index < group.lastIndex)
-                    HorizontalDivider(
-                        Modifier.padding(start = 33.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                    )
+internal fun SettingsMenu(client: ClientSettings, onOpen: (String) -> Unit) {
+    val version = rememberVersionName()
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        settingGroups.forEachIndexed { group, ids ->
+            SettingsSection(tr(groupTitles[group])) {
+                ids.forEachIndexed { index, id ->
+                    if (index > 0) RowDivider()
+                    NavRow(
+                        settingsTitle(id),
+                        if (id in listOf("diagnosis", "terminal")) "tool-$id" else "settings-$id",
+                        value = if (id == "about") version else settingValue(id, client),
+                        icon = settingsGlyph(id) to Color(settingTints.getValue(id)),
+                    ) {
+                        onOpen(id)
+                    }
+                }
             }
         }
     }
 }
 
+// What each entry shows on the right: the label of its current choice.
+private val valueLabels =
+    mapOf(
+        "rules" to
+            mapOf(
+                "rule" to R.string.rules,
+                "global" to R.string.global_proxy,
+                "direct" to R.string.direct,
+            ),
+        "apps" to
+            mapOf(
+                "all" to R.string.all_apps,
+                "exclude" to R.string.exclude_selected_apps,
+                "include" to R.string.only_selected_apps,
+            ),
+        "lan" to
+            mapOf(
+                "direct" to R.string.direct_lan,
+                "proxy" to R.string.proxy_lan,
+                "block" to R.string.block_lan,
+            ),
+        "appearance" to
+            mapOf(
+                "ocean" to R.string.ui_scene_ocean,
+                "clouds" to R.string.ui_scene_clouds,
+                "none" to R.string.ui_scene_none,
+                "image" to R.string.ui_scene_image,
+            ),
+    )
+
+private fun settingValue(id: String, client: ClientSettings): String? =
+    if (id == "dns") {
+        if (client.dnsMode == "https") "DoH" else "TCP"
+    } else valueLabels[id]?.get(choiceOf(id, client))?.let { tr(it) }
+
+private fun choiceOf(id: String, client: ClientSettings) =
+    when (id) {
+        "rules" -> client.mode
+        "apps" -> client.appMode
+        "lan" -> client.lan
+        "appearance" -> client.scene
+        else -> ""
+    }
+
 @Composable
-private fun SettingLink(id: String, title: String, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth()
-            .heightIn(min = 52.dp)
-            .testTag(if (id in listOf("diagnosis", "terminal")) "tool-$id" else "settings-$id")
-            .fluidClickable(depth = .97f, onClick = onClick)
-            .padding(vertical = 7.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        AppGlyph(settingsGlyph(id), Modifier.size(21.dp), Muted)
-        Text(title, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-        AppGlyph(PcIcon.ChevronRight, Modifier.size(18.dp), Muted)
+private fun rememberVersionName(): String {
+    val context = LocalContext.current
+    return remember(context) {
+        runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
+            .getOrNull()
+            .orEmpty()
+    }
+}
+
+/**
+ * The top of every settings page: on a detail page a blue "< Settings" back button, then the large
+ * title; Save appears on the right while typed changes are pending.
+ */
+@Composable
+internal fun SettingsHeading(
+    page: String,
+    dirty: Boolean,
+    canSave: Boolean,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+) {
+    Column {
+        if (page.isNotEmpty() || dirty)
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 44.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (page.isNotEmpty()) {
+                    val label = tr(R.string.back)
+                    Row(
+                        Modifier.fluidClickable(depth = .95f, onClick = onBack)
+                            .testTag("settings-back")
+                            .semantics(mergeDescendants = true) { contentDescription = label }
+                            .padding(end = 12.dp, top = 8.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        AppGlyph(
+                            BACK_GLYPH,
+                            Modifier.size(22.dp),
+                            MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            tr(R.string.settings),
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+                Box(Modifier.weight(1f))
+                if (dirty)
+                    TextButton(
+                        onSave,
+                        enabled = canSave,
+                        modifier = Modifier.testTag("settings-save"),
+                    ) {
+                        Text(tr(R.string.save_settings), fontWeight = FontWeight.SemiBold)
+                    }
+            }
+        PageHeading(
+            settingsTitle(page),
+            tag = if (page.isEmpty()) "page-title-settings" else "settings-detail-title",
+        )
     }
 }

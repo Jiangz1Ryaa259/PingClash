@@ -74,7 +74,8 @@ class FunctionalReviewTest {
                             ProxyTestState(),
                             true,
                             false,
-                        )
+                        ),
+                        {},
                     ) {}
                 }
             }

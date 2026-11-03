@@ -113,6 +113,31 @@ private object AppIcons {
             BACK_GLYPH.vectorId to "M15.5 5 L8.5 12 L15.5 19",
             PcIcon.Refresh.vectorId to "M20 12 A8 8 0 1 1 17.66 6.34 M18.2 2.8 V6.9 H14.1",
             PcIcon.Minus.vectorId to "M5 12 H19",
+            PcIcon.Clipboard.vectorId to
+                ("M9 4.5 H7 A2 2 0 0 0 5 6.5 V19 A2 2 0 0 0 7 21 H17 A2 2 0 0 0 19 19 V6.5 A2 2 0 " +
+                    "0 0 17 4.5 H15 M9.5 3 H14.5 A0.5 0.5 0 0 1 15 3.5 V5.5 A0.5 0.5 0 0 1 14.5 6 " +
+                    "H9.5 A0.5 0.5 0 0 1 9 5.5 V3.5 A0.5 0.5 0 0 1 9.5 3 Z"),
+            PcIcon.Folder.vectorId to
+                ("M3.5 7 A2 2 0 0 1 5.5 5 H9.5 L11.5 7 H18.5 A2 2 0 0 1 20.5 9 V17.5 A2 2 0 0 1 " +
+                    "18.5 19.5 H5.5 A2 2 0 0 1 3.5 17.5 Z"),
+            PcIcon.Archive.vectorId to
+                ("M4.5 4.5 H19.5 A1 1 0 0 1 20.5 5.5 V7.5 A1 1 0 0 1 19.5 8.5 H4.5 A1 1 0 0 1 3.5 " +
+                    "7.5 V5.5 A1 1 0 0 1 4.5 4.5 Z M5 8.5 V18.5 A2 2 0 0 0 7 20.5 H17 A2 2 0 0 0 19 " +
+                    "18.5 V8.5 M10 12.5 H14"),
+            PcIcon.Qr.vectorId to
+                ("M4 4 H10 V10 H4 Z M14 4 H20 V10 H14 Z M4 14 H10 V20 H4 Z M7 7 V7.1 M17 7 V7.1 " +
+                    "M7 17 V17.1 M14 14 H16.5 V16.5 M20 14 V14.1 M14 20 V20.1 M17.5 17.5 H20 V20 " +
+                    "H17.5 Z"),
+            PcIcon.Camera.vectorId to
+                ("M4 8.5 A2 2 0 0 1 6 6.5 H8 L9.5 4.5 H14.5 L16 6.5 H18 A2 2 0 0 1 20 8.5 V17.5 " +
+                    "A2 2 0 0 1 18 19.5 H6 A2 2 0 0 1 4 17.5 Z M15.5 13 A3.5 3.5 0 1 1 8.5 13 A3.5 " +
+                    "3.5 0 1 1 15.5 13"),
+            PcIcon.Eye.vectorId to
+                ("M2.5 12 C5 7.2 8.4 5 12 5 C15.6 5 19 7.2 21.5 12 C19 16.8 15.6 19 12 19 C8.4 19 " +
+                    "5 16.8 2.5 12 Z M15 12 A3 3 0 1 1 9 12 A3 3 0 1 1 15 12"),
+            PcIcon.EyeOff.vectorId to
+                ("M2.5 12 C5 7.2 8.4 5 12 5 C15.6 5 19 7.2 21.5 12 C19 16.8 15.6 19 12 19 C8.4 19 " +
+                    "5 16.8 2.5 12 Z M15 12 A3 3 0 1 1 9 12 A3 3 0 1 1 15 12 M4 4 L20 20"),
             PcIcon.Grip.vectorId to "M5 8.5 H19 M5 12 H19 M5 15.5 H19",
             PcIcon.Sort.vectorId to
                 "M8 19 V5 M4.5 8.5 L8 5 L11.5 8.5 M16 5 V19 M12.5 15.5 L16 19 L19.5 15.5",

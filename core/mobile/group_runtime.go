@@ -235,7 +235,7 @@ func parseLocalDefinition(text string) (*importGraph, error) {
 	for _, c := range text {
 		if strings.ContainsRune("\n[]{}:,", c) {
 			structural++
-			if structural > 200000 {
+			if structural > maxYAMLStructure {
 				return nil, invalid
 			}
 		}
@@ -254,7 +254,7 @@ func parseLocalDefinition(text string) (*importGraph, error) {
 		return nil, invalid
 	}
 	nodes, ok := root["proxies"].([]any)
-	if !ok || len(nodes) > 500 {
+	if !ok || len(nodes) > maxImportNodes {
 		return nil, invalid
 	}
 	p := importedProfile{}
@@ -270,8 +270,10 @@ type namedAdapter struct {
 func (p *namedAdapter) Name() string { return p.name }
 
 const (
-	maxRuntimeHealthGroups = 48
-	maxRuntimeAutoRefs     = 10000
+	// Automatic groups are health-checked eagerly at start, unlike mihomo's lazy
+	// default, so this stays below the import limits.
+	maxRuntimeHealthGroups = 128
+	maxRuntimeAutoRefs     = 50000
 )
 
 type groupHealth struct {

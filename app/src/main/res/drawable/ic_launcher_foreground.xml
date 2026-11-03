@@ -1,7 +1,30 @@
+<!-- Hanging badge with a terminal prompt: grapefruit to magenta-pink card on a white tile.
+     Drawn on the 108dp adaptive canvas, scaled to stay inside the 66dp safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="@android:color/transparent" android:strokeColor="#FFFFFF"
-        android:strokeWidth="7" android:strokeLineCap="round" android:strokeLineJoin="round"
-        android:pathData="M33,78V30H53C67,30 76,37 76,50C76,63 67,70 53,70H45" />
+    <group android:pivotX="54" android:pivotY="51.5" android:scaleX="0.78" android:scaleY="0.78"
+        android:translateY="2.5">
+        <path android:strokeWidth="5" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:fillColor="@android:color/transparent"
+            android:pathData="M39,13 L54,32 L69,13">
+            <aapt:attr name="android:strokeColor">
+                <gradient android:type="linear" android:startX="54" android:startY="13"
+                    android:endX="54" android:endY="32"
+                    android:startColor="#D1D1D6" android:endColor="#8E8E93" />
+            </aapt:attr>
+        </path>
+        <path android:pathData="M44,32 H64 A13,13 0 0 1 77,45 V77 A13,13 0 0 1 64,90 H44 A13,13 0 0 1 31,77 V45 A13,13 0 0 1 44,32 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="54" android:startY="32"
+                    android:endX="54" android:endY="90"
+                    android:startColor="#FF8466" android:endColor="#E9468F" />
+            </aapt:attr>
+        </path>
+        <path android:strokeColor="#FFFFFF" android:strokeWidth="5.5"
+            android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:fillColor="@android:color/transparent"
+            android:pathData="M42,53 L51,61 L42,69 M56,71 H67" />
+    </group>
 </vector>

@@ -8,15 +8,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -93,6 +103,50 @@ class ContextNoticeTest {
         compose.onNodeWithTag("solid-swatch-#111111").performTouchInput { longClick() }
         compose.onNodeWithTag("solid-color-dialog").assertIsDisplayed()
         compose.onNodeWithTag("solid-color-delete").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun pickerTabsChooseColoursAndKeepTheSheetInPlace() {
+        var saved: String? = null
+        fixture(IssueNoticeCenter()) {
+            SolidColorPicker("#FFFFFF", listOf("#FFFFFF", "#FCD2DC")) { color, _ -> saved = color }
+        }
+        compose.onNodeWithTag("solid-swatch-add").performClick()
+        val save = compose.onNodeWithTag("solid-color-save")
+        val top = save.fetchSemanticsNode().boundsInRoot.top
+        // Grid: a tap picks a cell; the saved colours offer a starting point.
+        compose.onNodeWithTag("color-grid").performTouchInput {
+            // The centre of the bottom-left cell: the very corner is clipped round.
+            click(Offset(width / 24f, height * .95f))
+        }
+        compose.onNodeWithTag("color-preview").assert(hasContentDescription("#FFFFFF").not())
+        compose.onNodeWithContentDescription("#FCD2DC").performClick()
+        compose.onNodeWithTag("color-preview").assert(hasContentDescription("#FCD2DC"))
+        // Sliders: each channel can be set directly; switching tabs never moves the sheet.
+        compose.onNodeWithTag("color-tab-sliders").performClick()
+        assertEquals(top, save.fetchSemanticsNode().boundsInRoot.top, 1f)
+        compose.onNodeWithContentDescription(tr(R.string.color_green)).performSemanticsAction(
+            SemanticsActions.SetProgress
+        ) {
+            it(255f)
+        }
+        compose.onNodeWithTag("color-preview").assert(hasContentDescription("#FCFFDC"))
+        compose.onNodeWithTag("color-tab-spectrum").performClick()
+        assertEquals(top, save.fetchSemanticsNode().boundsInRoot.top, 1f)
+        save.performClick()
+        compose.waitForIdle()
+        assertEquals("#FCFFDC", saved)
+    }
+
+    @Test
+    fun hexFieldFillsInTypingOrderAfterBeingCleared() {
+        fixture(IssueNoticeCenter()) { SolidColorPicker("#FFFFFF", listOf("#FFFFFF")) { _, _ -> } }
+        compose.onNodeWithTag("solid-swatch-add").performClick()
+        val hex = compose.onNodeWithTag("solid-hex")
+        // Clearing removes the "#" too; it comes back without pushing the first digit to the end.
+        hex.performTextClearance()
+        "F5C26B".forEach { hex.performTextInput(it.toString()) }
+        hex.assert(hasText("#F5C26B"))
     }
 
     @Test

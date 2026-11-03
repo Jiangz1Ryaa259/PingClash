@@ -41,4 +41,11 @@ internal enum class PcIcon(val vectorId: Int) {
     Sort(34),
     Grip(35),
     Minus(36),
+    Clipboard(37),
+    Folder(38),
+    Archive(39),
+    Qr(40),
+    Camera(41),
+    Eye(42),
+    EyeOff(43),
 }

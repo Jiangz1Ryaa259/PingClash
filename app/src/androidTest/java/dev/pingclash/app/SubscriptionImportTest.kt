@@ -4,6 +4,7 @@ import android.util.Base64
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -406,9 +407,9 @@ class SubscriptionImportTest {
             .performTextInput("https://example.invalid/subscribe?token=synthetic-private")
         hideFixtureKeyboard()
         assertCaptureProtected(false)
-        compose.onNodeWithText("显示").performClick()
+        compose.onNodeWithContentDescription("显示").performClick()
         assertCaptureProtected(true)
-        compose.onNodeWithText("隐藏").performClick()
+        compose.onNodeWithContentDescription("隐藏").performClick()
         assertCaptureProtected(false)
         compose.onNodeWithText("节点配置").performClick()
         hideFixtureKeyboard()
@@ -431,7 +432,6 @@ class SubscriptionImportTest {
             compose.onNodeWithTag("subscription-content").performTextInput(fixture.html)
             hideFixtureKeyboard()
             compose.waitForIdle()
-            compose.onNodeWithText("下一步").performScrollTo().performClick()
             compose.onNodeWithText("下载并导入").performScrollTo().performClick()
             compose.waitUntil(15_000) {
                 compose.onAllNodesWithTag("import-warning").fetchSemanticsNodes().isNotEmpty()
@@ -442,7 +442,6 @@ class SubscriptionImportTest {
                 .assertIsDisplayed()
             compose.onNodeWithText(tr(R.string.close)).performClick()
             compose.onNodeWithText("添加配置").assertExists()
-            compose.onNodeWithText(tr(R.string.ui_back)).performScrollTo().performClick()
             compose.onNodeWithTag("subscription-content").assert(hasText(fixture.html))
             assertEquals(before, app.repository.data.value.profiles.size)
             // The source is retained, but masked input does not block screenshots.
@@ -450,12 +449,18 @@ class SubscriptionImportTest {
             compose.onNodeWithTag("subscription-content").performTextReplacement(fixture.source)
             hideFixtureKeyboard()
             compose.waitForIdle()
-            compose.onNodeWithText("下一步").performScrollTo().performClick()
             compose.onNodeWithText("下载并导入").performScrollTo().performClick()
             compose.waitUntil(15_000) { app.repository.data.value.profiles.size == before + 1 }
             app.repository.activate(app.repository.data.value.profiles.last().id)
             compose.onNodeWithTag("nav-1").performClick()
-            compose.onNodeWithText("HK AnyTLS").assertIsDisplayed()
+            // The list screen was stopped behind the import page and redraws on return.
+            compose.waitUntil(10_000) {
+                runCatching {
+                        compose.onNodeWithText("HK AnyTLS").assertIsDisplayed()
+                        true
+                    }
+                    .getOrDefault(false)
+            }
             assertTrue(fixture.requests.get() >= 3)
             val profile = app.repository.data.value.profiles.last()
             assertEquals("我的订阅", profile.name)
@@ -515,7 +520,8 @@ class SubscriptionImportTest {
                 compose.onAllNodesWithTag("page-title-settings").fetchSemanticsNodes().isNotEmpty()
             }
             visibleSettingsControl(compose, "settings-appearance").performClick()
-            compose.onNodeWithText("跟随系统").performScrollTo().assertIsDisplayed()
+            // The language pop-up shows its current value; it must stay usable at large text.
+            visibleSettingsControl(compose, "choice-语言").assertIsDisplayed()
             captureSyntheticFixture(compose, device, "settings-dark-large.png")
         } finally {
             device.executeShellCommand("settings put system font_scale 1.0")

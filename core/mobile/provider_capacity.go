@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	maxRemoteProviders     = 128
 	maxRuleProviderBytes   = 16 * 1024 * 1024
 	maxProviderTotalBytes  = 32 * 1024 * 1024
 	maxProviderBridgeBytes = 24 * 1024 * 1024
@@ -18,8 +19,22 @@ const (
 	maxPrivateBridgeBytes  = 16 * 1024 * 1024
 	maxRuleDataBytes       = 48 * 1024 * 1024
 	maxPackedRuleDataBytes = 8 * 1024 * 1024
-	packedProviderPrefix   = "pingclash-cache-v1:gzip:"
-	packedRuleDataPrefix   = "pingclash-rules-v1:gzip:"
+	// Sized for large airport subscriptions as mihomo loads them: regional and
+	// service groups, thousands of nodes and rule lists in the tens of thousands.
+	// Past a limit only the excess is dropped and counted, never the whole list.
+	maxImportNodes     = 5000
+	maxImportGroups    = 512
+	maxImportRules     = 50000
+	maxImportRuleBytes = 4 * 1024 * 1024
+	maxImportNodeBytes = 8 * 1024 * 1024
+	// The user's own rules come on top of the subscription's.
+	maxRuntimeRules     = maxImportRules + 5000
+	maxRuntimeRuleBytes = maxImportRuleBytes + 512*1024
+	// Parser work bounds: alias expansion and lexical structure, not document size.
+	maxYAMLElements      = 1000000
+	maxYAMLStructure     = 2000000
+	packedProviderPrefix = "pingclash-cache-v1:gzip:"
+	packedRuleDataPrefix = "pingclash-rules-v1:gzip:"
 )
 
 func unpackBounded(text, prefix string, maximum, packedMaximum int) ([]byte, error) {

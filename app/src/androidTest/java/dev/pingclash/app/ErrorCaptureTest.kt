@@ -9,6 +9,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -74,7 +75,7 @@ class ErrorCaptureTest {
                 .performTextInput("https://example.invalid/feed?token=CANARY-SUB-TOKEN-1234")
             hideFixtureKeyboard()
             assertFalse(protected(activity))
-            compose.onNodeWithText("显示").performClick()
+            compose.onNodeWithContentDescription("显示").performClick()
             compose.waitUntil(5000) { protected(activity) }
             val message = ProviderFailure(1, "rule", "provider_http_403").publicMessage()
             instrumentation.runOnMainSync {
@@ -112,7 +113,7 @@ class ErrorCaptureTest {
             assertSafeFrame(activity)
             compose.onNodeWithText(tr(R.string.close)).performClick()
             compose.waitUntil(5000) { protected(activity) }
-            compose.onNodeWithText("隐藏").performClick()
+            compose.onNodeWithContentDescription("隐藏").performClick()
             compose.waitUntil(5000) { !protected(activity) }
             assertEquals(
                 0,

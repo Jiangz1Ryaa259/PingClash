@@ -4,6 +4,18 @@ package dev.pingclash.app
 internal val providerCodes =
     setOf(
         "provider_invalid",
+        "provider_count_limit",
+        "provider_document_syntax",
+        "provider_document_limit",
+        "provider_dns_document",
+        "provider_group_keys",
+        "provider_group_filter",
+        "provider_group_use",
+        "provider_group_reference",
+        "provider_rule_reference",
+        "provider_rule_entry",
+        "provider_bridge_invalid",
+        "provider_internal",
         "provider_payload",
         "provider_network",
         "provider_dns",
@@ -35,7 +47,10 @@ internal class ProviderFailure(index: Int, kind: String, code: String) :
     val kind = kind.takeIf { it in setOf("proxy", "rule") }.orEmpty()
     val code = safeProviderCode(code)
 
-    fun publicMessage() = tr(R.string.provider_failure, index, kind, downloadFailureText(code))
+    fun publicMessage() =
+        if (index > 0 && kind.isNotBlank())
+            tr(R.string.provider_failure, index, kind, downloadFailureText(code))
+        else tr(R.string.provider_configuration_failure, downloadFailureText(code))
 }
 
 internal class SubscriptionTransferFailure(val code: String) :
@@ -58,6 +73,18 @@ private val providerFailureResources =
         "provider_connect" to R.string.provider_connect,
         "provider_redirect" to R.string.provider_redirect,
         "provider_invalid" to R.string.provider_invalid,
+        "provider_count_limit" to R.string.provider_count_limit,
+        "provider_document_syntax" to R.string.provider_document_syntax,
+        "provider_document_limit" to R.string.provider_document_limit,
+        "provider_dns_document" to R.string.provider_dns_document,
+        "provider_group_keys" to R.string.provider_group_keys,
+        "provider_group_filter" to R.string.provider_group_filter,
+        "provider_group_use" to R.string.provider_group_use,
+        "provider_group_reference" to R.string.provider_group_reference,
+        "provider_rule_reference" to R.string.provider_rule_reference,
+        "provider_rule_entry" to R.string.provider_rule_entry,
+        "provider_bridge_invalid" to R.string.provider_bridge_invalid,
+        "provider_internal" to R.string.provider_internal,
         "provider_payload" to R.string.provider_payload,
         "provider_size_limit" to R.string.provider_size_limit,
         "provider_total_limit" to R.string.provider_total_limit,
@@ -110,7 +137,7 @@ internal fun providerErrorRecord(value: String): String {
     else ""
 }
 
-private const val MAX_PROVIDER_COUNT = 128
+private const val MAX_PROVIDER_COUNT = MAX_REMOTE_PROVIDERS
 private const val MIN_HTTP_STATUS = 100
 private const val MAX_HTTP_STATUS = 599
 private const val ERROR_RECORD_PARTS = 3

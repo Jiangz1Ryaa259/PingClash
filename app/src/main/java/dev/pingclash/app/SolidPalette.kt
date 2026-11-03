@@ -7,6 +7,16 @@ internal const val RETIRED_DOVE_COLOR = "#E8E3DF"
 
 internal class Swatch(val hex: String, val name: Int)
 
+/**
+ * What the colour editor is doing: adding a colour, or changing [original]. It opens on [start].
+ */
+internal class ColorEdit(
+    val original: String?,
+    val start: String,
+    val palette: List<String> = emptyList(),
+    val warnDark: Boolean = true,
+)
+
 // Four luxury-inspired presets softened for background use; custom colours remain editable.
 internal val PALETTE =
     listOf(

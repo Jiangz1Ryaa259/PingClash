@@ -20,8 +20,8 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -178,15 +180,16 @@ private fun RoutingApplicationRow(
     Row(
         Modifier.fillMaxWidth()
             .fluidClickable(enabled, depth = .97f, onClick = toggle)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .semantics { this.selected = selected }
+            .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         RoutingAppIcon(app.packageName, icons)
-        Checkbox(selected, { toggle() }, enabled = enabled)
-        Column(Modifier.weight(1f)) {
+        Column(Modifier.weight(1f).padding(start = 12.dp)) {
             Text(app.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(app.packageName, color = Muted, style = MaterialTheme.typography.bodySmall)
         }
+        CheckCircle(selected, enabled)
     }
 }
 
@@ -198,19 +201,21 @@ private fun RoutingFilterControls(
     onMode: (String) -> Unit,
     onFilters: (RoutingFilters) -> Unit,
 ) {
-    SettingsCard {
-        Choices(
-            tr(R.string.mode),
-            mode,
-            listOf(
-                "all" to tr(R.string.all_apps),
-                "exclude" to tr(R.string.exclude_selected_apps),
-                "include" to tr(R.string.only_selected_apps),
-            ),
-            enabled,
-            onMode,
-        )
-        SettingField(tr(R.string.search_apps), filters.query, true) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SettingsSection {
+            PopUpChoice(
+                tr(R.string.mode),
+                mode,
+                listOf(
+                    "all" to tr(R.string.all_apps),
+                    "exclude" to tr(R.string.exclude_selected_apps),
+                    "include" to tr(R.string.only_selected_apps),
+                ),
+                enabled,
+                onMode,
+            )
+        }
+        SearchField(tr(R.string.search_apps), filters.query) {
             onFilters(filters.copy(query = it.take(100)))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -218,11 +223,13 @@ private fun RoutingFilterControls(
                 filters.selected,
                 { onFilters(filters.copy(selected = !filters.selected)) },
                 label = { Text(tr(R.string.settings_selected_apps)) },
+                shape = CircleShape,
             )
             FilterChip(
                 filters.system,
                 { onFilters(filters.copy(system = !filters.system)) },
                 label = { Text(tr(R.string.settings_system_apps)) },
+                shape = CircleShape,
             )
         }
     }
@@ -240,10 +247,10 @@ private fun LazyListScope.routingApplicationItems(
             color = Panel,
             shape =
                 RoundedCornerShape(
-                    topStart = if (index == 0) 14.dp else 0.dp,
-                    topEnd = if (index == 0) 14.dp else 0.dp,
-                    bottomStart = if (index == listed.lastIndex) 14.dp else 0.dp,
-                    bottomEnd = if (index == listed.lastIndex) 14.dp else 0.dp,
+                    topStart = if (index == 0) 16.dp else 0.dp,
+                    topEnd = if (index == 0) 16.dp else 0.dp,
+                    bottomStart = if (index == listed.lastIndex) 16.dp else 0.dp,
+                    bottomEnd = if (index == listed.lastIndex) 16.dp else 0.dp,
                 ),
         ) {
             RoutingApplicationRow(app, icons, app.packageName in selected, enabled) {
@@ -262,23 +269,23 @@ private fun LazyListScope.manualRoutingItems(
 ) {
     item(key = "manual") {
         Column(Modifier.padding(top = 12.dp)) {
-            SettingsCard {
-                SettingField(tr(R.string.package_name), input.text, enabled) {
+            SettingsSection {
+                TextFieldRow(tr(R.string.package_name), input.text, enabled) {
                     input.change(it.take(255))
                 }
-                TextButton(
-                    {
-                        val pkg = input.text.trim()
-                        if (!validPackageName(pkg)) input.reject()
-                        else {
-                            if (pkg !in draft.packages.toSet())
-                                onChange(draft.copy(packages = (draft.packages + pkg).take(300)))
-                            input.change("")
-                        }
-                    },
+                RowDivider(underIcons = false)
+                ActionRow(
+                    tr(R.string.add_package_name),
+                    "add-package",
                     enabled = enabled && input.text.isNotBlank(),
                 ) {
-                    Text(tr(R.string.add_package_name))
+                    val pkg = input.text.trim()
+                    if (!validPackageName(pkg)) input.reject()
+                    else {
+                        if (pkg !in draft.packages.toSet())
+                            onChange(draft.copy(packages = (draft.packages + pkg).take(300)))
+                        input.change("")
+                    }
                 }
             }
         }

@@ -48,42 +48,62 @@ func (e *remoteFailure) Error() string { return e.code }
 func remoteResult(value any) string    { b, _ := json.Marshal(value); return string(b) }
 func remoteError(e error) string {
 	f := &remoteFailure{0, "", "provider_invalid"}
-	errors.As(e, &f)
+	if !errors.As(e, &f) && e != nil {
+		// Preserve only fixed public codes, never an arbitrary parser/transport error.
+		switch e.Error() {
+		case "provider_payload", "provider_size_limit", "provider_total_limit", "provider_cache_limit",
+			"provider_config_limit", "provider_rule_limit", "provider_rule_document",
+			"provider_rule_syntax", "provider_rule_type", "provider_count_limit",
+			"provider_document_syntax", "provider_document_limit", "provider_dns_document",
+			"provider_group_keys", "provider_group_filter", "provider_group_use",
+			"provider_group_reference", "provider_rule_reference", "provider_rule_entry",
+			"provider_bridge_invalid", "provider_internal":
+			f.code = e.Error()
+		}
+	}
 	return remoteResult(map[string]any{"state": "failed", "index": f.index, "kind": f.kind, "code": f.code})
 }
-func remoteYAML(text string) (any, error) { return remoteYAMLBounded(text, 50000, 2*1024*1024) }
+func remoteYAML(text string) (any, error) {
+	return remoteYAMLBounded(text, maxYAMLElements, maxImportNodeBytes)
+}
 func remoteYAMLWithBudget(text string, budget int) (any, error) {
 	return remoteYAMLBounded(text, budget, maxRuleProviderBytes)
 }
 func remoteYAMLBounded(text string, budget, maximum int) (any, error) {
-	if len(text) == 0 || len(text) > maximum || strings.Count(text, "\n") > budget {
-		return nil, errors.New("provider_payload")
+	if len(text) == 0 {
+		return nil, errors.New("provider_document_syntax")
+	}
+	// Align the pre-parse lexical allowance with ImportProfile. Punctuation in
+	// comments/scalars is not an AST node. The expanded node budget stays bounded.
+	lexicalBudget := max(budget, 200000)
+	if len(text) > maximum || strings.Count(text, "\n") > lexicalBudget {
+		return nil, errors.New("provider_document_limit")
 	}
 	punct := 0
 	for _, c := range text {
 		if strings.ContainsRune("\n[]{}:,", c) {
 			punct++
-			if punct > budget {
-				return nil, errors.New("provider_payload")
+			if punct > lexicalBudget {
+				return nil, errors.New("provider_document_limit")
 			}
 		}
 	}
 	d := yaml.NewDecoder(strings.NewReader(normalizeJSONStringTokens(text)))
 	var n yaml.Node
 	if d.Decode(&n) != nil || len(n.Content) != 1 || d.Decode(new(yaml.Node)) != io.EOF {
-		return nil, errors.New("provider_payload")
+		return nil, errors.New("provider_document_syntax")
 	}
 	count := 0
 	if !safeYAMLWithBudget(&n, 0, &count, budget) {
-		return nil, errors.New("provider_payload")
+		return nil, errors.New("provider_document_limit")
 	}
 	normalizeYAMLProtocolScalars(&n, nil, 0)
 	var v any
 	if n.Decode(&v) != nil {
-		return nil, errors.New("provider_payload")
+		return nil, errors.New("provider_document_syntax")
 	}
 	if !retainNativeDNSDocument(&n, v) {
-		return nil, errors.New("provider_payload")
+		return nil, errors.New("provider_dns_document")
 	}
 	return v, nil
 }
@@ -100,12 +120,15 @@ func remotePlan(text string) (map[string]any, []remoteSpec, error) {
 	specs := []remoteSpec{}
 	for _, kind := range []string{"proxy", "rule"} {
 		raw, exists := root[kind+"-providers"]
-		if !exists {
+		if !exists || raw == nil {
 			continue
 		}
 		providers, ok := raw.(map[string]any)
-		if !ok || len(providers) > 128 {
+		if !ok {
 			return nil, nil, errors.New("provider_invalid")
+		}
+		if len(providers) > maxRemoteProviders {
+			return nil, nil, &remoteFailure{0, kind, "provider_count_limit"}
 		}
 		names := []string{}
 		for name := range providers {
@@ -286,8 +309,8 @@ func remotePlan(text string) (map[string]any, []remoteSpec, error) {
 				}
 			}
 			specs = append(specs, s)
-			if len(specs) > 128 {
-				return bad()
+			if len(specs) > maxRemoteProviders {
+				return nil, nil, &remoteFailure{0, kind, "provider_count_limit"}
 			}
 		}
 	}
@@ -298,7 +321,7 @@ func remotePlan(text string) (map[string]any, []remoteSpec, error) {
 func PlanRemoteProviders(text string) (result string) {
 	defer func() {
 		if recover() != nil {
-			result = remoteError(errors.New("provider_invalid"))
+			result = remoteError(errors.New("provider_internal"))
 		}
 	}()
 	unwrapped, _ := unwrapSubscription(text)
@@ -317,7 +340,7 @@ func PlanRemoteProviders(text string) (result string) {
 func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 	defer func() {
 		if recover() != nil {
-			result = remoteError(errors.New("provider_payload"))
+			result = remoteError(errors.New("provider_internal"))
 		}
 	}()
 	root, specs, e := remotePlan(text)
@@ -328,11 +351,11 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 		return remoteResult(map[string]any{"state": "passed", "content": text})
 	}
 	if len(bodiesJSON) > maxProviderBridgeBytes {
-		return remoteError(errors.New("provider_payload"))
+		return remoteError(errors.New("provider_cache_limit"))
 	}
 	var bodies map[string]string
 	if json.Unmarshal([]byte(bodiesJSON), &bodies) != nil {
-		return remoteError(errors.New("provider_payload"))
+		return remoteError(errors.New("provider_bridge_invalid"))
 	}
 	nodes, _ := root["proxies"].([]any)
 	nodes = append([]any{}, nodes...)
@@ -457,7 +480,7 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 				}
 				prepared = append(prepared, n)
 				members[s.Name] = append(members[s.Name], name)
-				if len(nodes) > 500 {
+				if len(nodes) > maxImportNodes {
 					return bad()
 				}
 			}
@@ -478,13 +501,17 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 				return fail("provider_html")
 			}
 			var entries []any
-			if s.Format == "mrs" {
+			format := s.Format
+			if format != "mrs" {
+				format = ruleBodyFormat(trimmed)
+			}
+			if format == "mrs" {
 				var e error
 				entries, e = decodeMrsEntries(rawBody, s.Behavior)
 				if e != nil {
 					return fail(e.Error())
 				}
-			} else if s.Format == "yaml" {
+			} else if format == "yaml" {
 				v, e := remoteYAMLWithBudget(trimmed, maxProviderRules*3)
 				if e != nil {
 					return fail("provider_rule_document")
@@ -494,6 +521,11 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 					return fail("provider_rule_document")
 				}
 				entries, ok = m["payload"].([]any)
+				if len(entries) == 0 {
+					if rules, typed := m["rules"].([]any); typed {
+						entries, ok = rules, true
+					}
+				}
 				if !ok {
 					return fail("provider_rule_document")
 				}
@@ -516,7 +548,7 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 					return fail("provider_rule_syntax")
 				}
 				line = strings.TrimSpace(line)
-				if s.Behavior == "classical" && len(line) > 2048 {
+				if len(line) > 2048 {
 					line = ""
 				} // Preserve the entry position; skip instead of retaining oversized invalid data.
 				set.Entries = append(set.Entries, line)
@@ -536,7 +568,7 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 		}
 		normalized, valid := normalizeGroupKeys(g)
 		if !valid {
-			return remoteError(errors.New("provider_payload"))
+			return remoteError(errors.New("provider_group_keys"))
 		}
 		g = normalized
 		groups[gi] = g
@@ -546,7 +578,7 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 		// remove explicitly named nested policy groups such as an auto selector.
 		filters, e := compileFilters(stringOption(g, "filter"))
 		if e != nil {
-			return remoteError(errors.New("provider_payload"))
+			return remoteError(errors.New("provider_group_filter"))
 		}
 		appendProvider := func(values []any) {
 			for _, value := range values {
@@ -557,16 +589,16 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 			}
 		}
 		use, exists := g["use"]
-		if exists {
+		if exists && use != nil {
 			u, ok := use.([]any)
 			if !ok {
-				return remoteError(errors.New("provider_payload"))
+				return remoteError(errors.New("provider_group_use"))
 			}
 			for _, raw := range u {
 				name, ok := raw.(string)
 				m, exists := members[name]
 				if !ok || !exists {
-					return remoteError(errors.New("provider_payload"))
+					return remoteError(errors.New("provider_group_reference"))
 				}
 				appendProvider(m)
 			}
@@ -589,7 +621,7 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 			}
 		}
 		if filters.failed {
-			return remoteError(errors.New("provider_payload"))
+			return remoteError(errors.New("provider_group_filter"))
 		}
 		g["proxies"] = list
 		delete(g, "use")
@@ -602,15 +634,15 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 	for _, raw := range rawRules {
 		line, ok := raw.(string)
 		if !ok {
-			return remoteError(errors.New("provider_payload"))
+			return remoteError(errors.New("provider_rule_entry"))
 		}
 		kind, payload, target, params := RC.ParseRulePayload(line, true)
 		if kind == "RULE-SET" {
 			if target == "" || len(target) > 512 || len(params) > 32 {
-				return remoteError(errors.New("provider_payload"))
+				return remoteError(errors.New("provider_rule_entry"))
 			}
 			if _, exists := ruleSets[payload]; !exists {
-				return remoteError(errors.New("provider_payload"))
+				return remoteError(errors.New("provider_rule_reference"))
 			}
 		}
 		rules = append(rules, line)
@@ -631,4 +663,27 @@ func ResolveRemoteProviders(text, bodiesJSON string) (result string) {
 		return remoteError(&remoteFailure{0, "rule", "provider_config_limit"})
 	}
 	return remoteResult(map[string]any{"state": "passed", "content": string(b)})
+}
+
+// A rule source's body says what it is: a YAML document opens with a key
+// ("payload:", or any other so a wrong document is still reported), a flow
+// mapping or a list item; anything else is one entry per line. Domains, CIDRs
+// (including IPv6) and classical rules never look like a YAML key. The declared
+// or default format is not trusted for this, because subscriptions routinely
+// serve YAML lists as ".txt" and plain lists without a format, and reading one
+// as the other turns every entry into an invalid rule.
+var yamlKeyLine = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_-]*:(\s|$)`)
+
+func ruleBodyFormat(body string) string {
+	for _, line := range strings.Split(body, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "//") {
+			continue
+		}
+		if yamlKeyLine.MatchString(line) || strings.HasPrefix(line, "{") || strings.HasPrefix(line, "- ") {
+			return "yaml"
+		}
+		return "text"
+	}
+	return "text"
 }

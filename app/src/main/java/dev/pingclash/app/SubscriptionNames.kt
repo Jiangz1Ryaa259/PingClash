@@ -74,6 +74,6 @@ internal class SubscriptionInput(val source: String, val suggestedName: String) 
 
 internal fun subscriptionInput(raw: String): SubscriptionInput? {
     val text = raw.trim()
-    if (validHttps(text)) return SubscriptionInput(text, "")
-    return SubscriptionDeepLink.parse(text)?.let { SubscriptionInput(it.source, it.suggestedName) }
+    return normalizedSubscriptionLink(text)?.let { SubscriptionInput(it.source, it.label) }
+        ?: SubscriptionDeepLink.parse(text)?.let { SubscriptionInput(it.source, it.suggestedName) }
 }

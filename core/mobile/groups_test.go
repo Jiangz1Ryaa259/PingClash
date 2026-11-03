@@ -126,7 +126,8 @@ func TestGraphBoundariesNeverLoadFilesOrResolveAmbiguousNames(t *testing.T) {
 		}
 		large = append(large, map[string]any{"name": string(rune('a' + i)), "type": "anytls", "server": "example.invalid", "port": 443, "password": strings.Repeat("x", 1024), "dialer-proxy": ref})
 	}
-	for i := 0; i < 400; i++ {
+	// Enough expanded chains to pass the node byte budget.
+	for i := 0; i < 1200; i++ {
 		large = append(large, map[string]any{"name": "root" + string(rune(1000+i)), "type": "anytls", "server": "example.invalid", "port": 443, "password": strings.Repeat("x", 1024), "dialer-proxy": "a"})
 	}
 	encoded, _ := json.Marshal(map[string]any{"proxies": large})

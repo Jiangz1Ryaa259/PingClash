@@ -71,8 +71,9 @@ func importShareLinks(text, format string) string {
 			continue
 		}
 		count++
-		if count > 500 {
-			return `{"state":"failed","code":"profile_invalid","nodes":[]}`
+		if count > maxImportNodes {
+			rejected["resource_limit"]++
+			continue
 		}
 		node, err := parseShareLink(line)
 		if err != nil {
@@ -98,6 +99,12 @@ func importShareLinks(text, format string) string {
 	result.Format = format
 	encoded, _ := json.Marshal(result)
 	return string(encoded)
+}
+
+// Share-link parameters that only name, group or tune a node for another client.
+var cosmeticShareParameters = map[string]bool{
+	"remarks": true, "remark": true, "name": true, "group": true, "emoji": true,
+	"spx": true, "fragment": true, "tfo": true, "udp": true, "mptcp": true,
 }
 
 func parseShareLink(line string) (map[string]any, error) {
@@ -209,6 +216,12 @@ func parseShareLink(line string) (map[string]any, error) {
 				known = true
 				break
 			}
+		}
+		// Cosmetic and client-specific parameters other apps append are ignored
+		// rather than losing the node. Anything else unknown may carry a security
+		// setting (a pin, a key, a chain) and still rejects it.
+		if !known && cosmeticShareParameters[strings.ToLower(key)] {
+			continue
 		}
 		if !known {
 			return nil, errors.New("unsupported_fields")

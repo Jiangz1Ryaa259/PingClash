@@ -15,10 +15,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -32,8 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -46,14 +40,15 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-internal enum class ImportMethod(val title: Int, val glyph: PcIcon) {
-    URL(R.string.import_from_url, PcIcon.Settings),
-    CLIPBOARD(R.string.import_from_clipboard, PcIcon.Copy),
-    TEXT(R.string.import_from_text, PcIcon.Tools),
-    FILE(R.string.import_file, PcIcon.Tools),
-    BUNDLE(R.string.import_from_bundle, PcIcon.Tools),
-    IMAGE(R.string.import_from_image, PcIcon.Gauge),
-    CAMERA(R.string.import_from_camera, PcIcon.Gauge),
+/** How a profile can be added; [section] groups the menu: links, text and files, QR codes. */
+internal enum class ImportMethod(val title: Int, val glyph: PcIcon, val section: Int) {
+    URL(R.string.import_from_url, PcIcon.Link, 0),
+    CLIPBOARD(R.string.import_from_clipboard, PcIcon.Clipboard, 0),
+    TEXT(R.string.import_from_text, PcIcon.Profile, 1),
+    FILE(R.string.import_file, PcIcon.Folder, 1),
+    BUNDLE(R.string.import_from_bundle, PcIcon.Archive, 1),
+    IMAGE(R.string.import_from_image, PcIcon.Qr, 2),
+    CAMERA(R.string.import_from_camera, PcIcon.Camera, 2),
 }
 
 /** Deliberately not parcelable/saveable: subscription credentials stay in memory. */
@@ -84,24 +79,12 @@ class ProfileImportActivity : ComponentActivity() {
             val data by model.data.collectAsStateWithLifecycle()
             val ui by model.ui.collectAsStateWithLifecycle()
             PingClashTheme(data.client.effectiveTheme, data.client.dynamicColor) {
-                UnfoldingPage(rememberMotionAllowed(data.client.reduceEffects), ::finishFolded) {
-                    close ->
-                    ProfileImportContent(method, model, input, ui) { id ->
-                        if (id != null) setResult(RESULT_OK, Intent().putExtra(RESULT_PROFILE, id))
-                        close()
-                    }
+                ProfileImportContent(method, model, input, ui) { id ->
+                    if (id != null) setResult(RESULT_OK, Intent().putExtra(RESULT_PROFILE, id))
+                    finish()
                 }
             }
         }
-    }
-
-    // The page already folded itself away; no second system transition.
-    @Suppress("DEPRECATION")
-    private fun finishFolded() {
-        finish()
-        if (android.os.Build.VERSION.SDK_INT >= 34)
-            overrideActivityTransition(OVERRIDE_TRANSITION_CLOSE, 0, 0)
-        else overridePendingTransition(0, 0)
     }
 
     companion object {
@@ -110,45 +93,6 @@ class ProfileImportActivity : ComponentActivity() {
 
         internal fun intent(context: Context, method: ImportMethod) =
             Intent(context, ProfileImportActivity::class.java).putExtra(METHOD, method.name)
-
-        /** No system transition: the page unfolds itself over the profile list. */
-        internal fun unfoldOptions(context: Context) =
-            androidx.core.app.ActivityOptionsCompat.makeCustomAnimation(context, 0, 0)
-    }
-}
-
-/**
- * Origami entry: the form unfolds upward from the add button's corner over the still-visible
- * profile list (translucent window), and folds back down before the activity finishes.
- */
-@Composable
-private fun UnfoldingPage(
-    motion: Boolean,
-    onFolded: () -> Unit,
-    content: @Composable (close: () -> Unit) -> Unit,
-) {
-    val progress = remember { Animatable(if (motion) 0f else 1f) }
-    var closing by remember { mutableStateOf(false) }
-    LaunchedEffect(closing) {
-        if (!closing) {
-            progress.animateTo(1f, tween(380, easing = FastOutSlowInEasing))
-        } else {
-            if (motion) progress.animateTo(0f, tween(240, easing = FastOutLinearInEasing))
-            onFolded()
-        }
-    }
-    Box(
-        Modifier.fillMaxSize().graphicsLayer {
-            val p = progress.value
-            transformOrigin = TransformOrigin(.86f, 1f)
-            cameraDistance = 18 * density
-            rotationX = 72f * (1f - p)
-            scaleX = .88f + .12f * p
-            scaleY = .88f + .12f * p
-            alpha = (p * 1.6f).coerceIn(0f, 1f)
-        }
-    ) {
-        content { closing = true }
     }
 }
 
@@ -294,4 +238,4 @@ internal class ImportAcquisitionModel(application: android.app.Application) :
     }
 }
 
-internal const val IMPORT_TEXT_LIMIT = 2 * 1024 * 1024
+internal const val IMPORT_TEXT_LIMIT = MAX_FEED_BYTES

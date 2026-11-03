@@ -16,7 +16,7 @@ internal class ProfileDocument(
 
     companion object {
         private const val ENTRIES = 160
-        private const val CONFIG_BYTES = 2 * 1024 * 1024
+        private const val CONFIG_BYTES = MAX_FEED_BYTES
         private const val PATH_LENGTH = 512
         private const val SIGNATURE_BYTES = 4
         private val zipSignature = byteArrayOf(0x50, 0x4b, 3, 4)

@@ -38,9 +38,11 @@ private constructor(
                             fields[key] = value
                         }
                     }
-                    val source = requireNotNull(fields["url"])
-                    require(validHttps(source))
-                    val host = requireNotNull(URI(source).host)
+                    // Links from other apps stay strict: no fragment, which a pasted link may
+                    // carry as its name; loose characters are still encoded the same way.
+                    val url = requireNotNull(fields["url"]).also { require('#' !in it) }
+                    val source = requireNotNull(normalizedSubscriptionLink(url)).source
+                    val host = requireNotNull(httpsAuthority(URI(source))).first
                     val suggested = cleanName(fields["name"].orEmpty())
                     val name = suggested.ifBlank { tr(R.string.deep_link_default_name) }
                     SubscriptionDeepLink(source, host, name, suggested)

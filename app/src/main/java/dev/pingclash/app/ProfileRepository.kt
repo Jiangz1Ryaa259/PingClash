@@ -24,7 +24,14 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 private const val MAX_NODE_SECURITY_DEPTH = 8
-private const val PROFILE_STORAGE_BYTES = 32 * 1024 * 1024
+private const val PROFILE_STORAGE_BYTES = 64 * 1024 * 1024
+
+// The core's import limits (core/mobile/provider_capacity.go), sized for large
+// airport subscriptions. Stored profiles are read back within the same bounds.
+internal const val MAX_PROFILE_NODES = 5000
+internal const val MAX_PROFILE_GROUPS = 512
+internal const val MAX_PROFILE_RULES = 50000
+internal const val MAX_PROFILE_RULE_BYTES = 4 * 1024 * 1024
 private const val RECOVERY_FILE = "profiles.enc.recovery"
 
 // Most users are in mainland China. Like FlClash's baseline DNS (doh.pub / AliDNS) and
@@ -174,7 +181,7 @@ data class LocalProfile(
 
     fun proxyConfig(name: String): String? {
         // Plain nodes already have validated, resolved configs. Avoid parsing a
-        // whole 500-node definition for every latency request.
+        // whole definition of thousands of nodes for every latency request.
         nodes
             .firstOrNull { it.name == name }
             ?.let {
@@ -319,10 +326,10 @@ class ProfileRepository(private val context: Context) {
                 parsed.optInt("unsupported"),
                 parsed.optBoolean("routingIgnored"),
                 rejectionCounts(parsed.optJSONObject("rejections")),
-                parsed.optInt("verificationEnabled").coerceIn(0, 500),
+                parsed.optInt("verificationEnabled").coerceIn(0, MAX_PROFILE_NODES),
                 importFieldCounts(parsed.optJSONObject("fieldIssues")),
                 readGroups(parsed.optJSONArray("groups")),
-                parsed.optInt("groupsUnsupported").coerceIn(0, 64),
+                parsed.optInt("groupsUnsupported").coerceIn(0, MAX_PROFILE_NODES),
                 parsed.optString("definition"),
                 parsed.optBoolean("groupsDeclared"),
                 keptSelections,
@@ -1184,7 +1191,7 @@ class ProfileRepository(private val context: Context) {
         fun <T> optional(fallback: T, read: () -> T): T = lenient(fallback, read) as T
         val nodes = profile.getJSONArray("nodes")
         val decodedNodes =
-            (0 until minOf(nodes.length(), 500)).mapNotNull { n ->
+            (0 until minOf(nodes.length(), MAX_PROFILE_NODES)).mapNotNull { n ->
                 optional<LocalNode?>(null) {
                     val node = nodes.getJSONObject(n)
                     LocalNode(
@@ -1205,17 +1212,17 @@ class ProfileRepository(private val context: Context) {
             profile.optInt("unsupported"),
             profile.optBoolean("routingIgnored"),
             optional(emptyMap()) { rejectionCounts(profile.optJSONObject("rejections")) },
-            profile.optInt("verificationEnabled").coerceIn(0, 500),
+            profile.optInt("verificationEnabled").coerceIn(0, MAX_PROFILE_NODES),
             optional(emptyMap()) { importFieldCounts(profile.optJSONObject("fieldIssues")) },
             optional(emptyList()) { readGroups(profile.optJSONArray("groups")) },
-            profile.optInt("groupsUnsupported").coerceIn(0, 64),
+            profile.optInt("groupsUnsupported").coerceIn(0, MAX_PROFILE_NODES),
             profile.optString("definition"),
             profile.optBoolean("groupsDeclared"),
             optional(emptyMap()) {
                 profile
                     .optJSONObject("userSelections")
                     ?.let { picks ->
-                        require(picks.length() <= 64)
+                        require(picks.length() <= MAX_PROFILE_GROUPS)
                         picks.keys().asSequence().associateWith { picks.getString(it) }
                     }
                     .orEmpty()
@@ -1246,20 +1253,20 @@ internal class SettingsFailure(
 
 private fun readRules(value: JSONArray?): List<String> {
     if (value == null) return emptyList()
-    require(value.length() <= 2000)
+    require(value.length() <= MAX_PROFILE_RULES)
     val rules = (0 until value.length()).map(value::getString)
-    require(rules.sumOf { it.length } <= 256 * 1024 && rules.all { it.length <= 2048 })
+    require(rules.sumOf { it.length } <= MAX_PROFILE_RULE_BYTES && rules.all { it.length <= 2048 })
     return rules
 }
 
 internal fun readGroups(value: JSONArray?): List<LocalGroup> =
     if (value == null) emptyList()
     else {
-        require(value.length() <= 64)
+        require(value.length() <= MAX_PROFILE_GROUPS)
         (0 until value.length()).map { index ->
             val group = value.getJSONObject(index)
             val members = group.getJSONArray("proxies")
-            require(members.length() in 1..500)
+            require(members.length() in 1..MAX_PROFILE_NODES)
             LocalGroup(
                 group.getString("name"),
                 group.getString("type"),
@@ -1267,7 +1274,7 @@ internal fun readGroups(value: JSONArray?): List<LocalGroup> =
                 group.getString("selected"),
                 group.getBoolean("supported"),
                 group.optString("reason"),
-                group.optInt("unavailable").coerceIn(0, 500),
+                group.optInt("unavailable").coerceIn(0, MAX_PROFILE_NODES),
             )
         }
     }
@@ -1277,10 +1284,9 @@ internal fun validHttps(raw: String): Boolean =
             val uri = URI(raw)
             raw.length <= 4096 &&
                 uri.scheme == "https" &&
-                !uri.host.isNullOrBlank() &&
                 uri.rawUserInfo == null &&
                 uri.rawFragment == null &&
-                (uri.port == -1 || uri.port in 1..65535)
+                httpsAuthority(uri) != null
         }
         .getOrDefault(false)
 
@@ -1415,7 +1421,9 @@ internal val rejectionLabels
 
 internal fun rejectionCounts(value: JSONObject?): Map<String, Int> =
     rejectionLabels.keys
-        .mapNotNull { key -> value?.optInt(key, 0)?.takeIf { it in 1..500 }?.let { key to it } }
+        .mapNotNull { key ->
+            value?.optInt(key, 0)?.takeIf { it in 1..MAX_PROFILE_NODES }?.let { key to it }
+        }
         .toMap()
 
 internal fun rejectionSummary(counts: Map<String, Int>): String =
@@ -1488,7 +1496,7 @@ internal fun importFieldCounts(value: JSONObject?): Map<String, Int> {
         .mapNotNull { key ->
             val parts = key.split('.')
             if (parts.size != 2 || parts[0] !in protocols || parts[1] !in publicImportFields) null
-            else value.optInt(key).takeIf { it in 1..500 }?.let { key to it }
+            else value.optInt(key).takeIf { it in 1..MAX_PROFILE_NODES }?.let { key to it }
         }
         .toMap()
 }

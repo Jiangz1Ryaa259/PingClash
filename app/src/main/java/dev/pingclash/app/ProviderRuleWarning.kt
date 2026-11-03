@@ -31,7 +31,7 @@ internal fun readProviderRuleWarnings(value: JSONArray?): List<ProviderRuleWarni
     return (0 until value.length()).map { index ->
         val item = value.getJSONObject(index)
         ProviderRuleWarning(
-            item.optInt("source").coerceIn(1, MAX_SOURCES),
+            item.optInt("source").coerceIn(1, MAX_REMOTE_PROVIDERS),
             item.optInt("entry").coerceIn(1, MAX_RULE_ENTRIES),
             item.optString("type").takeIf { it in publicRuleCategories } ?: "UNRECOGNIZED",
             item.optString("reason").takeIf { it in warningReasons } ?: "rule_unsupported",
@@ -158,5 +158,4 @@ private val warningReasons =
         "rule_unsupported",
     )
 private const val MAX_WARNING_ROWS = 64
-private const val MAX_SOURCES = 16
 private const val MAX_RULE_ENTRIES = 500000

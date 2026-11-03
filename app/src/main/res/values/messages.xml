@@ -34,7 +34,7 @@
     <string name="attempt_ms">"%1$s · attempt %2$s · %3$s ms"</string>
     <string name="show_speed_in_notification">"Show speed in notification"</string>
     <string name="saved">"Saved"</string>
-    <string name="rules_exceed_the_limit_of_2_000">"Rules exceed the limit of 2,000 rules or 64 custom outbound targets"</string>
+    <string name="rules_exceed_the_limit_of_2_000">"Rules exceed the limit of 55,000 rules or 64 custom outbound targets"</string>
     <string name="show_destinations_session_memory_only">"Show destinations (session memory only)"</string>
     <string name="running">"Running"</string>
     <string name="clear_usage_totals">"Clear usage totals"</string>

@@ -67,7 +67,8 @@ internal fun HomeConfiguration(state: DashboardState, actions: DashboardActions)
                 }
         }
     }
-    if (details) HomeDashboardSheet(state) { details = false }
+    ExitRefreshEffect(state, actions.refreshExit)
+    if (details) HomeDashboardSheet(state, { actions.refreshExit(true) }) { details = false }
 }
 
 @Composable
@@ -79,19 +80,26 @@ private fun HomeSummary(state: DashboardState, modifier: Modifier, onDetails: ()
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Text(
-            state.data.activeProfile?.name ?: tr(R.string.ui_choose_configuration),
-            Modifier.testTag("home-profile-name"),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleSmall,
-        )
-        Text(
-            modeLabel(state.data.client.mode),
-            color = Muted,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1,
-        )
+        // The name and mode block, with where traffic leaves in its bottom-right corner:
+        // country or region over network. The status lines below keep their full width.
+        Row(verticalAlignment = Alignment.Bottom) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    state.data.activeProfile?.name ?: tr(R.string.ui_choose_configuration),
+                    Modifier.testTag("home-profile-name"),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                Text(
+                    modeLabel(state.data.client.mode),
+                    color = Muted,
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                )
+            }
+            ExitLines(state, Modifier.padding(start = 8.dp, end = 2.dp))
+        }
         Spacer(Modifier.height(2.dp))
         Row(verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {

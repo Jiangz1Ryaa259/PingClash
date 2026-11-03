@@ -36,6 +36,62 @@ class SubscriptionNamingTest {
         get() = ViewModelProvider(compose.activity)[AppViewModel::class.java]
 
     @Test
+    fun looseSubscriptionLinksBecomeTheExactHttpsLinkTheyDenote() {
+        val idn = java.net.IDN.toASCII("订阅.example.com")
+        mapOf(
+                "https://my_sub.example.com/link/abc?clash=1" to
+                    "https://my_sub.example.com/link/abc?clash=1",
+                " https://sub.example.com/sub?target=clash&url=a|b " to
+                    "https://sub.example.com/sub?target=clash&url=a%7Cb",
+                "https://sub.example.com/s?x={y} z" to "https://sub.example.com/s?x=%7By%7D%20z",
+                "https://sub.example.com/s?remark=香港" to
+                    "https://sub.example.com/s?remark=%E9%A6%99%E6%B8%AF",
+                "https://sub.example.com/s?t=a%2Fb&p=100%" to
+                    "https://sub.example.com/s?t=a%2Fb&p=100%25",
+                "HTTPS://sub.example.com:8443/s" to "https://sub.example.com:8443/s",
+                "https://订阅.example.com/s" to "https://$idn/s",
+            )
+            .forEach { (pasted, exact) ->
+                assertEquals(pasted, exact, subscriptionInput(pasted)?.source)
+            }
+        // A provider's #name is not sent; it becomes the suggested name.
+        val named = requireNotNull(subscriptionInput("https://sub.example.com/s#My%20Airport"))
+        assertEquals("https://sub.example.com/s", named.source)
+        assertEquals("My Airport", named.suggestedName)
+        // Deep links decode their url parameter and get the same treatment.
+        val deep =
+            subscriptionInput(
+                "clash://install-config?url=https%3A%2F%2Fmy_sub.example.com%2Fs%3Fa%3D1%7C2&name=A"
+            )
+        assertEquals("https://my_sub.example.com/s?a=1%7C2", deep?.source)
+        // Still refused: plain HTTP, credentials in the link, and anything that is not a link.
+        listOf(
+                "http://sub.example.com/s",
+                "https://user:secret@sub.example.com/s",
+                "https://",
+                "https:///s",
+                "ftp://sub.example.com/s",
+                "sub.example.com/s",
+            )
+            .forEach { assertNull(it, subscriptionInput(it)) }
+        // Authorization stays with the same underscore host and is dropped for another.
+        val headers = mapOf("Authorization" to "token", "User-Agent" to "agent")
+        val from = java.net.URI("https://my_sub.example.com/a")
+        assertEquals(
+            headers,
+            redirectedSubscriptionHeaders(
+                headers,
+                from,
+                java.net.URI("https://my_sub.example.com/b"),
+            ),
+        )
+        assertEquals(
+            mapOf("User-Agent" to "agent"),
+            redirectedSubscriptionHeaders(headers, from, java.net.URI("https://cdn.example.com/b")),
+        )
+    }
+
+    @Test
     fun headerNamesAreBoundedSanitizedAndNeverGuessedFromTokenUrls() {
         val title = "港湾订阅"
         val encoded = "base64:" + Base64.getEncoder().encodeToString(title.toByteArray())
