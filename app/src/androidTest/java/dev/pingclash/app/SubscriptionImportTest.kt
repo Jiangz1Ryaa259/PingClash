@@ -316,14 +316,18 @@ class SubscriptionImportTest {
             // not black out the unrelated activity or navigation bar beneath it.
             val field =
                 compose.onAllNodesWithTag("subscription-content").fetchSemanticsNodes().isNotEmpty()
-            if (field) compose.onNodeWithTag("subscription-content").performScrollTo()
-            val bounds =
-                if (field)
-                    compose
-                        .onNodeWithTag("subscription-content")
-                        .fetchSemanticsNode()
-                        .boundsInWindow
-                else null
+            // The tag sits on the field's text, one line tall: about 19 px at 160 dpi (CI's
+            // default emulator), 57 px at 480 dpi. Size it in dp, and give the window time to
+            // grow back while the keyboard closes.
+            val minimum = 8 * instrumentation.targetContext.resources.displayMetrics.density
+            fun fieldBounds() =
+                compose.onNodeWithTag("subscription-content").fetchSemanticsNode().boundsInWindow
+            if (field)
+                compose.waitUntil(5000) {
+                    compose.onNodeWithTag("subscription-content").performScrollTo()
+                    fieldBounds().let { it.width > minimum && it.height > minimum }
+                }
+            val bounds = if (field) fieldBounds() else null
             val location = IntArray(2)
             var width = 0
             var height = 0
@@ -344,7 +348,10 @@ class SubscriptionImportTest {
             val top = (bounds?.top ?: height * .3f) + location[1]
             val spanX = bounds?.width ?: width * .6f
             val spanY = bounds?.height ?: height * .4f
-            assertTrue("Credential capture bounds must be visible", spanX > 20 && spanY > 20)
+            assertTrue(
+                "Credential capture bounds must be visible",
+                spanX > minimum && spanY > minimum,
+            )
             assertEquals("Actual import window protection", expected, secureWindow)
             var protected = !expected
             try {
