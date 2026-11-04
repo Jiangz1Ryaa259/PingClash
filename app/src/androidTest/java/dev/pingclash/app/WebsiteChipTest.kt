@@ -44,7 +44,7 @@ class WebsiteChipTest {
                 ServiceCheckState(
                     true,
                     mapOf(
-                        "google" to Latency.Failed(WebsiteFailure.HTTP, 403),
+                        "google" to Latency.Failed(WebsiteFailure.TIMEOUT),
                         "claude" to Latency.Running,
                     ),
                 ),
@@ -57,14 +57,15 @@ class WebsiteChipTest {
         assertEquals(listOf(listOf("google")), called)
         compose
             .onNode(
-                hasText("HTTP 403") and hasAnyAncestor(hasTestTag("service-detail-google")),
+                hasText(tr(R.string.timeout)) and
+                    hasAnyAncestor(hasTestTag("service-detail-google")),
                 useUnmergedTree = true,
             )
             .assertIsDisplayed()
     }
 
     @Test
-    fun chipTransitionsFromRunningToMeasuredAndHttpFailureWithoutInventingSuccess() {
+    fun chipTransitionsFromRunningToMeasuredAndARegionRefusalWithoutInventingSuccess() {
         val result = mutableStateOf<Latency?>(null)
         var retries = 0
         fixture { WebsiteCheckChip(serviceTargets.first(), result.value, true) { retries++ } }
@@ -72,8 +73,8 @@ class WebsiteChipTest {
         compose.onNodeWithTag("service-detail-google").assertIsNotEnabled()
         compose.runOnIdle { result.value = Latency.Measured(84) }
         compose.onNodeWithText("84 ms").assertIsDisplayed()
-        compose.runOnIdle { result.value = Latency.Failed(WebsiteFailure.HTTP, 451, 123) }
-        compose.onNodeWithText("HTTP 451").assertIsDisplayed()
+        compose.runOnIdle { result.value = Latency.Failed(WebsiteFailure.RESTRICTED, 451, 123) }
+        compose.onNodeWithText(tr(R.string.website_restricted)).assertIsDisplayed()
         compose.onNodeWithTag("service-detail-google").performClick()
         compose.runOnIdle { assertEquals(1, retries) }
     }

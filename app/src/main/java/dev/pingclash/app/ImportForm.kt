@@ -82,6 +82,7 @@ internal fun ImportDialog(
                 .safeDrawingPadding()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
+                .readableWidth()
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {

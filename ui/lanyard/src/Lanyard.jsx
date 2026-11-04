@@ -956,8 +956,16 @@ const Lanyard = ({
       const anchorY = viewHeight / 2 + 0.2;
       const cardTop = viewHeight / 2 - viewHeight * (hostFrame?.height > 0 ? hostFrame.top / hostFrame.viewportHeight : mix(0.12, 0.42, clamp(s.strapLength, 0, 1)));
       const hangTop = cardTop + (layout.hangY - layout.height / 2);
+      const shift = new THREE.Vector3(anchorX, anchorY, 0).sub(sim.anchor);
       sim.anchor.set(anchorX, anchorY, 0);
       configureSimulation(sim, layout, anchorY - hangTop);
+      if (placed && shift.lengthSq() > 0) {
+        for (const node of sim.nodes) node.add(shift);
+        for (const node of sim.previous) node.add(shift);
+        sim.body.position.add(shift);
+        sim.body.previous.add(shift);
+        sim.grab = null;
+      }
       sim.nodes[0].copy(sim.anchor);
       sim.previous[0].copy(sim.anchor);
     };

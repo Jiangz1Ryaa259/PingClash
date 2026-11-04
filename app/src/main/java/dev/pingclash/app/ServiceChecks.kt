@@ -21,8 +21,9 @@ import kotlinx.coroutines.sync.withPermit
 
 internal data class ServiceTarget(val id: String, val name: String, val url: String)
 
-// Fixed public HTTPS targets. Brand ordering follows the services users commonly check;
-// HTTP reachability does not claim account login or service unlock.
+// Fixed public HTTPS targets. Brand ordering follows the services users commonly check.
+// Reachable means this network gets an HTTP answer from the site; it does not claim account
+// login or service unlock.
 internal val serviceTargets =
     listOf(
         ServiceTarget("google", "Google", "https://www.google.com/generate_204"),
@@ -47,9 +48,6 @@ internal enum class WebsiteFailure {
     REFUSED,
     NETWORK,
     CANCELLED,
-    HTTP,
-    REDIRECT,
-    RESPONSE,
     RESTRICTED,
     OTHER,
 }

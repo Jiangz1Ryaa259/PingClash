@@ -6,15 +6,15 @@ A privacy-focused Android proxy client powered by Mihomo, with connection diagno
 
 [Download](https://github.com/Jiangz1Ryaa259/PingClash/releases/latest) · [使用指南 / User guide](docs/user-guide.md)
 
-**0.2.1 · Android 10+ · arm64-v8a · Rootless VPN · Jetpack Compose**
+**0.2.2 · Android 10+ · arm64-v8a · Rootless VPN · Jetpack Compose**
 
 ## Features
 
 - **Subscriptions and profiles** — import from HTTPS URLs, clipboard, configuration text, files, provider ZIP bundles and QR images, including large subscriptions (up to 5,000 nodes, 512 policy groups and 50,000 rules). Manage profile names, User-Agent, quota and expiry in one place.
 - **Native Mihomo routing** — preserve subscription policy groups and nested selections; switch between Rule, Global and Direct modes, configure application routing, and manage local rules. Profile and node changes apply while the VPN stays connected.
-- **Connection diagnostics** — compare nodes using Mihomo URL tests, inspect independent TCP latency, check website connectivity, and review connection routes, domains and rule types.
+- **Connection diagnostics** — compare nodes using Mihomo URL tests, inspect independent TCP latency, check whether your current network reaches common websites, and review connection routes, domains and rule types.
 - **Live information** — view upload/download speed, traffic, active connections, session duration, service state and memory information, plus your current IP: country or region, network, ASN and, while connected, the route the rules choose.
-- **A fluid interface** — a draggable hanging connection card, animated ocean/cloud backgrounds, customizable solid colors or your own picture, grouped settings, glass navigation, and light/dark themes.
+- **A fluid interface** — a draggable hanging connection card, animated ocean/cloud backgrounds, customizable solid colors or your own picture, grouped settings, glass navigation (a collapsible glass sidebar in landscape and on tablets), and light/dark themes.
 - **Automation and shortcuts** — a Quick Settings tile and a home-screen widget, optional connect on boot, scheduled subscription updates, connect-by-network rules for trusted Wi-Fi, and settings backup and restore.
 - **A standard terminal** — Android `sh` with a PTY, normal keyboard input, colors, pipes, redirection, Ctrl+C, copying and sharing.
 - **Local privacy** — Android Keystore and AES-GCM encrypted configuration storage, local diagnostic and crash reports, no telemetry and no advertisements.

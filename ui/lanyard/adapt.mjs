@@ -93,6 +93,20 @@ export async function adaptReference() {
   replace('      const dt = Math.min(1 / 30, Math.max(1 / 240, (now - last) / 1000));',
     '      const motionDt = Math.max(0, (now - last) / 1000);\n      const dt = Math.min(1 / 30, Math.max(1 / 240, motionDt));');
   replace('      const current = physics();', '      const hosted = syncNative(motionDt);\n      const current = physics();');
+  // The host moves the badge's slot when a sidebar opens or closes, possibly while another
+  // page is shown and the simulation is paused. Carry the whole rig with the anchor, so the
+  // strap never stretches across the screen and touches still land on the card.
+  replace(`      sim.anchor.set(anchorX, anchorY, 0);
+      configureSimulation(sim, layout, anchorY - hangTop);`, `      const shift = new THREE.Vector3(anchorX, anchorY, 0).sub(sim.anchor);
+      sim.anchor.set(anchorX, anchorY, 0);
+      configureSimulation(sim, layout, anchorY - hangTop);
+      if (placed && shift.lengthSq() > 0) {
+        for (const node of sim.nodes) node.add(shift);
+        for (const node of sim.previous) node.add(shift);
+        sim.body.position.add(shift);
+        sim.body.previous.add(shift);
+        sim.grab = null;
+      }`);
   replace('      stepSimulation(sim, dt, current, time);', '      if (!hosted && window.__pingclashFrame?.motion !== false) stepSimulation(sim, dt, current, time);');
   replace("      document.removeEventListener('visibilitychange', onVisibility);", `      window.removeEventListener('pingclash-frame', onNativeFrame);
       window.__lanyardReady = false;

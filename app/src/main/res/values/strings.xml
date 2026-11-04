@@ -41,9 +41,6 @@
     <string name="website_certificate">Certificate error</string>
     <string name="website_refused">Connection refused</string>
     <string name="website_no_network">No network</string>
-    <string name="website_http_status">HTTP %1$d</string>
-    <string name="website_response">Unexpected response</string>
-    <string name="website_redirect">Redirect not verified</string>
     <string name="website_restricted">Access restricted</string>
     <string name="website_retry">Retry %1$s</string>
     <string name="settings_unsaved_title">Unsaved changes</string>
@@ -82,4 +79,6 @@
     <string name="ui_exit_checking">Checking…</string>
     <string name="ui_exit_failed">Check failed</string>
     <string name="ui_exit_route">Route</string>
+    <string name="ui_sidebar_collapse">Collapse sidebar</string>
+    <string name="ui_sidebar_expand">Expand sidebar</string>
 </resources>

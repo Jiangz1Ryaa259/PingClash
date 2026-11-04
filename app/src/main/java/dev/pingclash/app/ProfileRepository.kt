@@ -1339,7 +1339,8 @@ internal object SubscriptionDownloader {
         bodyLimit: SubscriptionReadLimit = SubscriptionReadLimit(),
     ): SubscriptionResponse {
         validateSubscriptionFetch(source, userAgent)
-        var address = URI(source)
+        val original = URI(source)
+        var address = original
         var requestHeaders = headers
         val deadline =
             System.nanoTime() +
@@ -1381,7 +1382,7 @@ internal object SubscriptionDownloader {
                         SubscriptionNames.fromHeaders(
                             connection.getHeaderField("profile-title"),
                             connection.getHeaderField("Content-Disposition"),
-                        ),
+                        ) ?: SubscriptionNames.fromLink(address, original),
                     )
                 }
             } catch (failure: Exception) {

@@ -41,7 +41,7 @@ internal object WebsiteProbe {
                 started = System.nanoTime()
                 val remaining = TimeUnit.NANOSECONDS.toMillis(deadline - started).toInt()
                 if (remaining <= 0) throw SocketTimeoutException("website_timeout")
-                val reply = response(network, url, remaining, control)
+                val reply = response(network, target, url, remaining, control)
                 val failure = websiteResponseFailure(target, reply)
                 val elapsed =
                     TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started).coerceAtLeast(1)
@@ -64,7 +64,9 @@ internal object WebsiteProbe {
      * slow warm-up only hands the rest of the budget to the measured request.
      */
     private fun warmUp(network: Network, url: URL, timeout: Int, control: RunControl) {
-        runCatching { request(network, url, "HEAD", minOf(1000, timeout / 3), control) }
+        runCatching {
+                request(network, url, WebsiteRequest.WARM_UP, minOf(1000, timeout / 3), control)
+            }
             .onFailure { failure ->
                 if (classifyWebsiteFailure(failure) in definiteWebsiteFailures) throw failure
             }
@@ -79,47 +81,34 @@ internal object WebsiteProbe {
             WebsiteFailure.CERTIFICATE,
         )
 
+    /**
+     * The measured request. Its first answer is the verdict: a redirect is an answer too, so it is
+     * never followed (only its target is checked for a region refusal).
+     */
     private fun response(
         network: Network,
-        initial: URL,
+        target: ServiceTarget,
+        url: URL,
         timeout: Int,
         control: RunControl,
-    ): WebsiteReply {
-        var url = initial
-        var reply = WebsiteReply(0, failure = WebsiteFailure.REDIRECT)
-        var finished = false
-        var redirects = 0
-        while (!finished && redirects < 4) {
-            control.check()
-            reply = request(network, url, "GET", timeout, control)
-            if (reply.status !in setOf(301, 302, 303, 307, 308)) finished = true
-            else {
-                val next = reply.location?.let { URL(url, it) }
-                val failure =
-                    when {
-                        next == null -> WebsiteFailure.REDIRECT
-                        restrictedWebsiteLocation(next) -> WebsiteFailure.RESTRICTED
-                        !safeWebsiteRedirect(initial, next) -> WebsiteFailure.REDIRECT
-                        else -> null
-                    }
-                if (failure == null) url = requireNotNull(next)
-                else {
-                    reply = reply.copy(failure = failure)
-                    finished = true
-                }
-            }
-            redirects++
-        }
-        return if (finished) reply else reply.copy(failure = WebsiteFailure.REDIRECT)
-    }
+    ): WebsiteReply =
+        request(
+            network,
+            url,
+            if (regionSensitiveWebsite(target)) WebsiteRequest.READ_PAGE
+            else WebsiteRequest.MEASURE,
+            timeout,
+            control,
+        )
 
     private fun request(
         network: Network,
         url: URL,
-        method: String,
+        kind: WebsiteRequest,
         timeout: Int,
         control: RunControl,
     ): WebsiteReply {
+        val method = if (kind == WebsiteRequest.WARM_UP) "HEAD" else "GET"
         val connection = network.openConnection(url) as HttpsURLConnection
         val resource = control.track(Closeable { connection.disconnect() })
         var keepWarm = false
@@ -143,17 +132,21 @@ internal object WebsiteProbe {
             }
             val status = connection.responseCode
             val location = connection.getHeaderField("Location")?.take(2048)
-            val preview =
-                if (method == "GET" && status in 200..299 && status != 204) {
-                    connection.inputStream.use { input ->
-                        val bytes = readWebsitePreview(input)
-                        // A server may ignore Range: never drain a whole homepage to reuse its
-                        // socket.
-                        connection.disconnect()
-                        bytes.toString(Charsets.UTF_8)
-                    }
+            // Only a region-sensitive service needs a look at its page; read at most 4 KiB.
+            val body =
+                if (kind == WebsiteRequest.READ_PAGE) {
+                    val stream =
+                        if (status in 200..299) connection.inputStream else connection.errorStream
+                    stream
+                        ?.use { input ->
+                            val bytes = readWebsitePreview(input)
+                            // A server may ignore Range: never drain a whole homepage.
+                            connection.disconnect()
+                            bytes.toString(Charsets.UTF_8)
+                        }
+                        .orEmpty()
                 } else {
-                    // Closing the (empty) body returns the socket to the pool for reuse.
+                    // Closing the (empty or unread) body returns the socket to the pool.
                     if (status in 200..299) connection.inputStream.close()
                     else connection.errorStream?.close()
                     ""
@@ -161,7 +154,7 @@ internal object WebsiteProbe {
             control.check()
             // Any HEAD reply has no body, so its connection stays reusable whatever the status.
             keepWarm = method == "HEAD" && status > 0
-            return WebsiteReply(status, location, preview)
+            return WebsiteReply(status, location, body)
         } finally {
             if (!keepWarm) control.release(resource)
         }
@@ -216,6 +209,13 @@ internal object WebsiteProbe {
             control.release(resource)
         }
     }
+}
+
+/** A HEAD that opens the connection; the measured GET; the same GET reading up to 4 KiB. */
+private enum class WebsiteRequest {
+    WARM_UP,
+    MEASURE,
+    READ_PAGE,
 }
 
 internal fun classifyWebsiteFailure(failure: Throwable): WebsiteFailure {

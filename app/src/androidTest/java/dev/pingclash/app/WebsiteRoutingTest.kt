@@ -168,18 +168,20 @@ class WebsiteRoutingTest {
         get() = compose.activity.application as PingClashApplication
 
     @Test
-    fun authenticatedTlsWithHttp403MustNotProduceSuccessfulLatency() {
+    fun anyHttpAnswerOverVerifiedTlsMeansThisNetworkReachesTheSite() {
         assertFalse(VpnRuntime.state.value.active)
-        WebsiteTlsFixture().use { fixture ->
-            fixture.status = 403
-            fixture.headStatus = 204
-            RunControl(3000).use { control ->
-                val network = app.getSystemService(ConnectivityManager::class.java).activeNetwork!!
-                val result = WebsiteProbe.run(fixture.target(), 2000, control, network)
-                assertTrue(result.toString(), result is Latency.Failed)
-                assertEquals(WebsiteFailure.HTTP, (result as Latency.Failed).reason)
-                assertEquals(403, result.httpStatus)
-                assertTrue(fixture.methods.contains("GET"))
+        // A bot wall, a rate limit or a server error is still an answer from the site.
+        for (status in listOf(403, 429, 503)) {
+            WebsiteTlsFixture().use { fixture ->
+                fixture.status = status
+                fixture.headStatus = 204
+                RunControl(3000).use { control ->
+                    val network =
+                        app.getSystemService(ConnectivityManager::class.java).activeNetwork!!
+                    val result = WebsiteProbe.run(fixture.target(), 2000, control, network)
+                    assertTrue("$status: $result", result is Latency.Measured)
+                    assertTrue(fixture.methods.contains("GET"))
+                }
             }
         }
     }
@@ -200,30 +202,46 @@ class WebsiteRoutingTest {
     }
 
     @Test
-    fun responsePolicyRejectsWrongGoogleEndpointChallengesAndUnsafeRedirects() {
+    fun onlyAnExplicitRegionRefusalIsNotReachable() {
         val google = serviceTargets.first { it.id == "google" }
         assertEquals("www.google.com", java.net.URL(google.url).host)
-        assertEquals(WebsiteFailure.RESPONSE, websiteResponseFailure(google, WebsiteReply(200)))
-        assertEquals(null, websiteResponseFailure(google, WebsiteReply(204)))
+        for (status in listOf(200, 204, 302, 403, 429, 500)) {
+            assertEquals(null, websiteResponseFailure(google, WebsiteReply(status)))
+        }
         val claude = serviceTargets.first { it.id == "claude" }
+        // A browser passes a challenge page, so the way to the site is open.
+        assertEquals(
+            null,
+            websiteResponseFailure(
+                claude,
+                WebsiteReply(403, preview = "<title>Just a moment...</title>"),
+            ),
+        )
+        // A redirect to sign-in or another domain is an answer, not a failure.
+        assertEquals(
+            null,
+            websiteResponseFailure(claude, WebsiteReply(302, "https://login.example.invalid/")),
+        )
         assertEquals(
             WebsiteFailure.RESTRICTED,
             websiteResponseFailure(
                 claude,
-                WebsiteReply(200, preview = "<title>Just a moment...</title>"),
+                WebsiteReply(302, "https://www.anthropic.com/app-unavailable-in-region"),
             ),
         )
-        assertEquals(WebsiteFailure.HTTP, websiteResponseFailure(claude, WebsiteReply(403)))
-        assertTrue(
-            restrictedWebsiteLocation(
-                java.net.URL("https://www.anthropic.com/app-unavailable-in-region")
-            )
+        assertEquals(
+            WebsiteFailure.RESTRICTED,
+            websiteResponseFailure(
+                claude,
+                WebsiteReply(403, preview = "Claude is only available in certain regions"),
+            ),
         )
-        assertFalse(
-            safeWebsiteRedirect(java.net.URL(claude.url), java.net.URL("http://claude.ai/"))
-        )
-        assertFalse(
-            safeWebsiteRedirect(java.net.URL(claude.url), java.net.URL("https://example.invalid/"))
+        assertEquals(WebsiteFailure.RESTRICTED, websiteResponseFailure(google, WebsiteReply(451)))
+        // Region wording on an ordinary site means nothing.
+        val bilibili = serviceTargets.first { it.id == "bilibili" }
+        assertEquals(
+            null,
+            websiteResponseFailure(bilibili, WebsiteReply(200, preview = "unsupported country")),
         )
         assertFalse(
             WebsiteReply(403, "CANARY-LOCATION", "CANARY-BODY").toString().contains("CANARY")
@@ -234,15 +252,15 @@ class WebsiteRoutingTest {
     }
 
     @Test
-    fun redirectsCannotSilentlyBecomeCleartextOrARegionUnavailableSuccess() {
+    fun aRedirectIsTheAnswerAndIsNeverFollowed() {
         WebsiteTlsFixture().use { fixture ->
             fixture.status = 302
-            fixture.location = "http://127.0.0.1:${fixture.port}/"
+            fixture.location = "http://127.0.0.1:${fixture.port}/elsewhere"
             RunControl(3000).use { control ->
                 val network = app.getSystemService(ConnectivityManager::class.java).activeNetwork!!
-                val result =
-                    WebsiteProbe.run(fixture.target(), 2000, control, network) as Latency.Failed
-                assertEquals(WebsiteFailure.REDIRECT, result.reason)
+                val result = WebsiteProbe.run(fixture.target(), 2000, control, network)
+                assertTrue(result.toString(), result is Latency.Measured)
+                // The warm-up and the measured request; the cleartext target is never fetched.
                 assertEquals(2, fixture.requests.get())
             }
         }
@@ -254,7 +272,8 @@ class WebsiteRoutingTest {
         WebsiteTlsFixture().use { fast ->
             WebsiteTlsFixture().use { slow ->
                 fast.headStatus = 204
-                fast.status = 403
+                // A refusal of this location: still a failure under the reachability verdict.
+                fast.status = 451
                 slow.firstDelay = 1400
                 val targets =
                     listOf(fast.target().copy(id = "fast"), slow.target().copy(id = "slow"))

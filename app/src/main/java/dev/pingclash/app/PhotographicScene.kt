@@ -43,7 +43,10 @@ internal class PhotographicScene(private val bitmap: Bitmap, private val clouds:
                 (1.08f + frame.depth * .045f)
         val x =
             (frame.width - bitmap.width * scale) / 2 + sin(theta).toFloat() * frame.width * .004f
-        val y = (frame.height - bitmap.height * scale) / 2 + frame.depth * frame.height * .035f
+        // The photo is portrait. A wide screen shows a horizontal band of it: keep the band near
+        // the top so the sky stays behind the page titles instead of dark water.
+        val anchor = if (frame.width > frame.height) WIDE_ANCHOR else .5f
+        val y = (frame.height - bitmap.height * scale) * anchor + frame.depth * frame.height * .035f
         val checkpoint = canvas.save()
         try {
             canvas.translate(x, y)
@@ -55,3 +58,6 @@ internal class PhotographicScene(private val bitmap: Bitmap, private val clouds:
         }
     }
 }
+
+/** Where a wide frame's band sits in the photo, from the top (0) to the centre (.5). */
+private const val WIDE_ANCHOR = .06f

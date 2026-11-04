@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -99,6 +100,8 @@ internal fun GlassNavigation(
         modifier
             .navigationBarsPadding()
             .padding(horizontal = 18.dp, vertical = 12.dp)
+            // A portrait tablet keeps the phone's proportions instead of a screen-wide bar.
+            .widthIn(max = MAX_BAR_WIDTH)
             .fillMaxWidth()
             .height(height)
             .testTag("glass-navigation")
@@ -148,6 +151,8 @@ internal fun GlassNavigation(
         }
     }
 }
+
+private val MAX_BAR_WIDTH = 560.dp
 
 @Composable
 private fun NavigationTabs(

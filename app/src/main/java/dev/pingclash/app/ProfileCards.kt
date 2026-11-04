@@ -106,12 +106,13 @@ internal fun ProfilesOverview(
     LaunchedEffect(data.profiles.size, locked) {
         if (data.profiles.size < 2 || locked) sorting = false
     }
-    Box(Modifier.fillMaxSize()) {
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        val side = readableSidePadding(maxWidth)
         LazyColumn(
             state = scroll,
             modifier = Modifier.fillMaxSize().testTag("profiles-list"),
             contentPadding =
-                PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = bottom + 100.dp),
+                PaddingValues(start = side, end = side, top = 12.dp, bottom = bottom + 100.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item(key = "header") {

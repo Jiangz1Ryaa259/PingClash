@@ -466,12 +466,14 @@ internal fun ProxyScreen(
                                         )
                                     }
                                 else {
-                                    val columns =
-                                        if (singleColumn || LocalDensity.current.fontScale >= 1.6f)
-                                            1
-                                        else 2
+                                    val wide =
+                                        singleColumn || LocalDensity.current.fontScale >= 1.6f
+                                    val columns = if (wide) 1 else 2
                                     LazyVerticalGrid(
-                                        GridCells.Fixed(columns),
+                                        // The phone's one or two columns; tablets fit more.
+                                        GridCells.Adaptive(
+                                            if (wide) WIDE_MEMBER_WIDTH else MEMBER_WIDTH
+                                        ),
                                         modifier =
                                             Modifier.fillMaxSize()
                                                 .testTag("group-members-${group.name}"),
@@ -688,3 +690,9 @@ internal fun ProxySymbol(
         color,
     )
 }
+
+/** Narrowest member card: two fit across any phone. */
+private val MEMBER_WIDTH = 136.dp
+
+/** Narrowest single-column card: one across a phone, two or three on a tablet. */
+private val WIDE_MEMBER_WIDTH = 340.dp

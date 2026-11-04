@@ -41,9 +41,6 @@
     <string name="website_certificate">证书错误</string>
     <string name="website_refused">连接被拒绝</string>
     <string name="website_no_network">无可用网络</string>
-    <string name="website_http_status">HTTP %1$d</string>
-    <string name="website_response">响应不符</string>
-    <string name="website_redirect">重定向未验证</string>
     <string name="website_restricted">访问受限</string>
     <string name="website_retry">重测 %1$s</string>
     <string name="settings_unsaved_title">尚未保存</string>
@@ -82,4 +79,6 @@
     <string name="ui_exit_checking">正在检测…</string>
     <string name="ui_exit_failed">检测失败</string>
     <string name="ui_exit_route">线路</string>
+    <string name="ui_sidebar_collapse">收起边栏</string>
+    <string name="ui_sidebar_expand">展开边栏</string>
 </resources>

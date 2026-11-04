@@ -55,6 +55,11 @@ internal data class DashboardActions(
     val refreshExit: (Boolean) -> Unit = {},
 )
 
+private val HOME_CARD_WIDTH = 640.dp
+
+/** Below this landscape width the cards stack beside the badge instead of three columns. */
+private val THREE_COLUMNS = 900.dp
+
 @Composable
 internal fun DashboardScreen(state: DashboardState, actions: DashboardActions) {
     androidx.compose.foundation.layout.BoxWithConstraints(
@@ -65,7 +70,20 @@ internal fun DashboardScreen(state: DashboardState, actions: DashboardActions) {
             .testTag("dashboard")
     ) {
         val shown = if (maxHeight < 560.dp || LocalDensity.current.fontScale >= 1.4f) 2 else 4
-        if (maxWidth > maxHeight)
+        if (maxWidth > maxHeight && maxWidth < THREE_COLUMNS)
+        // A phone held sideways: the badge beside the two cards, one above the other.
+        Row(
+                Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                HomeConnection(state, actions, Modifier.weight(1f).fillMaxHeight())
+                Column(Modifier.weight(1.3f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HomeConfiguration(state, actions)
+                    HomeServiceChecks(state, actions.serviceTest, 2)
+                }
+            }
+        else if (maxWidth > maxHeight)
             Row(
                 Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -76,7 +94,10 @@ internal fun DashboardScreen(state: DashboardState, actions: DashboardActions) {
                 Box(Modifier.weight(1.3f)) { HomeServiceChecks(state, actions.serviceTest, shown) }
             }
         else
-            Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                Modifier.fillMaxHeight().readableWidth(HOME_CARD_WIDTH),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 HomeConnection(state, actions, Modifier.weight(1f).fillMaxWidth())
                 HomeConfiguration(state, actions)
                 HomeServiceChecks(state, actions.serviceTest, shown)
@@ -103,11 +124,13 @@ private fun HomeConnection(state: DashboardState, actions: DashboardActions, mod
         }
         if (state.vpn.stage == VpnPhase.ERROR)
             VpnErrorBadge(state.vpn, Modifier.align(Alignment.TopEnd).padding(top = 6.dp))
-        PageHeading(
-            "PingClash",
-            Modifier.align(Alignment.TopStart).padding(start = 4.dp, top = 6.dp),
-            "page-title-home",
-        )
+        // Beside a sidebar the app is already named there and on the badge.
+        if (!LocalNavigationRail.current)
+            PageHeading(
+                "PingClash",
+                Modifier.align(Alignment.TopStart).padding(start = 4.dp, top = 6.dp),
+                "page-title-home",
+            )
     }
 }
 

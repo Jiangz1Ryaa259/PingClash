@@ -109,6 +109,7 @@ internal fun SettingsHub(
                 Modifier.fillMaxSize()
                     .imePadding()
                     .then(if (listPage) Modifier else Modifier.verticalScroll(scroll))
+                    .readableWidth()
                     .padding(horizontal = 20.dp, vertical = 12.dp)
                     .padding(bottom = LocalNavigationClearance.current)
                     .testTag("settings-page"),

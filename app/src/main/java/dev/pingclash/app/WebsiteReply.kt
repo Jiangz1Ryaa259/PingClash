@@ -15,15 +15,25 @@ internal data class WebsiteReply(
     override fun toString() = "WebsiteReply(status=$status)"
 }
 
-internal fun websiteResponseFailure(target: ServiceTarget, reply: WebsiteReply): WebsiteFailure? =
-    when {
+/**
+ * Whether this network can reach [target]: any HTTP answer over a verified TLS connection says it
+ * can, whatever the status (a redirect to sign-in, 403, 429 or a bot challenge a browser passes all
+ * mean the way is open). Only an explicit refusal of this location is not success: HTTP 451, or an
+ * AI service's region-unavailable page or redirect.
+ */
+internal fun websiteResponseFailure(target: ServiceTarget, reply: WebsiteReply): WebsiteFailure? {
+    val redirect =
+        reply.location?.let { location ->
+            runCatching { URL(URL(target.url), location) }.getOrNull()
+        }
+    return when {
         reply.failure != null -> reply.failure
-        reply.status !in HTTP_SUCCESS_MIN..HTTP_SUCCESS_MAX -> WebsiteFailure.HTTP
-        target.id in setOf("google", "youtube") && reply.status != HTTP_NO_CONTENT ->
-            WebsiteFailure.RESPONSE
+        reply.status == HTTP_UNAVAILABLE_FOR_LEGAL_REASONS -> WebsiteFailure.RESTRICTED
+        redirect != null && restrictedWebsiteLocation(redirect) -> WebsiteFailure.RESTRICTED
         restrictedWebsiteBody(target, reply.preview) -> WebsiteFailure.RESTRICTED
         else -> null
     }
+}
 
 internal fun restrictedWebsiteLocation(url: URL): Boolean {
     val path = url.path.lowercase(Locale.ROOT)
@@ -31,31 +41,20 @@ internal fun restrictedWebsiteLocation(url: URL): Boolean {
         .any(path::contains)
 }
 
-/** No cleartext downgrade, userinfo, or arbitrary cross-site redirect requests. */
-internal fun safeWebsiteRedirect(initial: URL, next: URL): Boolean {
-    val domain = initial.host.lowercase(Locale.ROOT).removePrefix("www.")
-    val host = next.host.lowercase(Locale.ROOT)
-    return next.protocol == "https" &&
-        next.userInfo == null &&
-        (host == domain || host.endsWith(".$domain")) &&
-        next.httpsPort() == initial.httpsPort()
-}
-
-private fun URL.httpsPort() = if (port < 0) HTTPS_PORT else port
+/** Services that answer an unsupported region with a page of their own. */
+internal fun regionSensitiveWebsite(target: ServiceTarget) =
+    target.id in setOf("claude", "chatgpt", "gemini")
 
 private fun restrictedWebsiteBody(target: ServiceTarget, preview: String): Boolean {
+    if (!regionSensitiveWebsite(target)) return false
     val text = preview.lowercase(Locale.ROOT)
-    val challenge = text.contains("<title>just a moment") || text.contains("cf-chl-")
-    val regionService = target.id in setOf("claude", "chatgpt", "gemini")
-    val regionPage =
-        listOf(
-                "claude is only available in certain regions",
-                "unsupported country",
-                "unsupported_country",
-                "app-unavailable-in-region",
-            )
-            .any(text::contains)
-    return challenge || (regionService && regionPage)
+    return listOf(
+            "claude is only available in certain regions",
+            "unsupported country",
+            "unsupported_country",
+            "app-unavailable-in-region",
+        )
+        .any(text::contains)
 }
 
 internal fun readWebsitePreview(input: InputStream): ByteArray {
@@ -71,7 +70,4 @@ internal fun readWebsitePreview(input: InputStream): ByteArray {
 
 private const val MAX_WEBSITE_PREVIEW = 4096
 
-private const val HTTP_SUCCESS_MIN = 200
-private const val HTTP_SUCCESS_MAX = 299
-private const val HTTP_NO_CONTENT = 204
-private const val HTTPS_PORT = 443
+private const val HTTP_UNAVAILABLE_FOR_LEGAL_REASONS = 451

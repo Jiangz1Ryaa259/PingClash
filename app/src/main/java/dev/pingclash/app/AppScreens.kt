@@ -326,6 +326,7 @@ private fun Page(title: String, onBack: () -> Unit, content: @Composable ColumnS
         Modifier.fillMaxSize()
             .imePadding()
             .verticalScroll(rememberScrollState())
+            .readableWidth()
             .padding(horizontal = 20.dp, vertical = 16.dp)
             .padding(bottom = LocalNavigationClearance.current),
         verticalArrangement = Arrangement.spacedBy(20.dp),

@@ -5,6 +5,7 @@
 package dev.pingclash.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -35,7 +36,11 @@ internal val NavOpticalBackend = SemanticsPropertyKey<String>("NavOpticalBackend
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
-internal fun Modifier.navGlassMaterial(style: NavigationGlassStyle): Modifier {
+internal fun Modifier.navGlassMaterial(
+    style: NavigationGlassStyle,
+    // The optical lens accepts corner-based shapes only (a plain rectangle throws).
+    shape: CornerBasedShape = UiCorners.Pill,
+): Modifier {
     val backdrop = LocalNavigationBackdrop.current
     val haze = LocalNavHaze.current
     val surface = MaterialTheme.colorScheme.surface
@@ -45,7 +50,7 @@ internal fun Modifier.navGlassMaterial(style: NavigationGlassStyle): Modifier {
             backdrop != null ->
                 drawBackdrop(
                     backdrop = backdrop,
-                    shape = { UiCorners.Pill },
+                    shape = { shape },
                     effects = {
                         colorControls(saturation = style.saturation)
                         blur(style.blur.toPx())
@@ -65,13 +70,18 @@ internal fun Modifier.navGlassMaterial(style: NavigationGlassStyle): Modifier {
                             tints = listOf(HazeTint(style.tint)),
                             fallbackTint = HazeTint(surface.copy(alpha = NAV_FALLBACK_ALPHA)),
                         )
-                clip(UiCorners.Pill).hazeEffect(haze, style = material)
+                clip(shape).hazeEffect(haze, style = material)
             }
-            else -> clip(UiCorners.Pill).background(surface.copy(alpha = NAV_FALLBACK_ALPHA))
+            else -> clip(shape).background(surface.copy(alpha = NAV_FALLBACK_ALPHA))
         }
     val veil = navReadabilityTint(dark)
     return material.drawBehind {
-        // A soft material veil behind glyphs replaces per-letter outlines.
+        // A soft material veil behind glyphs replaces per-letter outlines. A tall panel keeps it
+        // even; a bar fades it at its top and bottom edges.
+        if (shape != UiCorners.Pill) {
+            drawRect(veil)
+            return@drawBehind
+        }
         drawRect(
             Brush.verticalGradient(
                 0f to Color.Transparent,
@@ -88,14 +98,22 @@ internal fun Modifier.navSelectorMaterial(
     style: NavigationGlassStyle,
     source: Backdrop?,
     motion: NavigationMotion,
-    offsetX: () -> Float,
+    vertical: Boolean = false,
+    offset: () -> Float,
 ): Modifier {
     val dark = MaterialTheme.colorScheme.background.luminance() < .5f
     val activity = motion::optics
+    // The lens stretches along the direction of travel: across the bar, down the sidebar.
     val transform: androidx.compose.ui.graphics.GraphicsLayerScope.() -> Unit = {
-        translationX = offsetX()
-        scaleX = motion.scaleX()
-        scaleY = motion.scaleY()
+        if (vertical) {
+            translationY = offset()
+            scaleX = motion.scaleY()
+            scaleY = motion.scaleX()
+        } else {
+            translationX = offset()
+            scaleX = motion.scaleX()
+            scaleY = motion.scaleY()
+        }
     }
     if (source == null)
         return graphicsLayer(transform).clip(UiCorners.Pill).navSelectionWash(dark, activity)

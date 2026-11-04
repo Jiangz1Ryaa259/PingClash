@@ -131,6 +131,42 @@ class SubscriptionNamingTest {
     }
 
     @Test
+    fun expiringLinksWithoutNameHeadersAreNamedFromTheFileOrHostNeverTheToken() {
+        fun name(final: String, original: String = final) =
+            SubscriptionNames.fromLink(java.net.URI(final), java.net.URI(original))
+        // A signed object-storage link: the file name, never the signature in the query.
+        assertEquals(
+            "Nexus Cloud",
+            name("https://bucket.oss.example.com/clash/Nexus%20Cloud.yaml?Expires=1&Signature=s"),
+        )
+        // A panel link that redirects to a signed CDN file takes the file's name.
+        assertEquals(
+            "airport",
+            name(
+                "https://cdn.example.net/files/airport.yml?token=x",
+                "https://panel.example.com/api/v1/client/subscribe?token=abc",
+            ),
+        )
+        // Token-like file names and paths without a config file fall back to the host.
+        for (token in
+            listOf(
+                "https://www.sub.example.org/s/9f86d081884c7d659a2feaa0c55ad015.yaml",
+                "https://www.sub.example.org/link/AbCd1234EfGh5678?clash=1",
+                "https://www.sub.example.org/sub/3f2a9c1e-7b4d-4e8a-9c1f-2b3d4e5f6a7b.yaml",
+            )) {
+            assertEquals(token, "sub.example.org", name(token))
+        }
+        // An address is not a name; the generic fallback applies then.
+        assertNull(name("https://203.0.113.9/s/x"))
+        assertNull(name("https://[2001:db8::1]/s/x"))
+        assertNull(name("https://localhost/s/x"))
+        assertEquals(
+            "sub.example.org",
+            SubscriptionNames.choose("", name("https://sub.example.org/x?e=1"), "我的订阅"),
+        )
+    }
+
+    @Test
     fun confirmedDownloadUsesHeaderNameAndExplicitNamesWinAndRefreshKeepsName() {
         val before = app.repository.data.value.profiles.map { it.id }.toSet()
         SubscriptionFixture().use { fixture ->

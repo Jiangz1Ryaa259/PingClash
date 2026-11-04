@@ -194,11 +194,6 @@ internal fun websiteFailureText(value: Latency.Failed): String =
         WebsiteFailure.REFUSED -> tr(R.string.website_refused)
         WebsiteFailure.NETWORK -> tr(R.string.website_no_network)
         WebsiteFailure.CANCELLED -> tr(R.string.ui_not_measured)
-        WebsiteFailure.HTTP ->
-            if (value.httpStatus in 100..599) tr(R.string.website_http_status, value.httpStatus)
-            else tr(R.string.website_response)
-        WebsiteFailure.REDIRECT -> tr(R.string.website_redirect)
-        WebsiteFailure.RESPONSE -> tr(R.string.website_response)
         WebsiteFailure.RESTRICTED -> tr(R.string.website_restricted)
         WebsiteFailure.OTHER -> tr(R.string.failed)
     }
