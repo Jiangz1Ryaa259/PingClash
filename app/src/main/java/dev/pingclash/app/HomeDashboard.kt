@@ -124,8 +124,8 @@ private fun Chip(text: String, dot: Color?) {
 private fun SectionTitle(text: String) {
     Text(
         text,
-        color = Muted,
-        style = MaterialTheme.typography.labelLarge,
+        color = pageInk().muted,
+        style = MaterialTheme.typography.labelLarge.onPage(),
         modifier = Modifier.padding(top = 4.dp),
     )
 }

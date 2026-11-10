@@ -148,13 +148,13 @@ private fun ImportHeader(busy: Boolean, onDismiss: () -> Unit, onFile: (() -> Un
                     .padding(end = 12.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                AppGlyph(BACK_GLYPH, Modifier.size(22.dp), MaterialTheme.colorScheme.primary)
-                Text(tr(R.string.profiles), color = MaterialTheme.colorScheme.primary)
+                AppGlyph(BACK_GLYPH, Modifier.size(22.dp), pageInk().accent)
+                Text(tr(R.string.profiles), color = pageInk().accent)
             }
             Box(Modifier.weight(1f))
             if (onFile != null)
                 TextButton(onFile, enabled = !busy, modifier = Modifier.testTag("import-file")) {
-                    Text(tr(R.string.import_file))
+                    Text(tr(R.string.import_file), color = pageInk().accent)
                 }
         }
         PageHeading(tr(R.string.add_profile))

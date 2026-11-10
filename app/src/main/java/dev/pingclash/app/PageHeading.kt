@@ -36,7 +36,8 @@ internal fun PageHeading(
         Text(
             title,
             Modifier.testTag(tag).semantics { heading() },
-            style = MaterialTheme.typography.headlineMedium,
+            color = pageInk().text,
+            style = MaterialTheme.typography.headlineMedium.onPage(),
             fontWeight = FontWeight.Bold,
         )
     }

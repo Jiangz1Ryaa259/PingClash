@@ -133,6 +133,16 @@ class ImportRecoveryTest {
             }
             try {
                 open("clipboard")
+                // The clipboard is read once the import window has focus, which idling does not
+                // wait for; Android 13+ grants focus noticeably later.
+                compose.waitUntil(10000) {
+                    runCatching {
+                            compose
+                                .onNodeWithTag("subscription-content")
+                                .assert(hasText(fixture.source))
+                        }
+                        .isSuccess
+                }
                 compose.onNodeWithTag("subscription-content").assert(hasText(fixture.source))
                 val instrumentation =
                     androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()

@@ -166,7 +166,8 @@ class CustomBackgroundUiTest {
             }
             compose.onNodeWithTag("nav-3").performClick()
             visibleSettingsControl(compose, "settings-appearance").performClick()
-            compose.onNodeWithTag("appearance-preview").assertExists()
+            compose.onNodeWithTag("appearance-preview").assertDoesNotExist()
+            compose.onNodeWithTag("scene-ocean").assertExists()
             block(app)
         } finally {
             source.delete()

@@ -76,7 +76,7 @@ internal fun AuxiliaryDiagnosticScreen(model: DiagnosticViewModel, onBack: () ->
                     contentDescription = tr(R.string.back)
                 },
             ) {
-                AppGlyph(BACK_GLYPH)
+                AppGlyph(BACK_GLYPH, tint = pageInk().text)
             }
             PageHeading(tr(R.string.direct_auxiliary_checks), tag = "auxiliary-title")
         }

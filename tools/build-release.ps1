@@ -46,6 +46,8 @@ try {
 } finally { Remove-Item Env:PINGCLASH_SIGNING_PASSWORD -ErrorAction SilentlyContinue }
 Push-Location $projectRoot
 try {
+    & python tools\verify-translations.py
+    if ($LASTEXITCODE -ne 0) { throw 'A translation does not match the English strings.' }
     & .\gradlew.bat --no-daemon --max-workers=2 -PpingclashSplitApks=true detekt :app:assembleRelease :app:lintRelease
     if ($LASTEXITCODE -ne 0) { throw 'Release compilation or lint failed.' }
     # ABI splits write per-ABI copies; the main merged manifest is ABI-independent.

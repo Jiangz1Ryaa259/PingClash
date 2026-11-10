@@ -86,7 +86,26 @@ internal fun NetworkPage(s: SettingsDraft, target: String, onTarget: (String) ->
             s.change(draft.copy(maxConnections = it))
         }
     }
+    LanSection(s)
     TestingSection(s, target, onTarget)
+}
+
+@Composable
+private fun LanSection(s: SettingsDraft) {
+    SettingsSection {
+        Choices(
+            tr(R.string.local_network),
+            s.value.lan,
+            listOf(
+                "proxy" to tr(R.string.proxy_lan),
+                "direct" to tr(R.string.direct_lan),
+                "block" to tr(R.string.block_lan),
+            ),
+            s.enabled,
+        ) {
+            s.change(s.value.copy(lan = it))
+        }
+    }
 }
 
 @Composable
@@ -121,24 +140,6 @@ private fun TestingSection(s: SettingsDraft, target: String, onTarget: (String) 
         RowDivider(underIcons = false)
         SettingSwitch(tr(R.string.unified_delay), draft.unifiedDelay, s.enabled) {
             s.change(draft.copy(unifiedDelay = it))
-        }
-    }
-}
-
-@Composable
-internal fun LanPage(s: SettingsDraft) {
-    SettingsSection {
-        Choices(
-            tr(R.string.local_network),
-            s.value.lan,
-            listOf(
-                "proxy" to tr(R.string.proxy_lan),
-                "direct" to tr(R.string.direct_lan),
-                "block" to tr(R.string.block_lan),
-            ),
-            s.enabled,
-        ) {
-            s.change(s.value.copy(lan = it))
         }
     }
 }

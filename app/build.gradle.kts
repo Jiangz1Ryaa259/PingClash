@@ -13,14 +13,17 @@ android {
         applicationId = "dev.pingclash.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 133
-        versionName = "0.2.2"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionCode = 149
+        versionName = "0.2.3"
+        // Marks first-run setup done before the app starts, so tests open on the app itself.
+        testInstrumentationRunner = "dev.pingclash.app.PingClashTestRunner"
         testProguardFiles("proguard-test-rules.pro")
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
 
     buildFeatures { compose = true }
+    // The user guide ships inside the app from its one source, docs/user-guide.md.
+    sourceSets["main"].assets.srcDir(layout.buildDirectory.dir("generated/guide-assets"))
     bundle { language { enableSplit = false } }
     lint {
         error += setOf("MissingTranslation", "HardcodedText")
@@ -77,6 +80,16 @@ dependencies {
     androidTestImplementation(libs.compose.test)
     debugImplementation(libs.compose.test.manifest)
 }
+
+val copyUserGuide by tasks.registering(Copy::class) {
+    from(
+        rootProject.file("docs/user-guide.md"),
+        rootProject.file("docs/user-guide.en.md"),
+        rootProject.file("docs/user-guide.ja.md"),
+    )
+    into(layout.buildDirectory.dir("generated/guide-assets/guide"))
+}
+tasks.named("preBuild") { dependsOn(copyUserGuide) }
 
 // Produce original classpaths for R8 TraceReferences; no test code is shipped.
 tasks.register("writeReleaseTestTraceInputs") {

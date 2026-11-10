@@ -95,8 +95,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     @Volatile private var control: RunControl? = null
     @Volatile private var nativeRun: String? = null
 
-    private fun requestKey(data: AppData) =
-        Triple(data.selectedId, data.selectedRuntimeConfig, data.probeUrl) to data.client.mode
+    private fun requestKey(data: AppData) = websiteRequestKey(data)
 
     init {
         if (data.value.loadRepaired) message(tr(R.string.local_data_repaired))
@@ -254,6 +253,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             viewModelScope.launch(Dispatchers.IO) {
                 val info =
                     runCatching {
+                            // Right after a switch, ask once the new route is in place.
+                            VpnRuntime.awaitRouting()
                             val reply = Mobile.exitDetails(fetchExitTrace(EXIT_TIMEOUT_MS))
                             ExitInfo.read(
                                 JSONObject(reply),
@@ -471,13 +472,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             else "")
 
     private fun selection(block: () -> Unit) = operation {
-        block()
-        if (vpn.value.stage == VpnPhase.ESTABLISHED)
-            app.startService(
-                android.content
-                    .Intent(app, PingVpnService::class.java)
-                    .setAction(PingVpnService.RECONFIGURE)
-            )
+        if (vpn.value.stage == VpnPhase.ESTABLISHED) VpnRuntime.reconfigure(app, block) else block()
         ""
     }
 
@@ -548,14 +543,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun routeMode(mode: String) = operation {
-        app.repository.routeMode(mode)
-        if (vpn.value.stage == VpnPhase.ESTABLISHED)
-            app.startService(
-                android.content
-                    .Intent(app, PingVpnService::class.java)
-                    .setAction(PingVpnService.RECONFIGURE)
-            )
+        val save = { app.repository.routeMode(mode) }
+        if (vpn.value.stage == VpnPhase.ESTABLISHED) VpnRuntime.reconfigure(app, save) else save()
         ""
+    }
+
+    /** Saves service routing and blocking; a connected VPN applies them at once. */
+    fun serviceRouting(routes: Map<String, String>, blocking: String) {
+        runCatching { app.repository.serviceRouting(routes, blocking) }
+            .onFailure { message(it.message ?: tr(R.string.vpn_update_failed)) }
     }
 
     fun appearance(
@@ -1107,12 +1103,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun cancelProxyTests() {
         proxyGeneration.incrementAndGet()
-        val sockets = tcpRuns.toList()
-        val native = testRuns.toList()
+        val sockets = tcpRuns.snapshot()
+        val native = testRuns.snapshot()
         val batch = testJob
         testJob = null
         batch?.cancel()
-        memberTcpJobs.entries.toList().forEach { (key, job) ->
+        memberTcpJobs.entries.snapshot().forEach { (key, job) ->
             memberTcpJobs.remove(key, job)
             job.cancel()
         }

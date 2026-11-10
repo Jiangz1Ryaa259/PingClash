@@ -224,7 +224,7 @@ internal fun ProxyScreen(
                                     contentDescription = tr(R.string.proxy_options)
                                 },
                             ) {
-                                ProxySymbol("menu")
+                                ProxySymbol("menu", color = pageInk().text)
                             }
                             DropdownMenu(menu, { menu = false }) {
                                 if (warning.isNotBlank())
@@ -364,12 +364,13 @@ internal fun ProxyScreen(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            AppGlyph(PcIcon.Globe, Modifier.size(44.dp), Mint)
+                            AppGlyph(PcIcon.Globe, Modifier.size(44.dp), pageInk().accent)
                             Spacer(Modifier.height(20.dp))
                             Text(
                                 if (profile == null) tr(R.string.no_proxy_profiles_yet)
                                 else tr(R.string.original_policy_groups_are_unavailable_or),
-                                style = MaterialTheme.typography.titleMedium,
+                                color = pageInk().text,
+                                style = MaterialTheme.typography.titleMedium.onPage(),
                             )
                             Spacer(Modifier.height(12.dp))
                             FilledTonalButton(onProfiles) {

@@ -122,9 +122,6 @@ internal fun LanyardThreeLayer(state: LanyardThreeState, active: Boolean, show: 
             Modifier.fillMaxSize()
                 .zIndex(if (state.dragging) 1f else 0f)
                 .onSizeChanged { state.viewport(it.width, it.height) }
-                .graphicsLayer {
-                    alpha = if (state.displayReady && show) 1f else 0f
-                    translationY = state.scrollOffset
-                },
+                .graphicsLayer { alpha = if (state.displayReady && show) 1f else 0f },
     )
 }

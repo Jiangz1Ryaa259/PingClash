@@ -19,18 +19,22 @@ function Read-Catalog([string]$Directory) {
     return ,$catalog
 }
 $base=Read-Catalog (Join-Path $projectRoot 'app/src/main/res/values')
-$chinese=Read-Catalog (Join-Path $projectRoot 'app/src/main/res/values-zh-rCN')
 if($base.Count -lt 400){throw 'Translation catalog unexpectedly empty or incomplete.'}
-foreach($name in $base.Keys) {
-    if(!$chinese.ContainsKey($name)){throw "Missing Chinese translation: $name"}
-    if($base[$name] -ne $chinese[$name]){throw "Translation format mismatch: $name"}
+foreach($folder in @('values-zh-rCN','values-ja')) {
+    $translated=Read-Catalog (Join-Path $projectRoot "app/src/main/res/$folder")
+    foreach($name in $base.Keys) {
+        if(!$translated.ContainsKey($name)){throw "Missing translation in ${folder}: $name"}
+        if($base[$name] -ne $translated[$name]){throw "Translation format mismatch in ${folder}: $name"}
+    }
+    foreach($name in $translated.Keys){if(!$base.ContainsKey($name)){throw "Missing default translation: $name"}}
 }
-foreach($name in $chinese.Keys){if(!$base.ContainsKey($name)){throw "Missing default translation: $name"}}
+# These files hold names rather than copy: each language's own name, and place and service names.
+$nameTables=@('Localization.kt','ExitInfo.kt','ServiceCatalogue.kt')
 foreach($directory in @('app/src/main/java','diagnostics/src/main/java')) {
     foreach($file in Get-ChildItem -LiteralPath (Join-Path $projectRoot $directory) -Recurse -File |Where-Object {$_.Extension -in @('.kt','.java')}) {
         $text=[IO.File]::ReadAllText($file.FullName)
         foreach($match in [regex]::Matches($text,'"(?:\\.|[^"\\])*"')) {
-            if($match.Value -match '[\u3400-\u9fff]'){throw "Hardcoded UI text in $($file.Name); move it to resources."}
+            if($file.Name -notin $nameTables -and $match.Value -match '[\u3400-\u9fff]'){throw "Hardcoded UI text in $($file.Name); move it to resources."}
         }
         # Android's XML HardcodedText rule does not cover every Compose call.
         # Permit branding, shell/protocol examples, numbers and SI units only.

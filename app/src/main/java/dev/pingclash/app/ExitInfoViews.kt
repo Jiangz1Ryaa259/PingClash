@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -62,26 +61,26 @@ internal fun ExitRefreshEffect(state: DashboardState, refresh: (Boolean) -> Unit
 internal fun ExitLines(state: DashboardState, modifier: Modifier = Modifier) {
     val info = state.currentExit() ?: return
     val language = LocalUiLanguage.current
-    Column(
-        modifier.widthIn(max = 150.dp).testTag("home-exit"),
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(1.dp),
+    val network = info.org.ifBlank { if (info.asn > 0) "AS${info.asn}" else "" }
+    // One line on the card: where traffic leaves, then whose network it is.
+    Row(
+        modifier.testTag("home-exit"),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        listOf(
-                exitCountryLabel(info.country, language),
-                info.org.ifBlank { if (info.asn > 0) "AS${info.asn}" else "" },
+        Text(
+            exitCountryLabel(info.country, language),
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+        )
+        if (network.isNotBlank())
+            Text(
+                network,
+                color = Muted,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            .filter { it.isNotBlank() }
-            .forEach { line ->
-                Text(
-                    line,
-                    color = Muted,
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.End,
-                )
-            }
     }
 }
 

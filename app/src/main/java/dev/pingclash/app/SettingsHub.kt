@@ -38,9 +38,16 @@ internal fun SettingsHub(
     vpn: VpnUiState,
     locked: Boolean,
     model: AppViewModel,
-    onDiagnose: () -> Unit,
+    host: SettingsHost,
 ) {
     var page by rememberSaveable { mutableStateOf("") }
+    // Another screen asked for a page (the home card opens Service routing).
+    LaunchedEffect(host.page) {
+        if (host.page.isNotEmpty()) {
+            page = host.page
+            host.handled()
+        }
+    }
     val saver =
         androidx.compose.runtime.saveable.Saver<ClientSettings, String>(
             save = { it.json().toString() },
@@ -94,16 +101,16 @@ internal fun SettingsHub(
     ContextReminder(
         "forwarding-locked:$page:${vpn.sessionStartedElapsed}",
         tr(R.string.disconnect_the_vpn_before_changing_forward),
-        vpn.active && locked && page in setOf("dns", "network", "apps", "rules", "lan"),
+        vpn.active && locked && page in setOf("dns", "network", "apps", "rules"),
     )
     SettingsSlide(page, backProgress) { shown ->
         pages.SaveableStateProvider(shown) {
-            val listPage = shown in setOf("apps", "connections")
+            // These pages own their scrolling: a list scrolls, the rest of the page stays.
+            val listPage = shown in setOf("apps", "connections", "routing")
             val scroll = rememberScrollState()
+            val save = { model.clientSettings(draft, dns.trim(), target.trim()) }
             val heading: @Composable () -> Unit = {
-                SettingsHeading(shown, textDirty, !locked, ::back) {
-                    model.clientSettings(draft, dns.trim(), target.trim())
-                }
+                SettingsHeading(shown, textDirty, ::back, save.takeUnless { locked })
             }
             Column(
                 Modifier.fillMaxSize()
@@ -121,7 +128,8 @@ internal fun SettingsHub(
                     "" ->
                         SettingsMenu(draft) { id ->
                             when (id) {
-                                "diagnosis" -> onDiagnose()
+                                "diagnosis" -> host.diagnose()
+                                "setup" -> host.setupGuide()
                                 "terminal" ->
                                     context.startActivity(
                                         Intent(context, TerminalActivity::class.java)
@@ -132,8 +140,24 @@ internal fun SettingsHub(
                     "connections" -> ConnectionsPanel(vpn, model, heading)
                     "dns" -> DnsPage(editor, dns) { dns = it }
                     "network" -> NetworkPage(editor, target) { target = it }
-                    "lan" -> LanPage(editor)
                     "rules" -> RulesPage(editor, data.activeProfile) { showProviderRules = true }
+                    "routing" ->
+                        ServiceRoutingPage(
+                            data.client,
+                            routingEditable(uiBusy, vpn),
+                            data.activeProfile?.routingGroups().orEmpty(),
+                            { trailing ->
+                                SettingsHeading(
+                                    shown,
+                                    textDirty,
+                                    ::back,
+                                    save.takeUnless { locked },
+                                    trailing,
+                                )
+                            },
+                        ) { routes, blocking ->
+                            model.serviceRouting(routes, blocking)
+                        }
                     "apps" -> AppRoutingPanel(draft, !locked, heading) { changeDraft(it) }
                     "appearance" -> AppearancePage(data, model)
                     "control" -> ControlPage(editor, appearanceEditable) { reset = true }
@@ -142,8 +166,10 @@ internal fun SettingsHub(
                             SettingsDraft(draft, appearanceEditable, ::changeDraft) { draft = it },
                             appearanceEditable,
                         )
-                    "backup" -> BackupPage(model, !uiBusy, vpn.active)
-                    "privacy" -> PrivacyPage(editor, appearanceEditable, model::resetUsage)
+                    "privacy" -> {
+                        PrivacyPage(editor, appearanceEditable, model::resetUsage)
+                        BackupPage(model, !uiBusy, vpn.active)
+                    }
                     "about" -> AboutPanel(model.nativeReady)
                 }
                 Spacer(Modifier.height(8.dp))
@@ -268,13 +294,32 @@ private fun ConnectionsPanel(
             item(key = "heading") { heading() }
             item(key = "controls") { ConnectionControls(rows.size, vpn, model) }
             if (rows.isEmpty())
-                item(key = "empty") { Text(tr(R.string.no_active_connections), color = Muted) }
+                item(key = "empty") { ConnectionsEmpty(vpn.stage == VpnPhase.ESTABLISHED) }
             items(rows, key = { "connection:${it.id}" }) { r ->
                 ConnectionListItem(r) {
                     model.closeConnection(r.id)
                     rows = rows.filterNot { it.id == r.id }
                 }
             }
+        }
+    }
+}
+
+/** The list's empty state, as a card like the empty Profiles page: VPN off, or nothing open. */
+@Composable
+private fun ConnectionsEmpty(connected: Boolean) {
+    GroupCard {
+        Column(
+            Modifier.fillMaxWidth().padding(vertical = 28.dp).testTag("connections-empty"),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            IconSquare(settingsGlyph("connections"), settingTint("connections"))
+            Text(
+                tr(if (connected) R.string.no_active_connections else R.string.connections_vpn_off),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }
@@ -319,6 +364,7 @@ private fun AboutPanel(ready: Boolean) {
     var license by remember { mutableStateOf<String?>(null) }
     AboutHeader()
     SettingsSection { InfoRow(tr(R.string.proxy_core), if (ready) "mihomo v1.19.32" else "—") }
+    AboutDocuments()
     SettingsSection(tr(R.string.ui_group_licenses)) {
         val files = listOf("NOTICE.md", "GPL-3.0.txt", "Apache-2.0.txt")
         files.forEachIndexed { index, file ->
@@ -372,11 +418,31 @@ private fun AboutHeader() {
                 Modifier.requiredSize(124.dp),
             )
         }
-        Text("PingClash", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            "PingClash",
+            color = pageInk().text,
+            style = MaterialTheme.typography.titleLarge.onPage(),
+            fontWeight = FontWeight.Bold,
+        )
         Text(
             buildIdentity() + " · GPL-3.0",
-            color = Muted,
-            style = MaterialTheme.typography.bodyMedium,
+            color = pageInk().muted,
+            style = MaterialTheme.typography.bodyMedium.onPage(),
         )
     }
 }
+
+/** Service choices save at once, also while connected; not while the VPN is changing state. */
+internal fun routingEditable(busy: Boolean, vpn: VpnUiState) =
+    !busy && vpn.phase !in setOf("connecting", "stopping")
+
+/**
+ * What Settings opens outside itself (diagnosis, the setup guide), and a [page] another screen
+ * asked it to show; [handled] consumes that request once the page is shown.
+ */
+internal class SettingsHost(
+    val diagnose: () -> Unit,
+    val page: String = "",
+    val handled: () -> Unit = {},
+    val setupGuide: () -> Unit = {},
+)

@@ -128,6 +128,9 @@ internal class ServiceChecks(
 
     private suspend fun probe(target: ServiceTarget, limit: Int, ticket: Int, route: WebsiteRoute) {
         try {
+            // A check started just after a node or mode change must test the new route, not
+            // the moment of the swap, which can reset a connection.
+            VpnRuntime.awaitRouting()
             gate.withPermit {
                 kotlinx.coroutines.currentCoroutineContext().ensureActive()
                 val control = RunControl(limit.toLong())
@@ -193,7 +196,7 @@ internal class ServiceChecks(
                 jobs.values.forEach { it.cancel() }
                 jobs.clear()
                 mutable.value = ServiceCheckState()
-                runs.toList()
+                runs.snapshot()
             }
         // A disconnect may wait for a blocked reader. Never close probe sockets on the UI thread.
         scope.launch(Dispatchers.IO) { controls.forEach { it.cancel() } }

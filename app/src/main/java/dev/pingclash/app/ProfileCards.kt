@@ -116,15 +116,22 @@ internal fun ProfilesOverview(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item(key = "header") {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    PageHeading(tr(R.string.profiles), Modifier.weight(1f), "page-title-profiles")
-                    ProfileHeaderActions(
-                        canRefresh = !fetchLocked(locked) && data.profiles.any { it.autoUpdates },
-                        canSort = !locked && data.profiles.size > 1,
-                        sorting,
-                        actions,
-                    ) {
-                        sorting = !sorting
+                OnPage {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        PageHeading(
+                            tr(R.string.profiles),
+                            Modifier.weight(1f),
+                            "page-title-profiles",
+                        )
+                        ProfileHeaderActions(
+                            canRefresh =
+                                !fetchLocked(locked) && data.profiles.any { it.autoUpdates },
+                            canSort = !locked && data.profiles.size > 1,
+                            sorting,
+                            actions,
+                        ) {
+                            sorting = !sorting
+                        }
                     }
                 }
             }

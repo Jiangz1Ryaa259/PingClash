@@ -28,9 +28,9 @@ import androidx.compose.ui.unit.dp
 
 private val settingGroups =
     listOf(
-        listOf("network", "dns", "rules", "apps", "lan"),
+        listOf("network", "dns", "rules", "routing", "apps"),
         listOf("connections", "diagnosis", "terminal"),
-        listOf("appearance", "control", "automation", "backup", "privacy", "about"),
+        listOf("appearance", "control", "automation", "privacy", "setup", "about"),
     )
 private val settingTitles =
     mapOf(
@@ -38,19 +38,22 @@ private val settingTitles =
         "network" to R.string.network_connection,
         "apps" to R.string.per_app_vpn,
         "rules" to R.string.outbound_rules,
-        "lan" to R.string.local_network,
+        "routing" to R.string.service_routing,
+        "setup" to R.string.setup_guide,
         "connections" to R.string.connections,
         "diagnosis" to R.string.connection_diagnostics,
         "terminal" to R.string.terminal,
         "control" to R.string.ui_settings_background,
         "automation" to R.string.ui_settings_automation,
-        "backup" to R.string.ui_settings_backup,
-        "privacy" to R.string.privacy_security,
+        "privacy" to R.string.privacy_backup,
         "about" to R.string.about_licenses,
     )
 
 internal fun settingsTitle(id: String) =
     if (id == "dns") "DNS" else tr(settingTitles[id] ?: R.string.settings)
+
+/** The colour of a settings entry's icon tile, shared by pages that echo the entry. */
+internal fun settingTint(id: String) = Color(settingTints.getValue(id))
 
 /** The tinted square behind each entry's glyph, as in iOS Settings. */
 private val settingTints =
@@ -58,15 +61,15 @@ private val settingTints =
         "network" to 0xFF0A84FF,
         "dns" to 0xFF5E5CE6,
         "rules" to 0xFFFF9500,
+        "routing" to 0xFF00C7BE,
+        "setup" to 0xFFFFCC00,
         "apps" to 0xFF34C759,
-        "lan" to 0xFF30B0C7,
         "connections" to 0xFFFF2D55,
         "diagnosis" to 0xFFFF3B30,
         "terminal" to 0xFF3A3A3C,
         "appearance" to 0xFFAF52DE,
         "control" to 0xFFFF9F0A,
         "automation" to 0xFF5856D6,
-        "backup" to 0xFF32ADE6,
         "privacy" to 0xFF636366,
         "about" to 0xFF8E8E93,
     )
@@ -87,7 +90,7 @@ internal fun SettingsMenu(client: ClientSettings, onOpen: (String) -> Unit) {
                         settingsTitle(id),
                         if (id in listOf("diagnosis", "terminal")) "tool-$id" else "settings-$id",
                         value = if (id == "about") version else settingValue(id, client),
-                        icon = settingsGlyph(id) to Color(settingTints.getValue(id)),
+                        icon = settingsGlyph(id) to settingTint(id),
                     ) {
                         onOpen(id)
                     }
@@ -112,12 +115,6 @@ private val valueLabels =
                 "exclude" to R.string.exclude_selected_apps,
                 "include" to R.string.only_selected_apps,
             ),
-        "lan" to
-            mapOf(
-                "direct" to R.string.direct_lan,
-                "proxy" to R.string.proxy_lan,
-                "block" to R.string.block_lan,
-            ),
         "appearance" to
             mapOf(
                 "ocean" to R.string.ui_scene_ocean,
@@ -128,15 +125,18 @@ private val valueLabels =
     )
 
 private fun settingValue(id: String, client: ClientSettings): String? =
-    if (id == "dns") {
-        if (client.dnsMode == "https") "DoH" else "TCP"
-    } else valueLabels[id]?.get(choiceOf(id, client))?.let { tr(it) }
+    when (id) {
+        "dns" -> if (client.dnsMode == "https") "DoH" else "TCP"
+        "routing" ->
+            client.serviceRoutes.size.takeIf { it > 0 }?.let { tr(R.string.routing_summary, it) }
+                ?: tr(R.string.routing_default)
+        else -> valueLabels[id]?.get(choiceOf(id, client))?.let { tr(it) }
+    }
 
 private fun choiceOf(id: String, client: ClientSettings) =
     when (id) {
         "rules" -> client.mode
         "apps" -> client.appMode
-        "lan" -> client.lan
         "appearance" -> client.scene
         else -> ""
     }
@@ -159,9 +159,10 @@ private fun rememberVersionName(): String {
 internal fun SettingsHeading(
     page: String,
     dirty: Boolean,
-    canSave: Boolean,
     onBack: () -> Unit,
-    onSave: () -> Unit,
+    /** Saves the typed changes; null while they cannot be saved. */
+    onSave: (() -> Unit)?,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     Column {
         if (page.isNotEmpty() || dirty)
@@ -178,27 +179,28 @@ internal fun SettingsHeading(
                             .padding(end = 12.dp, top = 8.dp, bottom = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        AppGlyph(
-                            BACK_GLYPH,
-                            Modifier.size(22.dp),
-                            MaterialTheme.colorScheme.primary,
-                        )
+                        AppGlyph(BACK_GLYPH, Modifier.size(22.dp), pageInk().accent)
                         Text(
                             tr(R.string.settings),
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyLarge,
+                            color = pageInk().accent,
+                            style = MaterialTheme.typography.bodyLarge.onPage(),
                         )
                     }
                 }
                 Box(Modifier.weight(1f))
                 if (dirty)
                     TextButton(
-                        onSave,
-                        enabled = canSave,
+                        { onSave?.invoke() },
+                        enabled = onSave != null,
                         modifier = Modifier.testTag("settings-save"),
                     ) {
-                        Text(tr(R.string.save_settings), fontWeight = FontWeight.SemiBold)
+                        Text(
+                            tr(R.string.save_settings),
+                            color = pageInk().accent,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
+                trailing?.invoke()
             }
         PageHeading(
             settingsTitle(page),

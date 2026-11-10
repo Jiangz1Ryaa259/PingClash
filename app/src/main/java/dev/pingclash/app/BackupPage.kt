@@ -33,7 +33,7 @@ internal fun BackupPage(model: AppViewModel, enabled: Boolean, connected: Boolea
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
             it?.let(model::restoreBackup)
         }
-    SettingsSection {
+    SettingsSection(tr(R.string.ui_settings_backup)) {
         SettingSwitch(tr(R.string.ui_backup_include_profiles), withProfiles, enabled) {
             if (it) confirmProfiles = true else withProfiles = false
         }

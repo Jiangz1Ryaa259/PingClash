@@ -23,6 +23,10 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,8 +59,8 @@ internal fun SettingsSection(
             Text(
                 footer,
                 Modifier.padding(horizontal = 6.dp),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodySmall.onPage(),
+                color = pageInk().text,
             )
     }
 }
@@ -90,22 +94,25 @@ internal fun NavRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         icon?.let { (glyph, tint) -> IconSquare(glyph, tint) }
-        // The title keeps its full width; a long value gives way and ends in an ellipsis.
+        // The title keeps its full width; a value that does not fit whole is left to its own page.
         Text(
             title,
             if (value == null) Modifier.weight(1f) else Modifier.widthIn(max = 240.dp),
             style = MaterialTheme.typography.bodyLarge,
         )
-        if (value != null)
+        if (value != null) {
+            var fits by remember(value) { mutableStateOf(true) }
             Text(
                 value,
                 Modifier.weight(1f),
-                color = Muted,
+                color = if (fits) Muted else Color.Transparent,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.End,
                 style = MaterialTheme.typography.bodyLarge,
+                onTextLayout = { fits = !it.isLineEllipsized(0) },
             )
+        }
         AppGlyph(PcIcon.ChevronRight, Modifier.size(16.dp), Muted.copy(alpha = .7f))
     }
 }

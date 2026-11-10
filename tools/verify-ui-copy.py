@@ -28,7 +28,7 @@ MARKERS = (
 
 def main():
     count = 0
-    for folder in ("values", "values-zh-rCN"):
+    for folder in ("values", "values-zh-rCN", "values-ja"):
         for path in (ROOT / "app/src/main/res" / folder).glob("*.xml"):
             for entry in ET.parse(path).getroot():
                 if entry.attrib.get("name") in RETIRED:
@@ -43,8 +43,6 @@ def main():
     for name in sys.argv[1:]:
         with zipfile.ZipFile(name) as apk:
             for entry in apk.infolist():
-                if entry.filename.endswith("user-guide.md"):
-                    raise RuntimeError("External guide must not be bundled in APK")
                 data = apk.read(entry)
                 if any(marker.encode(encoding) in data for marker in MARKERS for encoding in ("utf-8", "utf-16le")):
                     raise RuntimeError("APK contains retired command/tutorial copy")

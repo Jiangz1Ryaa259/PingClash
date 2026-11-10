@@ -55,18 +55,37 @@ internal data class ExitState(
 )
 
 /**
- * What the current address depends on: the VPN session, mode, profile and main proxy, or the
- * phone's own connection. Null while the VPN is starting or stopping.
+ * What the current address depends on: the VPN session, mode, profile, main proxy, group picks
+ * (held in the runtime configuration), service routing and blocking, or the phone's own connection.
+ * Null while the VPN is starting or stopping.
  */
 internal fun exitRoute(vpn: VpnUiState, data: AppData): String? =
     when (vpn.stage) {
         VpnPhase.ESTABLISHED ->
             "vpn:${vpn.sessionStartedElapsed}:${data.client.mode}:" +
-                "${data.activeProfile?.id}:${data.selectedId}"
+                "${data.activeProfile?.id}:${data.selectedId}:${routingSignature(data)}"
         VpnPhase.IDLE,
         VpnPhase.ERROR -> "direct"
         else -> null
     }
+
+/**
+ * What website checks and a diagnosis were measured under: a change clears their results. Group
+ * picks are part of the runtime configuration.
+ */
+internal fun websiteRequestKey(data: AppData): List<Any?> =
+    listOf(
+        data.selectedId,
+        data.selectedRuntimeConfig,
+        data.probeUrl,
+        data.client.mode,
+        data.client.serviceRoutes,
+        data.client.blocking,
+    )
+
+/** Changes whenever a node, group pick, service route or blocking choice changes. */
+internal fun routingSignature(data: AppData): Int =
+    listOf(data.selectedRuntimeConfig, data.client.serviceRoutes, data.client.blocking).hashCode()
 
 /**
  * Fetches Cloudflare's trace like any other app on the phone would, so the reply shows the route
@@ -100,12 +119,29 @@ private fun readTrace(input: java.io.InputStream): String {
     return out.toString(Charsets.UTF_8.name())
 }
 
-/** "🇭🇰 Hong Kong" in the app's language; empty when the code is not a country. */
+// Places that belong to China use one flag and one wording in every language, whatever the
+// system's locale data calls them. Each entry is the English name, then the name by language.
+private val chinaPlaces =
+    mapOf(
+        "CN" to ("China" to mapOf("zh" to "中国", "ja" to "中国")),
+        "HK" to ("China – Hong Kong" to mapOf("zh" to "中国 – 香港", "ja" to "中国 – 香港")),
+        "MO" to ("China – Macau" to mapOf("zh" to "中国 – 澳门", "ja" to "中国 – マカオ")),
+        "TW" to ("China – Taiwan" to mapOf("zh" to "中国 – 台湾", "ja" to "中国 – 台湾")),
+    )
+
+/** "🇺🇸 United States" in the app's language; empty when the code is not a country. */
 internal fun exitCountryLabel(code: String, language: String): String {
     if (code.length != 2 || !code.all { it in 'A'..'Z' }) return ""
-    val name = Locale("", code).getDisplayCountry(Locale.forLanguageTag(language))
+    val china = chinaPlaces[code]
+    val name =
+        if (china != null) china.second[language] ?: china.first
+        else Locale("", code).getDisplayCountry(Locale.forLanguageTag(language))
     val flag =
-        code.map { String(Character.toChars(REGIONAL_INDICATOR_A + (it - 'A'))) }.joinToString("")
+        if (china != null) "🇨🇳"
+        else
+            code
+                .map { String(Character.toChars(REGIONAL_INDICATOR_A + (it - 'A'))) }
+                .joinToString("")
     return if (name.isBlank() || name == code) flag else "$flag $name"
 }
 

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="region_us">美国</string>
+    <string name="region_uk">英国</string>
+    <string name="region_japan">日本</string>
+    <string name="region_korea">韩国</string>
+    <string name="region_hong_kong">中国 – 香港</string>
+    <string name="region_taiwan">中国 – 台湾</string>
+    <string name="region_mainland">中国 – 大陆</string>
+    <string name="region_ai">AI</string>
+    <string name="region_games">游戏</string>
+    <string name="region_social">工作与社交</string>
+
+    <string name="service_routing">服务分流</string>
+    <string name="routing_regions">国家和地区</string>
+    <string name="routing_proxy">代理</string>
+    <string name="routing_direct">直连</string>
+    <string name="routing_default">默认</string>
+    <string name="routing_clear_all">清除全部选择</string>
+    <string name="routing_clear_title">清除全部服务选择？</string>
+    <string name="routing_clear_body">所有服务恢复为「默认」，由订阅决定。</string>
+    <string name="routing_clear_confirm">清除</string>
+    <string name="routing_summary">已设置 %1$d 项</string>
+    <string name="routing_main_proxy">主代理</string>
+    <string name="routing_group_title">走哪个代理</string>
+    <string name="routing_group_missing">当前配置没有 %1$s，暂走主代理</string>
+    <string name="routing_invalid">服务分流设置无效。</string>
+    <string name="routing_wait_vpn">请等待 VPN 完成连接或断开。</string>
+
+    <string name="ad_blocking">广告拦截</string>
+    <string name="blocking_off">关闭</string>
+    <string name="blocking_ads">广告</string>
+    <string name="blocking_telemetry">广告与跟踪</string>
+
+    <string name="setup_guide">设置向导</string>
+    <string name="user_guide">使用指南</string>
+    <string name="user_agreement">用户协议</string>
+    <string name="guide_unavailable">无法打开使用指南。</string>
+
+    <string name="setup_step">第 %1$d 步，共 %2$d 步</string>
+    <string name="setup_skip_all">跳过设置</string>
+    <string name="setup_skip">跳过</string>
+    <string name="setup_next">下一步</string>
+    <string name="setup_welcome_title">欢迎使用 PingClash</string>
+    <string name="setup_welcome_body">PingClash 是基于 Mihomo 内核的 Android 代理客户端。它不提供服务器、订阅或账号：你使用自己的订阅或配置，PingClash 通过它们连接。</string>
+    <string name="setup_agree">同意</string>
+    <string name="setup_exit">退出</string>
+    <string name="agreement_text">1. 关于 PingClash\nPingClash 是依据 GNU 通用公共许可证第 3 版（GPL-3.0）发布的自由开源软件，是基于 Mihomo 内核的 Android 代理客户端。本软件按“现状”提供，不附带任何明示或默示的担保，包括对特定用途适用性的担保。\n\n2. 不提供服务器、订阅或账号\nPingClash 不提供、不销售、不推荐也不审核任何代理服务器、订阅或账号，与任何服务商均无关联。你导入的内容，以及你与其服务商之间的约定或付费，由你与该服务商自行处理。\n\n3. 合法使用\n你自行决定并承担使用 PingClash 的风险与责任。请遵守所在地的法律法规、网络运营商的规定以及所用服务的条款。不得将 PingClash 用于任何违法用途、侵害他人权利、攻击或干扰网络与系统，或传播垃圾信息与恶意软件。\n\n4. 你的数据只在本机\n你的订阅、配置、设置、日志、用量统计和崩溃详情只保存在本机的应用私有存储中；其中订阅、配置和设置使用 Android Keystore 管理的密钥加密。PingClash 没有账号、统计、广告、跟踪或崩溃上报服务，也没有开发者服务器，不会向开发者发送任何内容。\n报告、备份和导出的配置只有在你主动保存或分享时才会离开手机。包含配置的备份或导出文件含有你的凭据，请妥善保管。\n卸载 PingClash 或清除其数据会删除它保存的全部内容；你另行保存的文件仍留在你放置的位置。\n\n5. PingClash 会连接哪些地方\nPingClash 只为你使用的功能联网：\n• 下载你的订阅及其指定的提供源，包括你在「自动化」中设定的定时更新；\n• 通过你选择的节点连接、配置中自动策略组的健康检查，以及设置中的 DNS 服务器；\n• 你主动发起的延迟测试、连接诊断、网站检测和手动域名或 IP 检测；\n• 首页的 IP 检测，向 Cloudflare 查询当前线路使用的地址。\n上述服务能看到它收到的连接（例如你的 IP 地址），并适用其各自的条款与隐私政策。\n\n6. VPN 与其他权限\n为了分流，Android 会请求一次 VPN 授权。开启后，你选择分流的应用流量会在本机经过 PingClash。PingClash 按目标地址分流，不记录浏览历史、不解密加密流量，也不抓包。服务商能看到你经其节点发送的流量，未加密的流量在途中也可能被读取。\n通知用于显示连接状态。只有在你开启「按网络自动连接」时才会申请位置权限，因为 Android 需要它读取 Wi-Fi 名称；该名称只在本机比对，不保存、不发送。\n终端以 PingClash 自身的权限执行你输入的命令，这些命令可以读写 PingClash 的文件并访问网络。\n\n7. 你导入的配置\n订阅和配置文件决定你的流量去向，请只从可信来源导入。如果配置跳过了服务器证书验证，PingClash 无法确认服务器身份；它会保留该设置并向你说明。\n\n8. 服务分流与广告拦截\n服务分流和广告拦截使用随应用提供的域名列表。列表可能不完整、过时或有误，服务也可能随时更换地址。某项服务仍可能走另一条线路，广告拦截也可能误拦你需要的内容或漏掉你不需要的内容。\n\n9. 不保证可用性\nPingClash 不保证任何连接、节点、网站或服务可以访问、快速或稳定，也不保证能在所有设备和 Android 版本上运行。功能可能在后续版本中调整或移除。\n\n10. 第三方组件\nPingClash 包含第三方软件与数据，例如 Mihomo 内核以及域名和 IP 数据库，各自适用其许可证，详见「设置 → 关于与许可」。\n\n11. 责任限制\n在适用法律允许的范围内，开发者与贡献者不对因使用或无法使用 PingClash 而产生的任何直接、间接、附带或后果性损失承担责任，包括数据丢失、连接中断、第三方服务对你账号采取的措施，以及你的使用方式带来的任何法律后果。\n\n12. 协议变更\n如果本协议有变更，PingClash 会显示新版本，并请你再次同意后才能继续使用。如果你不同意，请轻点「退出」并停止使用 PingClash。\n\n13. 反馈\n问题与报告请提交到项目在 GitHub 上的公开 Issue 页面。PingClash 不会替你发送任何内容。\n\n14. 语言\n本协议以英文版为准。其他语言版本均为方便阅读而提供的译文；如有不一致，以英文版为准。</string>
+
+    <string name="setup_how_title">使用方法</string>
+    <string name="setup_how_import_title">添加订阅</string>
+    <string name="setup_how_import_body">在「配置」页通过链接、文件或二维码导入。</string>
+    <string name="setup_how_connect_title">连接</string>
+    <string name="setup_how_connect_body">在首页选择出站模式，轻点工牌。Android 会请求一次 VPN 授权。</string>
+    <string name="setup_how_nodes_title">选择节点</string>
+    <string name="setup_how_nodes_body">在「代理」页选择节点与策略组成员，并测试延迟。</string>
+    <string name="setup_full_guide">阅读完整指南</string>
+
+    <string name="setup_profile_title">你的配置</string>
+    <string name="setup_profile_body">现在添加订阅、从其他手机恢复备份，或稍后在「配置」页完成。</string>
+    <string name="setup_import">导入订阅</string>
+    <string name="setup_restore">恢复备份</string>
+    <string name="setup_later">稍后</string>
+    <string name="setup_profile_ready">已添加配置：%1$s</string>
+
+    <string name="setup_routing_title">如你所愿</string>
+    <string name="setup_routing_more">更多国家和地区的服务：设置 → 服务分流。</string>
+
+    <string name="setup_blocking_title">拦截</string>
+
+    <string name="setup_ready_title">准备就绪</string>
+    <string name="setup_ready_profile">配置</string>
+    <string name="setup_ready_no_profile">尚未添加</string>
+    <string name="setup_ready_services">已设置的服务</string>
+    <string name="setup_home">进入首页</string>
+    <string name="setup_connect">立即连接</string>
+    <string name="setup_skip_hint">你可以随时在「设置 → 设置向导」中完成设置。</string>
+
+    <string name="routing_feature_title">新功能：服务分流</string>
+    <string name="routing_feature_body">选择哪些服务使用代理。</string>
+    <string name="routing_feature_open">打开</string>
+    <string name="routing_feature_dismiss">暂不</string>
+
+    <string name="privacy_backup">隐私与备份</string>
+</resources>

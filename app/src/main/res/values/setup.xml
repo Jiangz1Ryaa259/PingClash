@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Countries and regions follow one naming rule everywhere in the app. -->
+    <string name="region_us">U.S.</string>
+    <string name="region_uk">U.K.</string>
+    <string name="region_japan">Japan</string>
+    <string name="region_korea">South Korea</string>
+    <string name="region_hong_kong">China – Hong Kong</string>
+    <string name="region_taiwan">China – Taiwan</string>
+    <string name="region_mainland">China – Mainland</string>
+    <string name="region_ai">AI</string>
+    <string name="region_games">Games</string>
+    <string name="region_social">Work &amp; social</string>
+
+    <string name="service_routing">Service routing</string>
+    <string name="routing_regions">Countries &amp; regions</string>
+    <string name="routing_proxy">Proxy</string>
+    <string name="routing_direct">Direct</string>
+    <string name="routing_default">Default</string>
+    <string name="routing_clear_all">Clear all choices</string>
+    <string name="routing_clear_title">Clear all service choices?</string>
+    <string name="routing_clear_body">Every service goes back to Default, so your subscription decides.</string>
+    <string name="routing_clear_confirm">Clear</string>
+    <string name="routing_summary">%1$d set</string>
+    <string name="routing_main_proxy">Main proxy</string>
+    <string name="routing_group_title">Route through</string>
+    <string name="routing_group_missing">%1$s is not in this profile, using the main proxy</string>
+    <string name="routing_invalid">Service routing options are invalid.</string>
+    <string name="routing_wait_vpn">Wait until the VPN finishes connecting or stopping.</string>
+
+    <string name="ad_blocking">Ad blocking</string>
+    <string name="blocking_off">Off</string>
+    <string name="blocking_ads">Ads</string>
+    <string name="blocking_telemetry">Ads &amp; tracking</string>
+
+    <string name="setup_guide">Setup guide</string>
+    <string name="user_guide">User guide</string>
+    <string name="user_agreement">User agreement</string>
+    <string name="guide_unavailable">The guide could not be opened.</string>
+
+    <string name="setup_step">Step %1$d of %2$d</string>
+    <string name="setup_skip_all">Skip setup</string>
+    <string name="setup_skip">Skip</string>
+    <string name="setup_next">Next</string>
+    <string name="setup_welcome_title">Welcome to PingClash</string>
+    <string name="setup_welcome_body">PingClash is a proxy client for Android, built on the Mihomo core. It has no servers, subscriptions or accounts of its own: you bring your own subscription or configuration, and PingClash connects through it.</string>
+    <string name="setup_agree">Agree</string>
+    <string name="setup_exit">Exit</string>
+    <string name="agreement_text">1. About PingClash\nPingClash is free, open-source software released under the GNU General Public License v3.0 (GPL-3.0). It is a proxy client for Android built on the Mihomo core. It is provided as is, without warranty of any kind, express or implied, including any warranty of fitness for a particular purpose.\n\n2. No servers, subscriptions or accounts\nPingClash does not provide, sell, recommend or check proxy servers, subscriptions or accounts, and has no relationship with any provider. What you import, and any agreement or payment between you and its provider, is a matter between you and that provider.\n\n3. Lawful use\nYou use PingClash at your own risk and on your own responsibility. Follow the laws and regulations where you are, the rules of your network operator, and the terms of the services you use. Do not use PingClash for any unlawful purpose, to infringe the rights of others, to attack or disrupt networks or systems, or to spread spam or malware.\n\n4. Your data stays on this phone\nYour subscriptions, profiles, settings, logs, usage totals and crash details are kept only on this phone, in PingClash\'s private storage; subscriptions, profiles and settings are encrypted with a key held by Android Keystore. PingClash has no accounts, analytics, advertising, tracking or crash-reporting services and no developer server, and sends nothing to its developers.\nReports, backups and exported profiles leave the phone only when you save or share them yourself. A backup or export that includes profiles contains your credentials: keep it safe.\nUninstalling PingClash or clearing its data removes everything it stored. Files you saved elsewhere stay where you put them.\n\n5. What PingClash connects to\nPingClash connects out only for the features you use:\n• downloading your subscriptions and the providers they name, including the scheduled updates you choose in Automation;\n• connecting through the nodes you select, the health checks your configuration\'s automatic groups make, and the DNS servers in your settings;\n• the latency tests, diagnostics, website checks and manual domain or IP checks you start;\n• the IP check on the home page, which asks Cloudflare which address the current route uses.\nEach of these services can see the connection it receives, such as your IP address, and its own terms and privacy policy apply.\n\n6. The VPN and other permissions\nTo route traffic, Android asks once to allow PingClash as a VPN. While it is on, the traffic of the apps you route passes through PingClash on this phone. PingClash routes connections by destination; it does not record browsing history, decrypt encrypted traffic or capture packets. Your provider can see the traffic you send through its nodes, and unencrypted traffic can be read along the way.\nNotifications show the connection status. Location is requested only if you turn on Wi-Fi auto-connect, because Android requires it to read the Wi-Fi name; the name is compared on this phone and never stored or sent.\nThe terminal runs the commands you type with PingClash\'s own permissions; they can read and change PingClash\'s files and use the network.\n\n7. Configurations you import\nSubscriptions and configuration files decide where your traffic goes. Import them only from sources you trust. If a configuration skips server certificate verification, PingClash cannot confirm the server\'s identity; it keeps that setting and tells you so.\n\n8. Service routing and ad blocking\nService routing and ad blocking use domain lists bundled with the app. The lists may be incomplete, out of date or wrong, and services can change their addresses at any time. A service may still take the other route, and ad blocking may block something you want or miss something you do not.\n\n9. No guarantee of availability\nPingClash does not guarantee that any connection, node, website or service will be reachable, fast or stable, or that PingClash works on every device and Android version. Features may change or be removed in later versions.\n\n10. Third-party components\nPingClash includes third-party software and data, such as the Mihomo core and domain and IP databases, each under its own licence. They are listed under Settings → About &amp; licenses.\n\n11. Limitation of liability\nTo the extent permitted by applicable law, the developers and contributors are not liable for any direct, indirect, incidental or consequential loss or damage arising from the use of, or inability to use, PingClash. This includes loss of data, interrupted connections, actions taken by third-party services against your accounts, and any legal consequences of how you use it.\n\n12. Changes to this agreement\nIf this agreement changes, PingClash shows the new version and asks you to agree again before you continue. If you do not agree, tap Exit and stop using PingClash.\n\n13. Feedback\nQuestions and reports go to the project\'s public issue tracker on GitHub. PingClash never sends anything there for you.\n\n14. Language\nThe English version of this agreement is the primary text. Other languages are translations provided for your convenience; if they differ, the English version applies.</string>
+
+    <string name="setup_how_title">How it works</string>
+    <string name="setup_how_import_title">Add your subscription</string>
+    <string name="setup_how_import_body">On the Profiles page, import a link, a file or a QR code.</string>
+    <string name="setup_how_connect_title">Connect</string>
+    <string name="setup_how_connect_body">On the home page, choose a mode and tap the badge. Android asks once to allow the VPN.</string>
+    <string name="setup_how_nodes_title">Pick nodes</string>
+    <string name="setup_how_nodes_body">On the Proxies page, choose nodes and group members, and check latency.</string>
+    <string name="setup_full_guide">Read the full guide</string>
+
+    <string name="setup_profile_title">Your profile</string>
+    <string name="setup_profile_body">Add a subscription now, restore a backup from another phone, or do it later on the Profiles page.</string>
+    <string name="setup_import">Import a subscription</string>
+    <string name="setup_restore">Restore a backup</string>
+    <string name="setup_later">Later</string>
+    <string name="setup_profile_ready">Profile ready: %1$s</string>
+
+    <string name="setup_routing_title">IF YOU WANT</string>
+    <string name="setup_routing_more">More services by country and region: Settings → Service routing.</string>
+
+    <string name="setup_blocking_title">Blocking</string>
+
+    <string name="setup_ready_title">Ready</string>
+    <string name="setup_ready_profile">Profile</string>
+    <string name="setup_ready_no_profile">Not added yet</string>
+    <string name="setup_ready_services">Services set</string>
+    <string name="setup_home">Go to home</string>
+    <string name="setup_connect">Connect now</string>
+    <string name="setup_skip_hint">You can finish setup any time in Settings → Setup guide.</string>
+
+    <string name="routing_feature_title">New: Service routing</string>
+    <string name="routing_feature_body">Choose which services use the proxy.</string>
+    <string name="routing_feature_open">Open</string>
+    <string name="routing_feature_dismiss">Not now</string>
+
+    <string name="privacy_backup">Privacy and backup</string>
+    <string name="setup_language_title" translatable="false">Language · 语言 · 言語</string>
+</resources>

@@ -93,7 +93,8 @@ class InteractionUpgradeTest {
         assertEquals(0, calls)
         // The dial only reports a change of mode; tapping the current one does nothing.
         clickHomeControl("mode-global")
-        assertEquals("global", mode)
+        // The mode is requested when the wheel reaches it, a moment after the tap.
+        compose.waitUntil(3000) { mode == "global" }
         clickHomeControl("service-check-start")
         assertEquals(1, calls)
         compose.onNodeWithText("Google").assertExists()

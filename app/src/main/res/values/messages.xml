@@ -16,7 +16,7 @@
     <string name="home">Home</string>
     <string name="unsupported_tls_options">"Unsupported TLS options"</string>
     <string name="name_optional">"Name (optional)"</string>
-    <string name="latency_target_empty_follows_group">"Latency target (empty follows group)"</string>
+    <string name="latency_target_empty_follows_group">"Latency target (optional)"</string>
     <string name="the_selected_member_cannot_build_this_grou">"The selected member cannot build this group. The original configuration and selection were preserved."</string>
     <string name="runtime_rules_list_item_has_an_invalid">"Runtime rules list: item %1$s has an invalid format. This is a rule index, not a file line number."</string>
     <string name="rename">"Rename"</string>
@@ -66,6 +66,7 @@
     <string name="diagnose_main_proxy">"Diagnose main proxy"</string>
     <string name="vpn_tunnel_established">"VPN tunnel established"</string>
     <string name="no_active_connections">"No active connections"</string>
+    <string name="connections_vpn_off">"VPN is not connected"</string>
     <plurals name="count_proxy_proxies">
         <item quantity="one">"%1$s proxy · %2$s"</item>
         <item quantity="other">"%1$s proxies · %2$s"</item>
@@ -198,7 +199,6 @@
     </plurals>
     <string name="establishing_tunnel">"Establishing tunnel"</string>
     <string name="profile_name">"Profile name"</string>
-    <string name="text">"简体中文"</string>
     <string name="total_downloaded">"Total downloaded"</string>
     <string name="import_and_choose_a_proxy_first">"Import and choose a proxy first"</string>
     <string name="vpn_permission_revoked_connection_cleaned">"VPN permission revoked. Connection cleaned up."</string>
@@ -275,7 +275,6 @@
     <string name="reconnect">"Reconnect"</string>
     <string name="subscription">"Subscription"</string>
     <string name="some_nodes_skip_certificate_verification_s">Some nodes skip certificate verification, so their server identity cannot be confirmed. The original connection policy is retained.</string>
-    <string name="english">"English"</string>
     <string name="other">"Other"</string>
     <string name="local_profiles_could_not_be_read_the">"Local profiles could not be read. The original file was preserved."</string>
     <string name="automatically_selected">" · automatically selected"</string>

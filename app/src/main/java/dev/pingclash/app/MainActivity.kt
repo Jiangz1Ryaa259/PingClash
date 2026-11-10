@@ -52,22 +52,17 @@ class MainActivity : ComponentActivity() {
                 androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language
             val language =
                 if (data.client.language == "system") {
-                    if (systemLanguage == "zh") "zh" else "en"
+                    if (uiLanguageSupported(systemLanguage)) systemLanguage else "en"
                 } else data.client.language
             CompositionLocalProvider(LocalUiLanguage provides language) {
                 ThemeRevealHost(data.client.effectiveTheme, data.client.reduceEffects) {
                     PingClashTheme(data.client.effectiveTheme, data.client.dynamicColor) {
                         val light = MaterialTheme.colorScheme.background.luminance() > .5f
-                        SideEffect {
+                        // Only when the theme changes: on a photo the frame sets its own icons.
+                        DisposableEffect(light) {
                             window.isNavigationBarContrastEnforced = false
-                            androidx.core.view.WindowCompat.getInsetsController(
-                                    window,
-                                    window.decorView,
-                                )
-                                .apply {
-                                    isAppearanceLightStatusBars = light
-                                    isAppearanceLightNavigationBars = light
-                                }
+                            window.setDarkSystemBarIcons(light)
+                            onDispose {}
                         }
                         Surface(Modifier.fillMaxSize(), color = Ink) { PingClashApp() }
                     }

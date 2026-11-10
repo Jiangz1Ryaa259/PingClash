@@ -10,7 +10,6 @@ import android.webkit.WebView
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -61,9 +60,6 @@ internal class LanyardThreeState(private val rendererLost: () -> Unit = {}) {
             if (hadFrame) recovery.arm()
         }
 
-    var scrollOffset by mutableFloatStateOf(0f)
-        private set
-
     var hasControl by mutableStateOf(false)
         private set
 
@@ -80,7 +76,6 @@ internal class LanyardThreeState(private val rendererLost: () -> Unit = {}) {
     private var polling = false
     private var viewportWidth = 1
     private var viewportHeight = 1
-    private var initialTop: Float? = null
     private var slotTop = 0f
     private var slotHeight = 0f
     private var slotCenterX: Float? = null
@@ -192,7 +187,6 @@ internal class LanyardThreeState(private val rendererLost: () -> Unit = {}) {
 
     fun viewport(width: Int, height: Int) {
         if (viewportWidth != width || viewportHeight != height) {
-            initialTop = null
             displayReady = false
             epoch++
         }
@@ -250,14 +244,10 @@ internal class LanyardThreeState(private val rendererLost: () -> Unit = {}) {
         // geometry while paused; otherwise there may be no later layout callback.
         if (owner !== token) return
         if (!top.isFinite() || !height.isFinite()) return
-        val newControl = !hasControl || slotHeight != height
-        val lowerAnchor = top > (initialTop ?: top)
-        if (initialTop == null || newControl || lowerAnchor) initialTop = top
         hasControl = height > 0
         slotTop = top
         slotHeight = height
         slotCenterX = centerX?.takeIf { it.isFinite() }
-        scrollOffset = top - (initialTop ?: top)
         schedule()
     }
 
@@ -319,7 +309,7 @@ internal class LanyardThreeState(private val rendererLost: () -> Unit = {}) {
                 .put("mode", identity.mode)
                 .put("viewportWidth", viewportWidth)
                 .put("viewportHeight", viewportHeight)
-                .put("top", initialTop ?: slotTop)
+                .put("top", slotTop)
                 .put("height", slotHeight)
                 .put("fontScale", fontScale)
                 .put("centerX", slotCenterX ?: viewportWidth / 2f)
@@ -353,7 +343,6 @@ internal class LanyardThreeState(private val rendererLost: () -> Unit = {}) {
         held = false
         dragging = false
         lastFrame = ""
-        initialTop = null
     }
 }
 

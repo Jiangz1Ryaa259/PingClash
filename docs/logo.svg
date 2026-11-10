@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="152" height="152" viewBox="0 0 76 76" role="img" aria-label="PingClash">
+  <!-- The app's About header: a white 76 tile with 18 corners holding the launcher foreground
+       (app/src/main/res/drawable/ic_launcher_foreground.xml) drawn at 124 on its 108 canvas. -->
+  <defs>
+    <linearGradient id="lanyard" gradientUnits="userSpaceOnUse" x1="54" y1="13" x2="54" y2="32">
+      <stop offset="0" stop-color="#D1D1D6"/>
+      <stop offset="1" stop-color="#8E8E93"/>
+    </linearGradient>
+    <linearGradient id="card" gradientUnits="userSpaceOnUse" x1="54" y1="32" x2="54" y2="90">
+      <stop offset="0" stop-color="#FF8466"/>
+      <stop offset="1" stop-color="#E9468F"/>
+    </linearGradient>
+    <clipPath id="tile">
+      <rect width="76" height="76" rx="18"/>
+    </clipPath>
+  </defs>
+  <rect width="76" height="76" rx="18" fill="#FFFFFF"/>
+  <g clip-path="url(#tile)">
+    <g transform="translate(-24 -24) scale(1.148148)">
+      <g transform="translate(0 2.5) translate(54 51.5) scale(0.78) translate(-54 -51.5)">
+        <path d="M39,13 L54,32 L69,13" fill="none" stroke="url(#lanyard)" stroke-width="5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M44,32 H64 A13,13 0 0 1 77,45 V77 A13,13 0 0 1 64,90 H44 A13,13 0 0 1 31,77 V45 A13,13 0 0 1 44,32 Z"
+          fill="url(#card)"/>
+        <path d="M42,53 L51,61 L42,69 M56,71 H67" fill="none" stroke="#FFFFFF" stroke-width="5.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </g>
+  </g>
+  <!-- A hairline edge keeps the tile defined on GitHub's light page; on the dark page the white
+       tile stands out by itself. -->
+  <rect x="0.25" y="0.25" width="75.5" height="75.5" rx="17.75" fill="none" stroke="#D1D1D6"
+    stroke-width="0.5"/>
+</svg>

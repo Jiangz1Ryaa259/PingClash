@@ -15,7 +15,7 @@
     <ID>CyclomaticComplexMethod:ProfileRepository.kt$ProfileRepository$@Synchronized fun importProfile( name: String, text: String, source: String? = null, replaceId: String? = null, explicitSelections: Map&lt;String, String&gt;? = null, userAgent: String? = null, subscriptionResponse: SubscriptionResponse? = null, remote: RemoteProfile? = null, providerRefresh: Boolean = false, startingVpn: Boolean = false, requireActivation: Boolean = false, ): LocalProfile</ID>
     <ID>CyclomaticComplexMethod:ProfileRepository.kt$ProfileRepository$fun refreshProviders(profile: LocalProfile, force: Boolean = false)</ID>
     <ID>CyclomaticComplexMethod:ProxyScreen.kt$@Composable internal fun ProxyScreen( data: AppData, locked: Boolean, model: AppViewModel, tests: ProxyTestState, onProfiles: () -&gt; Unit, onDiagnosis: () -&gt; Unit, )</ID>
-    <ID>CyclomaticComplexMethod:SettingsHub.kt$@Composable internal fun SettingsHub( data: AppData, vpn: VpnUiState, locked: Boolean, model: AppViewModel, onDiagnose: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:SettingsHub.kt$@Composable internal fun SettingsHub( data: AppData, vpn: VpnUiState, locked: Boolean, model: AppViewModel, host: SettingsHost, )</ID>
     <ID>CyclomaticComplexMethod:SubscriptionDetails.kt$@Composable internal fun SubscriptionDetails(profile: LocalProfile)</ID>
     <ID>CyclomaticComplexMethod:SubscriptionImportTest.kt$SubscriptionImportTest$@Test fun screenshotsAllowedExceptWhenCredentialsAreVisible()</ID>
     <ID>CyclomaticComplexMethod:TcpLatencyProbe.kt$TcpLatencyProbe$fun run(context: Context, node: LocalNode?, timeout: Int, control: RunControl): ProxyDelay</ID>
@@ -89,7 +89,7 @@
     <ID>LongMethod:ScenicGlassTest.kt$ScenicGlassTest$@Test fun idleWavesActuallyMoveAndReducedMotionFreezesSceneWhileCloudsAndNoneAreSelectable()</ID>
     <ID>LongMethod:ServiceChecks.kt$ServiceChecks$fun start(timeout: Int, ids: List&lt;String&gt;, targets: List&lt;ServiceTarget&gt; = serviceTargets)</ID>
     <ID>LongMethod:SessionTimer.kt$@Composable internal fun SessionTimer( vpn: VpnUiState, modifier: Modifier = Modifier, away: Boolean = false, onHome: () -&gt; Unit = {}, onDisconnect: () -&gt; Unit = {}, )</ID>
-    <ID>LongMethod:SettingsHub.kt$@Composable internal fun SettingsHub( data: AppData, vpn: VpnUiState, locked: Boolean, model: AppViewModel, onDiagnose: () -&gt; Unit, )</ID>
+    <ID>LongMethod:SettingsHub.kt$@Composable internal fun SettingsHub( data: AppData, vpn: VpnUiState, locked: Boolean, model: AppViewModel, host: SettingsHost, )</ID>
     <ID>LongMethod:SettingsHub.kt$@Composable private fun AppRoutingPanel( draft: ClientSettings, enabled: Boolean, onChange: (ClientSettings) -&gt; Unit, )</ID>
     <ID>LongMethod:StrategyGroupsTest.kt$StrategyGroupsTest$@Test fun import234NodesKeepFifteenDialerDependenciesAndPersistManualChoice()</ID>
     <ID>LongMethod:SubscriptionDetails.kt$@Composable internal fun SubscriptionDetails(profile: LocalProfile)</ID>

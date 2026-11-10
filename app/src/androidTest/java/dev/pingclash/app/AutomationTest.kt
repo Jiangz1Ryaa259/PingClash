@@ -193,11 +193,14 @@ class AutomationTest {
             compose.onNodeWithTag("switch-按网络自动连接").performScrollTo().assertIsOff()
             compose.onNodeWithTag("settings-back").performClick()
             compose.waitForIdle()
-            visibleControl("settings-backup").performClick()
+            // Backup and restore now sit on the Privacy page.
+            visibleControl("settings-privacy").performClick()
             compose.waitForIdle()
             val export = compose.onNodeWithTag("backup-export")
-            compose.waitUntil(5000) { runCatching { export.assertIsDisplayed() }.isSuccess }
-            compose.onNodeWithTag("backup-restore").assertIsDisplayed()
+            compose.waitUntil(5000) {
+                runCatching { export.performScrollTo().assertIsDisplayed() }.isSuccess
+            }
+            compose.onNodeWithTag("backup-restore").performScrollTo().assertIsDisplayed()
         } finally {
             repo.clientSettings(before.client, before.dnsAddress, before.probeUrl)
         }

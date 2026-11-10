@@ -54,6 +54,9 @@ jobs:
       - name: Verify localization resources and format placeholders
         shell: pwsh
         run: ./tools/verify-localization.ps1
+      - name: Verify translations
+        shell: pwsh
+        run: python tools/verify-translations.py
       - name: Build APK, detekt baseline gate, lint, and Java verification
         shell: pwsh
         run: ./tools/build-android.ps1

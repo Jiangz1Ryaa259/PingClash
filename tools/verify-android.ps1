@@ -101,7 +101,7 @@ try {
     }
     $fixtureData=Get-Content -LiteralPath $fixtureReady -Raw | ConvertFrom-Json
     $result=& $adb -s $serial shell am instrument -w -r -e hy2Port $fixtureData.hy2Port -e hy2HttpPort $fixtureData.httpPort `
-        -e hy2DnsPort $fixtureData.dnsPort -e hy2Host $fixtureData.host dev.pingclash.app.test/androidx.test.runner.AndroidJUnitRunner
+        -e hy2DnsPort $fixtureData.dnsPort -e hy2Host $fixtureData.host dev.pingclash.app.test/dev.pingclash.app.PingClashTestRunner
     $fixtureStats=Invoke-RestMethod -Uri ('http://127.0.0.1:'+$fixtureData.httpPort+'/stats') -NoProxy -TimeoutSec 3
     $fixtureStats | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $output 'hyfixture-stats.json') -Encoding UTF8
 } finally {

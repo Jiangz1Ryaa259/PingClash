@@ -65,6 +65,9 @@ private constructor(
         val socket = Socket()
         var prepared = false
         try {
+            // A new Socket has no descriptor until an option is touched, and protect() then
+            // fails on the missing one. Network.bindSocket does the same before binding.
+            socket.reuseAddress
             PingVpnService.instance?.let {
                 if (!it.protect(socket)) throw ProbeFailure(State.BLOCKED, Code.LOCAL_RESTRICTION)
             }

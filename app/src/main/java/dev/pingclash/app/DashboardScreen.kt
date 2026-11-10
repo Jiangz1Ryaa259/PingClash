@@ -99,8 +99,10 @@ internal fun DashboardScreen(state: DashboardState, actions: DashboardActions) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 HomeConnection(state, actions, Modifier.weight(1f).fillMaxWidth())
-                HomeConfiguration(state, actions)
-                HomeServiceChecks(state, actions.serviceTest, shown)
+                // Portrait: one card, the website checks docked under the summary.
+                HomeConfiguration(state, actions) {
+                    HomeServiceStrip(state, actions.serviceTest, shown)
+                }
             }
     }
 }

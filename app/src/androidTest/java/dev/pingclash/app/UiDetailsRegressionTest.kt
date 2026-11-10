@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -26,6 +27,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -41,11 +43,11 @@ class UiDetailsRegressionTest {
     @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun modeAcknowledgementStartsOneSpringAndExternalChangesNeverResubmit() {
+    fun aTapRequestsTheModeOnceAndExternalChangesNeverResubmit() {
         val mode = mutableStateOf("rule")
         var requests = 0
         fixture {
-            ModeDial(
+            ModeDrum(
                 mode.value,
                 true,
                 {
@@ -56,15 +58,18 @@ class UiDetailsRegressionTest {
         }
         compose.mainClock.autoAdvance = false
         try {
+            // The right side holds the next mode.
             compose.onNodeWithTag("mode-global").performClick()
             compose.mainClock.advanceTimeBy(1800)
-            assertEquals(0f, angle(), .01f)
-            assertEquals(1, settlements())
+            assertEquals(-DRUM_SPACING, angle(), .01f)
             assertEquals(1, requests)
+            assertEquals(0, settlements())
+            compose.onNodeWithTag("mode-global").assertIsSelected()
+            // Changed elsewhere: the drum follows without asking again.
             compose.runOnIdle { mode.value = "direct" }
             compose.mainClock.advanceTimeBy(1800)
-            assertEquals(68f, angle(), .01f)
-            assertEquals(2, settlements())
+            assertEquals(-2 * DRUM_SPACING, angle(), .01f)
+            assertEquals(1, settlements())
             assertEquals(1, requests)
         } finally {
             compose.mainClock.autoAdvance = true
@@ -72,41 +77,73 @@ class UiDetailsRegressionTest {
     }
 
     @Test
-    fun rejectedDragReturnsToTheActualModeAndCanBeUsedAgain() {
+    fun aRefusedChangeTurnsBackAndTheDrumCanBeUsedAgain() {
         var requests = 0
-        fixture { ModeDial("rule", true, { requests++ }) }
+        fixture { ModeDrum("rule", true, { requests++ }) }
         compose.mainClock.autoAdvance = false
         try {
-            dragDial()
-            assertTrue("No routing request was made", requests > 0)
-            compose.mainClock.advanceTimeBy(1800)
-            assertEquals(-68f, angle(), .01f)
+            compose.onNodeWithTag("mode-global").performClick()
+            compose.mainClock.advanceTimeBy(3000)
+            assertEquals(1, requests)
+            assertEquals(0f, angle(), .01f)
+            // The left side holds the previous mode, round the drum.
             compose.onNodeWithTag("mode-direct").performClick()
-            compose.mainClock.advanceTimeBy(1800)
-            assertEquals(-68f, angle(), .01f)
+            compose.mainClock.advanceTimeBy(3000)
+            assertEquals(2, requests)
+            assertEquals(0f, angle(), .01f)
         } finally {
             compose.mainClock.autoAdvance = true
         }
     }
 
     @Test
-    fun disablingDuringADragCancelsItAndRestoresTheActualDetent() {
+    fun disablingDuringADragCancelsItWithoutARequest() {
         val enabled = mutableStateOf(true)
         var requests = 0
-        fixture { ModeDial("rule", enabled.value, { requests++ }) }
+        fixture { ModeDrum("rule", enabled.value, { requests++ }) }
         compose.mainClock.autoAdvance = false
         try {
-            dragDial(release = false)
+            compose.onNodeWithTag("mode-drum").performTouchInput {
+                down(center)
+                moveBy(Offset(width * .1f, 0f), 50)
+                moveBy(Offset(width * .15f, 0f), 50)
+            }
+            compose.mainClock.advanceTimeBy(80)
             compose.runOnIdle { enabled.value = false }
             compose.mainClock.advanceTimeBy(80)
-            compose.onNodeWithTag("mode-knob", true).performTouchInput { cancel() }
+            compose.onNodeWithTag("mode-drum").performTouchInput { cancel() }
             compose.runOnIdle { enabled.value = true }
-            compose.mainClock.advanceTimeBy(1800)
-            assertEquals(-68f, angle(), .01f)
+            compose.mainClock.advanceTimeBy(3000)
+            assertEquals(0f, angle(), .01f)
             assertEquals(0, requests)
         } finally {
             compose.mainClock.autoAdvance = true
         }
+    }
+
+    @Test
+    fun aFlickComesToRestOnAModeAndRequestsItAtMostOnce() {
+        val mode = mutableStateOf("rule")
+        val requested = mutableListOf<String>()
+        fixture {
+            ModeDrum(
+                mode.value,
+                true,
+                {
+                    requested += it
+                    mode.value = it
+                },
+            )
+        }
+        compose.onNodeWithTag("mode-drum").performTouchInput {
+            swipeLeft(centerX + width * .3f, centerX - width * .3f, 120)
+        }
+        compose.waitForIdle()
+        val rest = angle()
+        val notch = Math.round(-rest / DRUM_SPACING)
+        assertEquals(0f, rest + notch * DRUM_SPACING, .01f)
+        assertTrue("More than one request: $requested", requested.size <= 1)
+        assertEquals(HomeModes[drumMode(notch)].first, mode.value)
     }
 
     @Test
@@ -233,21 +270,10 @@ class UiDetailsRegressionTest {
             .value()
 
     private fun angle() =
-        compose.onNodeWithTag("mode-dial").fetchSemanticsNode().config[ModeDialAngle]
+        compose.onNodeWithTag("mode-drum").fetchSemanticsNode().config[ModeDrumRotation]
 
     private fun settlements() =
-        compose.onNodeWithTag("mode-dial").fetchSemanticsNode().config[ModeDialSettlements]
-
-    private fun dragDial(release: Boolean = true) {
-        compose.onNodeWithTag("mode-knob", true).performTouchInput {
-            down(center + Offset(0f, -height * .3f))
-            moveTo(center + Offset(width * .3f, -height * .2f), 100)
-            moveTo(center + Offset(width * .35f, height * .25f), 100)
-            moveTo(center + Offset(0f, height * .35f), 100)
-            if (release) up()
-        }
-        compose.mainClock.advanceTimeBy(80)
-    }
+        compose.onNodeWithTag("mode-drum").fetchSemanticsNode().config[ModeDrumSettlements]
 
     private fun fixture(motion: Boolean = true, content: @Composable () -> Unit) {
         compose.runOnUiThread {

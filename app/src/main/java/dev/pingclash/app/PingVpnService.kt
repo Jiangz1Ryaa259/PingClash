@@ -28,10 +28,12 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 
 data class VpnUiState(
@@ -69,12 +71,58 @@ internal fun vpnActivityIntent(context: Context): Intent =
                 Intent.FLAG_ACTIVITY_SINGLE_TOP
         )
 
+/** Longest a check waits for a node or mode change to be applied. */
+private const val ROUTING_WAIT_MS = 5_000L
+
 object VpnRuntime {
     private val mutableState = MutableStateFlow(VpnUiState())
     val state = mutableState.asStateFlow()
 
     internal fun publish(value: VpnUiState) {
         mutableState.value = value
+    }
+
+    /** Routing changes asked of the service and not yet applied (or given up). */
+    private val pendingRouting = MutableStateFlow(0)
+
+    /** True when no node, mode or routing change is still being applied. */
+    val routingSettled: Boolean
+        get() = pendingRouting.value == 0
+
+    /**
+     * Saves a routing change with [save], then asks a running VPN to apply it; [awaitRouting] waits
+     * for it. The change counts as pending before it is saved, so nothing that sees the new choice
+     * can miss that it is not applied yet.
+     */
+    fun reconfigure(context: Context, save: () -> Unit = {}) {
+        pendingRouting.update { it + 1 }
+        var saved = false
+        try {
+            save()
+            saved = true
+        } finally {
+            if (!saved) routingApplied()
+        }
+        runCatching {
+                context.startService(
+                    Intent(context, PingVpnService::class.java)
+                        .setAction(PingVpnService.RECONFIGURE)
+                )
+            }
+            .onFailure { routingApplied() }
+    }
+
+    internal fun routingApplied() {
+        pendingRouting.update { (it - 1).coerceAtLeast(0) }
+    }
+
+    internal fun routingAbandoned() {
+        pendingRouting.value = 0
+    }
+
+    /** Waits until requested routing changes are applied; never longer than [limitMillis]. */
+    suspend fun awaitRouting(limitMillis: Long = ROUTING_WAIT_MS) {
+        withTimeoutOrNull(limitMillis) { pendingRouting.first { it == 0 } }
     }
 
     internal fun stats(owner: PingVpnService, status: JSONObject, upSpeed: Long, downSpeed: Long) {
@@ -514,10 +562,12 @@ class PingVpnService : VpnService() {
                                         "↑ ${formatBytes(up)}/s   ↓ ${formatBytes(down)}/s"
                                     else tr(R.string.vpn_tunnel_established_tap_to_view)
                                 // Re-post only on change, and skip speed ticks nobody can see.
-                                if (text != postedText && power.isInteractive) {
+                                // The title shows the mode, so a mode change counts as well.
+                                val posting = "${notificationTitle()}|$text"
+                                if (posting != postedText && power.isInteractive) {
                                     getSystemService(NotificationManager::class.java)
                                         .notify(NOTIFICATION_ID, notification(text))
-                                    postedText = text
+                                    postedText = posting
                                 }
                             }
                         }
@@ -624,50 +674,54 @@ class PingVpnService : VpnService() {
         "TooGenericExceptionCaught"
     ) // JNI/config errors must preserve the last working tunnel.
     private fun reconfigure(settings: ClientSettings): Int {
-        scope.launch {
-            mutex.withLock {
-                if (descriptor != null && !stopRequested.get()) {
-                    val attempted = (application as PingClashApplication).repository.data.value
-                    try {
-                        val repository = (application as PingClashApplication).repository
-                        val data = attempted
-                        val config = requireNotNull(data.selectedRuntimeConfig)
-                        // The core validates a replacement before publishing it, and can apply
-                        // mode/group-only changes without reconstructing the accepted graph.
-                        val options =
-                            VpnConfigurationFailure.runtimeOptions(data, validateCore = false)
-                        val result =
-                            JSONObject(
-                                Mobile.updateVPNWithOptions(config, data.dnsAddress, options)
+        // Counted down however the job ends: applied, failed, skipped or cancelled.
+        val job =
+            scope.launch {
+                mutex.withLock {
+                    if (descriptor != null && !stopRequested.get()) {
+                        val attempted = (application as PingClashApplication).repository.data.value
+                        try {
+                            val repository = (application as PingClashApplication).repository
+                            val data = attempted
+                            val config = requireNotNull(data.selectedRuntimeConfig)
+                            // The core validates a replacement before publishing it, and can apply
+                            // mode/group-only changes without reconstructing the accepted graph.
+                            val options =
+                                VpnConfigurationFailure.runtimeOptions(data, validateCore = false)
+                            val result =
+                                JSONObject(
+                                    Mobile.updateVPNWithOptions(config, data.dnsAddress, options)
+                                )
+                            if (result.optString("code") != "vpn_routing_updated") {
+                                // Detailed diagnostics are needed only on failure, with the
+                                // previous
+                                // native generation still serving traffic throughout validation.
+                                VpnConfigurationFailure.validateNode(config)
+                                VpnConfigurationFailure.runtimeOptions(data)
+                                VpnConfigurationFailure.checkNativeCode(result.optString("code"))
+                                error("routing_update_failed")
+                            }
+                            appliedData = data
+                        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                            throw cancelled
+                        } catch (failure: Exception) {
+                            val repository = (application as PingClashApplication).repository
+                            appliedData?.let { repository.restoreRouting(it, attempted) }
+                            val text =
+                                (failure as? VpnConfigurationFailure)?.publicMessage()
+                                    ?: tr(R.string.vpn_update_failed)
+                            VpnRuntime.publish(
+                                VpnRuntime.state.value.copy(
+                                    message = text,
+                                    failureCode = "configuration",
+                                    failureId = SystemClock.elapsedRealtimeNanos(),
+                                )
                             )
-                        if (result.optString("code") != "vpn_routing_updated") {
-                            // Detailed diagnostics are needed only on failure, with the previous
-                            // native generation still serving traffic throughout validation.
-                            VpnConfigurationFailure.validateNode(config)
-                            VpnConfigurationFailure.runtimeOptions(data)
-                            VpnConfigurationFailure.checkNativeCode(result.optString("code"))
-                            error("routing_update_failed")
                         }
-                        appliedData = data
-                    } catch (cancelled: kotlinx.coroutines.CancellationException) {
-                        throw cancelled
-                    } catch (failure: Exception) {
-                        val repository = (application as PingClashApplication).repository
-                        appliedData?.let { repository.restoreRouting(it, attempted) }
-                        val text =
-                            (failure as? VpnConfigurationFailure)?.publicMessage()
-                                ?: tr(R.string.vpn_update_failed)
-                        VpnRuntime.publish(
-                            VpnRuntime.state.value.copy(
-                                message = text,
-                                failureCode = "configuration",
-                                failureId = SystemClock.elapsedRealtimeNanos(),
-                            )
-                        )
                     }
                 }
             }
-        }
+        job.invokeOnCompletion { VpnRuntime.routingApplied() }
         return restartPolicy(settings)
     }
 
@@ -722,6 +776,7 @@ class PingVpnService : VpnService() {
 
     override fun onDestroy() {
         destroying = true
+        VpnRuntime.routingAbandoned()
         stopRequested.set(true)
         saveUsage()
         runCatching { Mobile.stopVPN() }
@@ -764,6 +819,13 @@ class PingVpnService : VpnService() {
         }
     }
 
+    /** "PingClash · Rules": the mode in the title, shown as status only. */
+    private fun notificationTitle(): String {
+        val mode = (application as PingClashApplication).repository.data.value.client.mode
+        val label = HomeModes.firstOrNull { it.first == mode }?.second ?: R.string.rules
+        return "PingClash · ${tr(label)}"
+    }
+
     private fun notification(message: String): Notification {
         val open =
             PendingIntent.getActivity(
@@ -781,7 +843,7 @@ class PingVpnService : VpnService() {
             )
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(dev.pingclash.app.R.drawable.ic_status)
-            .setContentTitle("PingClash")
+            .setContentTitle(notificationTitle())
             .setContentText(message)
             .setContentIntent(open)
             .setOngoing(true)

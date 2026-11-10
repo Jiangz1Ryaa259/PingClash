@@ -74,7 +74,7 @@ def main():
                         '-e', 'class', test_class]
                 for key, field in [('hy2Port', 'hy2Port'), ('hy2HttpPort', 'httpPort'), ('hy2DnsPort', 'dnsPort'), ('hy2Host', 'host')]:
                     args += ['-e', key, str(data[field])]
-                args += ['dev.pingclash.app.test/androidx.test.runner.AndroidJUnitRunner']
+                args += ['dev.pingclash.app.test/dev.pingclash.app.PingClashTestRunner']
                 live = OUT / ('ci-' + test_class.rsplit('.', 1)[-1] + '-live-logcat.txt')
                 with live.open('w', encoding='utf-8') as live_output:
                     logger = subprocess.Popen(

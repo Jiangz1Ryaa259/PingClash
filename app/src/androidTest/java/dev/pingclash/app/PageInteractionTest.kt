@@ -22,6 +22,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -66,7 +67,14 @@ class PageInteractionTest {
     fun applicationAndConnectionPagesHaveOneScrollOwnerIncludingTheHeading() {
         // The harness's key events leave the device in key mode, where Android focuses the
         // search field on return and scrolls it into view. Restoration is checked for touch.
-        InstrumentationRegistry.getInstrumentation().setInTouchMode(true)
+        // Asking for touch mode is not reliable, and Compose test taps go straight to the view
+        // without changing it. A real tap through the system does: touch the static home title.
+        val title =
+            compose.onNodeWithTag("page-title-home").fetchSemanticsNode().boundsInWindow.center
+        val window = IntArray(2).also { compose.activity.window.decorView.getLocationOnScreen(it) }
+        androidx.test.uiautomator.UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            .click(window[0] + title.x.toInt(), window[1] + title.y.toInt())
+        compose.waitUntil(10000) { compose.activity.window.decorView.isInTouchMode }
         compose.onNodeWithTag("nav-3").performClick()
         compose.onNodeWithTag("settings-apps").performScrollTo().performClick()
         singleScroll()
@@ -106,7 +114,11 @@ class PageInteractionTest {
         compose.onNodeWithTag("app-list").performScrollToIndex(0)
         compose.onNodeWithTag("settings-detail-title").assertIsDisplayed()
         compose.onNodeWithTag("settings-back").performClick()
-        compose.onNodeWithTag("settings-connections").performScrollTo().performClick()
+        // A longer menu can leave the row under the floating navigation: click the row itself.
+        compose
+            .onNodeWithTag("settings-connections")
+            .performScrollTo()
+            .performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.OnClick)
         singleScroll()
         // The detail page slides in; slower emulators can still be mid-transition here.
         compose.waitUntil(5000) {

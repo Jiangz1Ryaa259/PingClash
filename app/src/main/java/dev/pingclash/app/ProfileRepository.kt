@@ -651,13 +651,7 @@ class ProfileRepository(private val context: Context) {
         commit(mutableData.value.copy(profiles = ids.map(byId::getValue)))
     }
 
-    private fun reconfigureLiveVpn() {
-        context.startService(
-            android.content
-                .Intent(context, PingVpnService::class.java)
-                .setAction(PingVpnService.RECONFIGURE)
-        )
-    }
+    private fun reconfigureLiveVpn() = VpnRuntime.reconfigure(context)
 
     /** Last resort when stored data cannot be read: start over with empty local data. */
     @Synchronized
@@ -869,6 +863,27 @@ class ProfileRepository(private val context: Context) {
         commit(current.copy(client = value))
     }
 
+    /**
+     * Service routing and blocking, which may change while connected: an established VPN takes them
+     * through the hot routing update, and a rejected update rolls them back. Returns true when the
+     * running VPN was asked to reconfigure.
+     */
+    @Synchronized
+    fun serviceRouting(routes: Map<String, String>, blocking: String): Boolean {
+        val current = mutableData.value
+        check(!current.loadFailed) { tr(R.string.local_profiles_could_not_be_read_the) }
+        check(VpnRuntime.state.value.phase !in listOf("connecting", "stopping")) {
+            tr(R.string.routing_wait_vpn)
+        }
+        val value = current.client.copy(serviceRoutes = routes.toSortedMap(), blocking = blocking)
+        validateServiceRoutes(value)
+        if (value == current.client) return false
+        val save = { commit(current.copy(client = value)) }
+        val live = VpnRuntime.state.value.stage == VpnPhase.ESTABLISHED
+        if (live) VpnRuntime.reconfigure(context, save) else save()
+        return live
+    }
+
     @Synchronized
     fun appearance(
         language: String,
@@ -942,12 +957,24 @@ class ProfileRepository(private val context: Context) {
                     else -> profile
                 }
             }
+        // Service choices made for the rejected update go back too, unless changed again since.
+        val services =
+            current.client.serviceRoutes == attempted.client.serviceRoutes &&
+                current.client.blocking == attempted.client.blocking
         commit(
             current.copy(
                 selectedId = previous.selectedId,
                 activeProfileId = previous.activeProfileId,
                 profiles = profiles,
-                client = current.client.copy(mode = previous.client.mode),
+                client =
+                    current.client.copy(
+                        mode = previous.client.mode,
+                        serviceRoutes =
+                            if (services) previous.client.serviceRoutes
+                            else current.client.serviceRoutes,
+                        blocking =
+                            if (services) previous.client.blocking else current.client.blocking,
+                    ),
             )
         )
     }

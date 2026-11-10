@@ -9,12 +9,12 @@ $stage=[IO.Path]::GetFullPath((Join-Path $projectRoot ('.tools\source-package\'+
 if(-not $stage.StartsWith($allowed,[StringComparison]::OrdinalIgnoreCase)){throw 'Source staging escaped project tools.'}
 $root=Join-Path $stage $packageName
 New-Item -ItemType Directory -Path $root -Force|Out-Null
-# Published documentation is the overview (README.md) and docs/user-guide.md; licence and
+# Published documentation is the overview (README.md) and docs/user-guide.md (with its English and Japanese versions); licence and
 # attribution files ship as required, including docs/rule-data.md, which NOTICE.md cites.
 # Review, test and status notes stay local.
 foreach($relative in @('README.md','NOTICE.md','LICENSE','.editorconfig','.gitattributes','.gitignore','settings.gradle.kts','build.gradle.kts','gradle.properties','gradlew','gradlew.bat',
     'app\build.gradle.kts','app\proguard-rules.pro','app\proguard-test-rules.pro','app\proguard-instrumentation.pro',
-    'diagnostics\build.gradle.kts','core\go.mod','core\go.sum','core\NOTICE.md','core\LICENSE','docs\user-guide.md','docs\rule-data.md')){
+    'diagnostics\build.gradle.kts','core\go.mod','core\go.sum','core\NOTICE.md','core\LICENSE','docs\user-guide.md','docs\user-guide.en.md','docs\user-guide.ja.md','docs\rule-data.md','docs\logo.svg')){
     $target=Join-Path $root $relative;New-Item -ItemType Directory -Path (Split-Path -Parent $target) -Force|Out-Null
     Copy-Item -LiteralPath (Join-Path $projectRoot $relative) -Destination $target
 }

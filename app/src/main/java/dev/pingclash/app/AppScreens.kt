@@ -135,6 +135,37 @@ internal fun PingClashApp(model: AppViewModel = viewModel()) {
         }
     val locked = ui.busy || vpn.active
     val motion = rememberMotionAllowed(data.client.reduceEffects)
+    fun connectSelected() {
+        if (
+            Build.VERSION.SDK_INT >= 33 &&
+                context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+                    PackageManager.PERMISSION_GRANTED
+        )
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        else requestVpn()
+    }
+    val setup = remember(context) { SetupState(context) }
+    val firstView =
+        remember(setup) { SetupScreen.start(setup, data.profiles.isNotEmpty() || data.loadFailed) }
+    val setupView = SetupScreen.view.collectAsState().value ?: firstView
+    var routingCard by remember { mutableStateOf(false) }
+    var settingsPage by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(setupView) {
+        if (setupView.isNotEmpty()) return@LaunchedEffect
+        if (setup.takeHint()) model.message(tr(R.string.setup_skip_hint), warning = false)
+        routingCard = setup.featurePending
+    }
+    if (setupView.isNotEmpty()) {
+        // Each run keeps its own saved step; a recreation within the run restores it.
+        key(SetupScreen.run) {
+            SetupHost(setupView, setup, data, model) { connect ->
+                SetupScreen.close()
+                if (connect) connectSelected()
+            }
+        }
+        IssueNoticeHost(notices)
+        return
+    }
     CompositionLocalProvider(
         LocalMotionAllowed provides motion,
         LocalIssueNotices provides notices,
@@ -267,7 +298,12 @@ internal fun PingClashApp(model: AppViewModel = viewModel()) {
                                                     vpn,
                                                     locked,
                                                     model,
-                                                    onDiagnose = { openDiagnosis() },
+                                                    SettingsHost(
+                                                        { openDiagnosis() },
+                                                        settingsPage,
+                                                        { settingsPage = "" },
+                                                        { SetupScreen.show(SETUP_VIEW_RERUN) },
+                                                    ),
                                                 )
                                         }
                                     }
@@ -277,6 +313,20 @@ internal fun PingClashApp(model: AppViewModel = viewModel()) {
                 }
             }
         }
+        if (routingCard && tab == 0)
+            RoutingFeatureCard(
+                onOpen = {
+                    setup.dismissFeature()
+                    routingCard = false
+                    settingsPage = "routing"
+                    tool = 1
+                    tab = SETTINGS_TAB
+                },
+                onDismiss = {
+                    setup.dismissFeature()
+                    routingCard = false
+                },
+            )
         IssueNoticeHost(notices)
     }
     // Each dialog is its own composable. Inlined here, the last conditional got no group of
@@ -338,7 +388,7 @@ private fun Page(title: String, onBack: () -> Unit, content: @Composable ColumnS
                     contentDescription = tr(R.string.back)
                 },
             ) {
-                AppGlyph(BACK_GLYPH)
+                AppGlyph(BACK_GLYPH, tint = pageInk().text)
             }
             PageHeading(title, Modifier.weight(1f))
         }
@@ -659,7 +709,11 @@ private fun NodeDiagnosisScreen(
             onClick = { auxiliary = true },
             modifier = Modifier.testTag("diagnostic-auxiliary"),
         ) {
-            Text(tr(R.string.check_a_domain_or_ip_manually))
+            Text(
+                tr(R.string.check_a_domain_or_ip_manually),
+                color = pageInk().accent,
+                style = MaterialTheme.typography.labelLarge.onPage(),
+            )
         }
     }
     if (preview && diagnosis.report != null)

@@ -215,8 +215,12 @@ private fun RoutingFilterControls(
                 onMode,
             )
         }
-        SearchField(tr(R.string.search_apps), filters.query) {
-            onFilters(filters.copy(query = it.take(100)))
+        GroupCard {
+            Box(Modifier.padding(vertical = 6.dp)) {
+                SearchField(tr(R.string.search_apps), filters.query) {
+                    onFilters(filters.copy(query = it.take(100)))
+                }
+            }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
@@ -224,12 +228,14 @@ private fun RoutingFilterControls(
                 { onFilters(filters.copy(selected = !filters.selected)) },
                 label = { Text(tr(R.string.settings_selected_apps)) },
                 shape = CircleShape,
+                colors = pageChipColors(),
             )
             FilterChip(
                 filters.system,
                 { onFilters(filters.copy(system = !filters.system)) },
                 label = { Text(tr(R.string.settings_system_apps)) },
                 shape = CircleShape,
+                colors = pageChipColors(),
             )
         }
     }

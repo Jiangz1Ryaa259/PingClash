@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -35,6 +35,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -89,16 +91,11 @@ internal fun ScenicFrame(
     val cable = remember { mutableStateOf<androidx.compose.ui.geometry.Offset?>(null) }
     val three = rememberLanyardThreeState()
     val immersive = scene != "none"
-    val parentColors = MaterialTheme.colorScheme
-    SideEffect {
-        window?.let {
-            androidx.core.view.WindowCompat.getInsetsController(it, it.decorView).apply {
-                isAppearanceLightStatusBars = parentColors.background.luminance() > .5f
-                isAppearanceLightNavigationBars = isAppearanceLightStatusBars
-            }
-        }
-    }
+    val picture = if (scene == "image") rememberFramedPicture() else null
+    val ink = rememberSceneInk(scene, picture)
+    SceneSystemBars(ink)
     CompositionLocalProvider(
+        LocalPageInk provides ink,
         LocalNavigationClearance provides clearance,
         LocalNavigationRail provides rail,
         LocalSceneDepth provides depth,
@@ -110,7 +107,7 @@ internal fun ScenicFrame(
     ) {
         Box(Modifier.fillMaxSize().sceneBackground(scene, LocalSolidBackground.current, Ink)) {
             Box(Modifier.fillMaxSize().navigationSource(backdrop, haze, legacyBlur)) {
-                if (scene == "image") CustomImageBackdrop(Modifier.fillMaxSize())
+                if (scene == "image") CustomImageBackdrop(picture, Modifier.fillMaxSize())
                 else OceanBackdrop(TrailTone.PENDING, false, Modifier.fillMaxSize(), scene)
                 // The badge layer places itself in window coordinates from the page's anchor, so
                 // it stays full-bleed with the scene; only the pages make room for the sidebar.
@@ -142,6 +139,33 @@ internal fun ScenicFrame(
                 )
             else GlassNavigation(selected, Modifier.align(Alignment.BottomCenter), onSelect)
         }
+    }
+}
+
+@Composable
+private fun rememberSceneInk(
+    scene: String,
+    picture: Pair<ImageBitmap, BackgroundFrame>?,
+): PageInk? {
+    val scrim = pictureScrim()
+    val image = picture?.first
+    val luminance =
+        remember(image, scrim) { image?.let { pictureLuminance(it.asAndroidBitmap(), scrim) } }
+    return sceneInk(scene, luminance)
+}
+
+/**
+ * The system bars' icons follow what they sit on, as text does: light on a photo even in the light
+ * theme. Leaving the frame (the setup guide) gives them back to the theme.
+ */
+@Composable
+private fun SceneSystemBars(ink: PageInk?) {
+    val window = LocalActivity.current?.window ?: return
+    val themeIsLight = MaterialTheme.colorScheme.background.luminance() > .5f
+    val darkIcons = ink?.let { it.text.luminance() < .5f } ?: themeIsLight
+    DisposableEffect(window, darkIcons, themeIsLight) {
+        window.setDarkSystemBarIcons(darkIcons)
+        onDispose { window.setDarkSystemBarIcons(themeIsLight) }
     }
 }
 

@@ -4,18 +4,15 @@
 package dev.pingclash.app
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,11 +33,16 @@ internal fun modeLabel(mode: String): String =
     tr(HomeModes.firstOrNull { it.first == mode }?.second ?: R.string.rules)
 
 /**
- * The home's configuration row: the mode dial on the left and a short summary on the right. Tapping
- * the entire summary opens live traffic and latency details.
+ * The home's configuration card: the mode drum across the top, then a summary of the profile, the
+ * node and where traffic leaves (tap it for live traffic and latency), and, when [websites] is
+ * given, the website checks docked at the bottom.
  */
 @Composable
-internal fun HomeConfiguration(state: DashboardState, actions: DashboardActions) {
+internal fun HomeConfiguration(
+    state: DashboardState,
+    actions: DashboardActions,
+    websites: (@Composable () -> Unit)? = null,
+) {
     var details by rememberSaveable { mutableStateOf(false) }
     val enabled = !state.busy && state.vpn.phase !in listOf("connecting", "stopping")
     Surface(
@@ -49,22 +51,16 @@ internal fun HomeConfiguration(state: DashboardState, actions: DashboardActions)
         border = BorderStroke(.7.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth().testTag("home-configuration"),
     ) {
-        BoxWithConstraints {
-            val summary = Modifier.testTag("home-summary")
-            if (maxWidth < 300.dp)
-                Column(Modifier.padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    ModeDial(state.data.client.mode, enabled, actions.mode)
-                    HomeSummary(state, summary.fillMaxWidth()) { details = true }
-                }
-            else
-                Row(
-                    Modifier.padding(end = 6.dp, bottom = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    ModeDial(state.data.client.mode, enabled, actions.mode)
-                    HomeSummary(state, summary.weight(1f)) { details = true }
-                }
+        Column {
+            ModeDrum(state.data.client.mode, enabled, actions.mode)
+            HomeSummary(state, Modifier.fillMaxWidth().testTag("home-summary")) { details = true }
+            if (websites != null) {
+                HorizontalDivider(
+                    thickness = .5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+                websites()
+            }
         }
     }
     ExitRefreshEffect(state, actions.refreshExit)
@@ -73,48 +69,46 @@ internal fun HomeConfiguration(state: DashboardState, actions: DashboardActions)
 
 @Composable
 private fun HomeSummary(state: DashboardState, modifier: Modifier, onDetails: () -> Unit) {
-    Column(
+    Row(
         modifier
             .clip(UiCorners.Card)
-            .fluidClickable(depth = .97f, onClick = onDetails)
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+            .fluidClickable(depth = .98f, onClick = onDetails)
+            .padding(start = 16.dp, end = 12.dp, top = 6.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        // The name and mode block, with where traffic leaves in its bottom-right corner:
-        // country or region over network. The status lines below keep their full width.
-        Row(verticalAlignment = Alignment.Bottom) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        // One column, one alignment: the profile, the node, where traffic leaves, then live
+        // speed or the remaining quota. The mode is on the drum and the state on the badge.
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                state.data.activeProfile?.name ?: tr(R.string.ui_choose_configuration),
+                Modifier.testTag("home-profile-name"),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleSmall,
+            )
+            state.data.selected?.name?.let {
                 Text(
-                    state.data.activeProfile?.name ?: tr(R.string.ui_choose_configuration),
-                    Modifier.testTag("home-profile-name"),
+                    it,
+                    color = Muted,
+                    style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                Text(
-                    modeLabel(state.data.client.mode),
-                    color = Muted,
-                    style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1,
                 )
             }
-            ExitLines(state, Modifier.padding(start = 8.dp, end = 2.dp))
-        }
-        Spacer(Modifier.height(2.dp))
-        Row(verticalAlignment = Alignment.Bottom) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                SummaryLines(state)
+            // Keeps its height while the address loads, so the badge above does not shift.
+            Box(Modifier.heightIn(min = 20.dp), contentAlignment = Alignment.CenterStart) {
+                ExitLines(state)
             }
-            AppGlyph(PcIcon.ChevronRight, Modifier.size(14.dp), Muted)
+            SummaryLines(state)
         }
+        AppGlyph(PcIcon.ChevronRight, Modifier.padding(start = 8.dp).size(16.dp), Muted)
     }
 }
 
-/** Two short lines: the status, then live speed while connected or the remaining quota. */
+/** Live speed while connected, otherwise the remaining quota when the subscription reports it. */
 @Composable
 private fun SummaryLines(state: DashboardState) {
     val vpn = state.vpn
-    StatusDotLine(vpn.phase, lanyardPhaseText(vpn.phase))
     val line =
         if (vpn.active)
             "↓ ${formatBytes(vpn.downloadSpeed)}/s · ↑ ${formatBytes(vpn.uploadSpeed)}/s"
@@ -136,17 +130,4 @@ private fun remainingQuota(profile: LocalProfile?): String? {
     val used = quota?.used
     return if (total == null || used == null) null
     else tr(R.string.subscription_remaining, formatBytes((total - used).coerceAtLeast(0)))
-}
-
-@Composable
-private fun StatusDotLine(phase: String, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.padding(end = 6.dp).size(7.dp).background(phaseColor(phase), CircleShape))
-        Text(
-            text,
-            style = MaterialTheme.typography.bodySmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
 }

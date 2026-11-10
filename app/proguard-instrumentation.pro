@@ -130,6 +130,7 @@
   public static androidx.compose.ui.layout.MeasurePolicy maybeCachedBoxMeasurePolicy(androidx.compose.ui.Alignment,boolean);
 }
 -keep interface androidx.compose.foundation.layout.BoxScope {
+  public androidx.compose.ui.Modifier align(androidx.compose.ui.Modifier,androidx.compose.ui.Alignment);
 }
 -keep class androidx.compose.foundation.layout.BoxScopeInstance {
   androidx.compose.foundation.layout.BoxScopeInstance INSTANCE;
@@ -312,6 +313,10 @@
   public static kotlin.coroutines.CoroutineContext minusKey(androidx.compose.runtime.MonotonicFrameClock,kotlin.coroutines.CoroutineContext$Key);
   public static kotlin.coroutines.CoroutineContext plus(androidx.compose.runtime.MonotonicFrameClock,kotlin.coroutines.CoroutineContext);
 }
+-keep interface androidx.compose.runtime.MutableIntState {
+  public int getIntValue();
+  public void setIntValue(int);
+}
 -keep interface androidx.compose.runtime.MutableState {
   public java.lang.Object getValue();
   public void setValue(java.lang.Object);
@@ -333,6 +338,9 @@
 }
 -keep interface androidx.compose.runtime.ScopeUpdateScope {
   public void updateScope(kotlin.jvm.functions.Function2);
+}
+-keep class androidx.compose.runtime.SnapshotIntStateKt {
+  public static androidx.compose.runtime.MutableIntState mutableIntStateOf(int);
 }
 -keep interface androidx.compose.runtime.SnapshotMutationPolicy {
 }
@@ -389,6 +397,7 @@
   androidx.compose.ui.Alignment$Companion Companion;
 }
 -keep class androidx.compose.ui.Alignment$Companion {
+  public androidx.compose.ui.Alignment getCenterStart();
   public androidx.compose.ui.Alignment$Horizontal getStart();
   public androidx.compose.ui.Alignment$Vertical getTop();
   public androidx.compose.ui.Alignment getTopStart();
@@ -770,7 +779,17 @@
   public int getEnd();
   public int getStart();
 }
+-keep class androidx.compose.ui.text.MultiParagraph {
+  public boolean getDidExceedMaxLines();
+  public androidx.compose.ui.text.MultiParagraphIntrinsics getIntrinsics();
+}
+-keep class androidx.compose.ui.text.MultiParagraphIntrinsics {
+  public float getMaxIntrinsicWidth();
+}
 -keep class androidx.compose.ui.text.TextLayoutInput {
+  public int getMaxLines();
+  public int getOverflow-gIe3tQ8();
+  public boolean getSoftWrap();
   public androidx.compose.ui.text.TextStyle getStyle();
   public androidx.compose.ui.text.AnnotatedString getText();
 }
@@ -779,12 +798,14 @@
   public androidx.compose.ui.text.TextLayoutInput getLayoutInput();
   public static int getLineEnd$default(androidx.compose.ui.text.TextLayoutResult,int,boolean,int,java.lang.Object);
   public int getLineForOffset(int);
+  public androidx.compose.ui.text.MultiParagraph getMultiParagraph();
 }
 -keep class androidx.compose.ui.text.TextRange {
   public static int getMax-impl(long);
   public static int getMin-impl(long);
 }
 -keep class androidx.compose.ui.text.TextStyle {
+  public long getColor-0d7_KjU();
   public long getFontSize-XSAIIZE();
   public androidx.compose.ui.text.font.FontWeight getFontWeight();
 }
@@ -819,6 +840,13 @@
 -keep class androidx.compose.ui.text.style.TextAlign {
 }
 -keep class androidx.compose.ui.text.style.TextDecoration {
+}
+-keep class androidx.compose.ui.text.style.TextOverflow {
+  public static boolean equals-impl0(int,int);
+  androidx.compose.ui.text.style.TextOverflow$Companion Companion;
+}
+-keep class androidx.compose.ui.text.style.TextOverflow$Companion {
+  public int getEllipsis-gIe3tQ8();
 }
 -keep class androidx.compose.ui.unit.AndroidDensity_androidKt {
   public static androidx.compose.ui.unit.Density Density(android.content.Context);
@@ -976,6 +1004,7 @@
 }
 -keep class androidx.core.view.WindowInsetsControllerCompat {
   public void hide(int);
+  public boolean isAppearanceLightStatusBars();
   public void setAppearanceLightNavigationBars(boolean);
   public void setAppearanceLightStatusBars(boolean);
 }
@@ -1045,11 +1074,20 @@
 -keep class com.termux.view.TerminalView {
   public android.view.inputmethod.InputConnection onCreateInputConnection(android.view.inputmethod.EditorInfo);
 }
+-keep class dev.pingclash.app.AdaptiveLayoutKt {
+  public static float readableSidePadding-2z7ARbQ$default(float,float,float,int,java.lang.Object);
+}
 -keep class dev.pingclash.app.AndroidCorePlatform {
   public <init>(android.app.Application);
   public java.lang.String connectionOwner(long,java.lang.String,java.lang.String);
   public android.net.Network outbound$app_release();
   public android.net.Network underlying();
+}
+-keep class dev.pingclash.app.AndroidNetworkBinding {
+  dev.pingclash.app.AndroidNetworkBinding$Companion Companion;
+}
+-keep class dev.pingclash.app.AndroidNetworkBinding$Companion {
+  public dev.pingclash.diagnostics.NetworkBinding open(android.content.Context);
 }
 -keep class dev.pingclash.app.AppData {
   public <init>(java.util.List,java.lang.String,java.lang.String,java.lang.String,boolean,boolean,java.lang.String,dev.pingclash.app.ClientSettings,dev.pingclash.app.LocalUsage,boolean,int,kotlin.jvm.internal.DefaultConstructorMarker);
@@ -1107,15 +1145,18 @@
   public void clientSettings(dev.pingclash.app.ClientSettings,java.lang.String,java.lang.String);
   public void diagnose();
   public void dismissMessage();
+  public kotlinx.coroutines.flow.StateFlow getBackgroundStaged$app_release();
   public kotlinx.coroutines.flow.StateFlow getDiagnosis();
   public dev.pingclash.app.IssueNoticeCenter getNotices$app_release();
   public kotlinx.coroutines.flow.StateFlow getProxyTests();
   public kotlinx.coroutines.flow.StateFlow getSettingsPending();
   public kotlinx.coroutines.flow.StateFlow getUi();
   public kotlinx.coroutines.flow.StateFlow getVpn();
+  public void importBackground(android.net.Uri);
   public void importCompleted(java.lang.String);
   public void importText(java.lang.String,java.lang.String);
   public void patchSettings(dev.pingclash.app.ClientSettings,dev.pingclash.app.ClientSettings);
+  public void prepareVpnTransition();
   public java.lang.String publicFailure$app_release(java.lang.Exception);
   public void refresh(dev.pingclash.app.LocalProfile);
   public void rename(java.lang.String,java.lang.String);
@@ -1132,12 +1173,47 @@
   public static java.lang.String delayKey$default(java.lang.String,java.lang.String,java.lang.String,int,java.lang.Object);
   public static java.lang.String delayKey(java.lang.String,java.lang.String,java.lang.String);
 }
+-keep class dev.pingclash.app.AutomationPageKt {
+  public static java.lang.String updateIntervalLabel(int);
+}
+-keep class dev.pingclash.app.BackgroundFrame {
+  public <init>(boolean,float,float,float,int,int,java.util.List,int,kotlin.jvm.internal.DefaultConstructorMarker);
+  public dev.pingclash.app.BackgroundFrame clamped-aZF9jCo(long,float,float);
+  public int getAuto();
+  public java.util.List getCustom();
+  public int getFill();
+  public boolean getFit();
+  public float getX();
+  public float getY();
+  public float getZoom();
+  public java.lang.String json();
+  dev.pingclash.app.BackgroundFrame$Companion Companion;
+}
+-keep class dev.pingclash.app.BackgroundFrame$Companion {
+  public dev.pingclash.app.BackgroundFrame read(java.lang.String);
+}
+-keep class dev.pingclash.app.BackgroundFrames {
+  public dev.pingclash.app.BackgroundFrame load(android.content.Context);
+  dev.pingclash.app.BackgroundFrames INSTANCE;
+}
+-keep class dev.pingclash.app.BackgroundImportException {
+  public dev.pingclash.app.BackgroundRejection getReason();
+}
+-keep enum dev.pingclash.app.BackgroundRejection {
+  dev.pingclash.app.BackgroundRejection NOT_AN_IMAGE;
+  dev.pingclash.app.BackgroundRejection TOO_LARGE;
+}
+-keep class dev.pingclash.app.BackupProfile {
+  public java.lang.String getConfiguration();
+  public java.lang.String getSubscription();
+}
 -keep class dev.pingclash.app.CardIdentity {
 }
 -keep class dev.pingclash.app.ClientSettings {
-  public <init>(java.lang.String,int,boolean,boolean,java.lang.String,int,int,int,java.lang.String,java.lang.String,java.lang.String,java.util.List,boolean,java.lang.String,boolean,java.lang.String,java.lang.String,boolean,boolean,boolean,boolean,boolean,boolean,int,int,boolean,java.lang.String,boolean,boolean,boolean,java.lang.String,boolean,boolean,java.lang.String,java.util.List,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
-  public static dev.pingclash.app.ClientSettings copy$default(dev.pingclash.app.ClientSettings,java.lang.String,int,boolean,boolean,java.lang.String,int,int,int,java.lang.String,java.lang.String,java.lang.String,java.util.List,boolean,java.lang.String,boolean,java.lang.String,java.lang.String,boolean,boolean,boolean,boolean,boolean,boolean,int,int,boolean,java.lang.String,boolean,boolean,boolean,java.lang.String,boolean,boolean,java.lang.String,java.util.List,int,int,java.lang.Object);
+  public <init>(java.lang.String,int,boolean,boolean,java.lang.String,int,int,int,java.lang.String,java.lang.String,java.lang.String,java.util.List,boolean,java.lang.String,boolean,java.lang.String,java.lang.String,boolean,boolean,boolean,boolean,boolean,boolean,int,int,boolean,java.lang.String,boolean,boolean,boolean,java.lang.String,boolean,boolean,java.lang.String,java.util.List,boolean,int,boolean,java.util.List,java.util.Map,java.lang.String,int,int,kotlin.jvm.internal.DefaultConstructorMarker);
+  public static dev.pingclash.app.ClientSettings copy$default(dev.pingclash.app.ClientSettings,java.lang.String,int,boolean,boolean,java.lang.String,int,int,int,java.lang.String,java.lang.String,java.lang.String,java.util.List,boolean,java.lang.String,boolean,java.lang.String,java.lang.String,boolean,boolean,boolean,boolean,boolean,boolean,int,int,boolean,java.lang.String,boolean,boolean,boolean,java.lang.String,boolean,boolean,java.lang.String,java.util.List,boolean,int,boolean,java.util.List,java.util.Map,java.lang.String,int,int,java.lang.Object);
   public boolean getAutoReconnect();
+  public java.lang.String getBlocking();
   public int getConnectTimeout();
   public java.lang.String getDnsHttps();
   public java.lang.String getDnsMode();
@@ -1153,10 +1229,15 @@
   public boolean getReduceEffects();
   public boolean getReduceTransparency();
   public java.lang.String getScene();
+  public java.util.Map getServiceRoutes();
   public boolean getShowMemory();
   public boolean getShowTraffic();
+  public boolean getStartOnBoot();
+  public int getSubscriptionHours();
   public java.lang.String getTheme();
+  public java.util.List getTrustedWifi();
   public boolean getUseSubscriptionDns();
+  public boolean getWifiAuto();
   public org.json.JSONObject json();
   int $stable;
   dev.pingclash.app.ClientSettings$Companion Companion;
@@ -1173,8 +1254,26 @@
 -keep class dev.pingclash.app.CompatibilityWarningKt {
   public static java.lang.String compatibilityWarning(dev.pingclash.app.LocalProfile,dev.pingclash.app.LocalGroup);
 }
+-keep class dev.pingclash.app.ConcurrentSnapshotKt {
+  public static java.util.List snapshot(java.util.Collection);
+}
 -keep class dev.pingclash.app.ConfigurationExportKt {
   public static java.lang.String configurationExport(dev.pingclash.app.LocalProfile);
+}
+-keep class dev.pingclash.app.ConnectTileService {
+  dev.pingclash.app.ConnectTileService$Companion Companion;
+}
+-keep class dev.pingclash.app.ConnectTileService$Companion {
+  public void refresh(android.content.Context);
+}
+-keep class dev.pingclash.app.ConnectTileServiceKt {
+  public static java.lang.String shortcutStatus(dev.pingclash.app.VpnUiState);
+}
+-keep class dev.pingclash.app.ConnectWidget {
+  dev.pingclash.app.ConnectWidget$Companion Companion;
+}
+-keep class dev.pingclash.app.ConnectWidget$Companion {
+  public void refresh(android.content.Context);
 }
 -keep class dev.pingclash.app.ConnectionListItemKt {
   public static void ConnectionListItem(dev.pingclash.app.ConnectionRow,kotlin.jvm.functions.Function0,androidx.compose.runtime.Composer,int);
@@ -1212,8 +1311,19 @@
   public java.lang.String throwable(java.lang.Throwable);
   dev.pingclash.app.CrashText INSTANCE;
 }
+-keep class dev.pingclash.app.CustomBackground {
+  public void clear(android.content.Context);
+  public void commit(android.content.Context,dev.pingclash.app.BackgroundFrame);
+  public boolean exists(android.content.Context);
+  public java.io.File file(android.content.Context);
+  public androidx.compose.runtime.MutableIntState getRevision();
+  public static android.graphics.Bitmap load$default(dev.pingclash.app.CustomBackground,android.content.Context,boolean,int,java.lang.Object);
+  public android.graphics.Bitmap load(android.content.Context,boolean);
+  public dev.pingclash.app.BackgroundFrame stage(android.content.Context,android.net.Uri);
+  dev.pingclash.app.CustomBackground INSTANCE;
+}
 -keep class dev.pingclash.app.DashboardActions {
-  public <init>(kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function1,kotlin.jvm.functions.Function1,kotlin.jvm.functions.Function1,kotlin.jvm.functions.Function1,int,kotlin.jvm.internal.DefaultConstructorMarker);
+  public <init>(kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function1,kotlin.jvm.functions.Function1,kotlin.jvm.functions.Function1,kotlin.jvm.functions.Function1,kotlin.jvm.functions.Function1,int,kotlin.jvm.internal.DefaultConstructorMarker);
   int $stable;
 }
 -keep class dev.pingclash.app.DashboardEvidenceKt {
@@ -1226,9 +1336,8 @@
   public static boolean websiteMeasurementEnabled(dev.pingclash.app.DashboardState);
 }
 -keep class dev.pingclash.app.DashboardState {
-  public <init>(dev.pingclash.app.AppData,dev.pingclash.app.VpnUiState,dev.pingclash.app.DiagnosticUiState,dev.pingclash.app.ProxyTestState,boolean,boolean,dev.pingclash.app.ServiceCheckState);
-  public <init>(dev.pingclash.app.AppData,dev.pingclash.app.VpnUiState,dev.pingclash.app.DiagnosticUiState,dev.pingclash.app.ProxyTestState,boolean,boolean,dev.pingclash.app.ServiceCheckState,int,kotlin.jvm.internal.DefaultConstructorMarker);
-  public static dev.pingclash.app.DashboardState copy$default(dev.pingclash.app.DashboardState,dev.pingclash.app.AppData,dev.pingclash.app.VpnUiState,dev.pingclash.app.DiagnosticUiState,dev.pingclash.app.ProxyTestState,boolean,boolean,dev.pingclash.app.ServiceCheckState,int,java.lang.Object);
+  public <init>(dev.pingclash.app.AppData,dev.pingclash.app.VpnUiState,dev.pingclash.app.DiagnosticUiState,dev.pingclash.app.ProxyTestState,boolean,boolean,dev.pingclash.app.ServiceCheckState,dev.pingclash.app.ExitState,int,kotlin.jvm.internal.DefaultConstructorMarker);
+  public static dev.pingclash.app.DashboardState copy$default(dev.pingclash.app.DashboardState,dev.pingclash.app.AppData,dev.pingclash.app.VpnUiState,dev.pingclash.app.DiagnosticUiState,dev.pingclash.app.ProxyTestState,boolean,boolean,dev.pingclash.app.ServiceCheckState,dev.pingclash.app.ExitState,int,java.lang.Object);
   int $stable;
 }
 -keep class dev.pingclash.app.DiagnosticUiState {
@@ -1241,17 +1350,45 @@
 -keep class dev.pingclash.app.DiagnosticViewModelKt {
   public static java.lang.String nodeConnectivitySummary(dev.pingclash.app.DiagnosticUiState,java.lang.String);
 }
+-keep class dev.pingclash.app.ExitInfo {
+  public <init>(java.lang.String,java.lang.String,java.lang.String,int,java.lang.String,java.lang.String,java.lang.String,java.lang.String,long);
+  public static dev.pingclash.app.ExitInfo copy$default(dev.pingclash.app.ExitInfo,java.lang.String,java.lang.String,java.lang.String,int,java.lang.String,java.lang.String,java.lang.String,java.lang.String,long,int,java.lang.Object);
+  int $stable;
+}
+-keep class dev.pingclash.app.ExitInfoKt {
+  public static java.lang.String exitCountryLabel(java.lang.String,java.lang.String);
+  public static java.lang.String exitRoute(dev.pingclash.app.VpnUiState,dev.pingclash.app.AppData);
+  public static java.util.List websiteRequestKey(dev.pingclash.app.AppData);
+}
+-keep class dev.pingclash.app.ExitInfoViewsKt {
+  public static void ExitLines(dev.pingclash.app.DashboardState,androidx.compose.ui.Modifier,androidx.compose.runtime.Composer,int,int);
+  public static void ExitSection(dev.pingclash.app.DashboardState,kotlin.jvm.functions.Function0,androidx.compose.runtime.Composer,int);
+}
+-keep class dev.pingclash.app.ExitState {
+  public <init>(dev.pingclash.app.ExitInfo,boolean,boolean,int,kotlin.jvm.internal.DefaultConstructorMarker);
+}
+-keep class dev.pingclash.app.GlassSidebarKt {
+  public static void GlassSidebar-EUb7tLY(int,float,kotlin.jvm.functions.Function0,androidx.compose.ui.Modifier,kotlin.jvm.functions.Function1,androidx.compose.runtime.Composer,int,int);
+  public static float getSIDEBAR_COLLAPSED();
+  public static float getSIDEBAR_EXPANDED();
+}
 -keep class dev.pingclash.app.GlassUiKt {
   public static void VpnPowerControl(java.lang.String,boolean,java.lang.String,kotlin.jvm.functions.Function0,androidx.compose.runtime.Composer,int);
   public static androidx.compose.runtime.ProvidableCompositionLocal getLocalMotionAllowed();
   public static boolean rememberMotionAllowed(boolean,androidx.compose.runtime.Composer,int,int);
   public static java.lang.String vpnControlDescription(java.lang.String);
 }
+-keep class dev.pingclash.app.GuideRow {
+  public java.lang.String getId();
+  public java.util.List getMembers();
+  public java.lang.String getName();
+  public java.lang.String label(java.lang.String);
+}
 -keep class dev.pingclash.app.HomeControlsKt {
-  public static void HomeConfiguration(dev.pingclash.app.DashboardState,dev.pingclash.app.DashboardActions,androidx.compose.runtime.Composer,int);
+  public static void HomeConfiguration(dev.pingclash.app.DashboardState,dev.pingclash.app.DashboardActions,kotlin.jvm.functions.Function2,androidx.compose.runtime.Composer,int,int);
 }
 -keep class dev.pingclash.app.HomeDashboardKt {
-  public static void HomeDashboardSheet(dev.pingclash.app.DashboardState,kotlin.jvm.functions.Function0,androidx.compose.runtime.Composer,int);
+  public static void HomeDashboardSheet(dev.pingclash.app.DashboardState,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function0,androidx.compose.runtime.Composer,int);
   public static long sessionSeconds(dev.pingclash.app.VpnUiState,long);
 }
 -keep class dev.pingclash.app.HomeServiceChecksKt {
@@ -1351,7 +1488,6 @@
 -keep class dev.pingclash.app.Latency$Failed {
   public <init>(dev.pingclash.app.WebsiteFailure,int,long);
   public <init>(dev.pingclash.app.WebsiteFailure,int,long,int,kotlin.jvm.internal.DefaultConstructorMarker);
-  public int getHttpStatus();
   public dev.pingclash.app.WebsiteFailure getReason();
   int $stable;
 }
@@ -1400,6 +1536,7 @@
   public java.util.Map getRejections();
   public dev.pingclash.app.RemoteProfile getRemote();
   public java.util.List getRules();
+  public int getRulesOmitted();
   public java.lang.String getSource();
   public int getUnsupported();
   public int getUnverifiedNodes();
@@ -1414,6 +1551,8 @@
   public long getSessions();
 }
 -keep class dev.pingclash.app.LocalizationKt {
+  public static androidx.compose.runtime.ProvidableCompositionLocal getLocalUiLanguage();
+  public static java.util.List getUI_LANGUAGES();
   public static java.lang.String tr(int,java.lang.Object[]);
 }
 -keep class dev.pingclash.app.MainActivity {
@@ -1421,10 +1560,17 @@
 -keep class dev.pingclash.app.MainActivityKt {
   public static void StepCard(dev.pingclash.diagnostics.Models$Step,androidx.compose.runtime.Composer,int);
 }
--keep class dev.pingclash.app.ModeDialKt {
-  public static void ModeDial(java.lang.String,boolean,kotlin.jvm.functions.Function1,androidx.compose.ui.Modifier,androidx.compose.runtime.Composer,int,int);
-  public static androidx.compose.ui.semantics.SemanticsPropertyKey getModeDialAngle();
-  public static androidx.compose.ui.semantics.SemanticsPropertyKey getModeDialSettlements();
+-keep class dev.pingclash.app.ModeDrumFaceKt {
+  public static float drumLabelX(float,float,float,float);
+}
+-keep class dev.pingclash.app.ModeDrumKt {
+  public static void ModeDrum(java.lang.String,boolean,kotlin.jvm.functions.Function1,androidx.compose.ui.Modifier,androidx.compose.runtime.Composer,int,int);
+  public static androidx.compose.ui.semantics.SemanticsPropertyKey getModeDrumRotation();
+  public static androidx.compose.ui.semantics.SemanticsPropertyKey getModeDrumSettlements();
+}
+-keep class dev.pingclash.app.ModeDrumMotionKt {
+  public static int drumMode(int);
+  public static java.util.List getHomeModes();
 }
 -keep class dev.pingclash.app.NavGlassMaterialKt {
   public static androidx.compose.ui.semantics.SemanticsPropertyKey getNavOpticalBackend();
@@ -1440,6 +1586,8 @@
   public static long navReadabilityTint(boolean);
   public static dev.pingclash.app.NavigationGlassStyle navigationGlassStyle(boolean);
 }
+-keep class dev.pingclash.app.NetworkChangeReceiver {
+}
 -keep class dev.pingclash.app.NoticeCardKt {
   public static androidx.compose.ui.semantics.SemanticsPropertyKey getNoticeFuseFraction();
 }
@@ -1451,6 +1599,14 @@
 -keep class dev.pingclash.app.OfflineLanyardClient {
   public <init>(android.content.res.AssetManager,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function1,int,kotlin.jvm.internal.DefaultConstructorMarker);
   public boolean permits$app_release(android.net.Uri);
+}
+-keep class dev.pingclash.app.PageInk {
+  public long getText-0d7_KjU();
+}
+-keep class dev.pingclash.app.PageInkKt {
+  public static float pictureLuminance-4WTKRHQ(android.graphics.Bitmap,long);
+  public static dev.pingclash.app.PageInk sceneInk$default(java.lang.String,java.lang.Float,boolean,int,java.lang.Object);
+  public static dev.pingclash.app.PageInk sceneInk(java.lang.String,java.lang.Float,boolean);
 }
 -keep enum dev.pingclash.app.PcIcon {
 }
@@ -1527,6 +1683,7 @@
   public void routeMode(java.lang.String);
   public void select(java.lang.String);
   public dev.pingclash.app.LocalProfile selectGroup(java.lang.String,java.lang.String,java.lang.String);
+  public boolean serviceRouting(java.util.Map,java.lang.String);
   public void settings(java.lang.String,java.lang.String);
 }
 -keep class dev.pingclash.app.ProfileRepositoryKt {
@@ -1541,6 +1698,7 @@
   public static java.lang.String downloadFailureText(java.lang.String);
   public static dev.pingclash.app.ProviderFailure providerDownloadFailure(int,java.lang.String,java.lang.Exception);
   public static java.lang.String providerErrorRecord(java.lang.String);
+  public static java.lang.String safeProviderCode(java.lang.String);
 }
 -keep class dev.pingclash.app.ProviderFailure {
   public <init>(int,java.lang.String,java.lang.String);
@@ -1550,7 +1708,9 @@
   public java.lang.String publicMessage();
 }
 -keep class dev.pingclash.app.ProviderRuleWarning {
+  public int getCount();
   public int getEntry();
+  public int getSource();
   public java.lang.String getType();
 }
 -keep class dev.pingclash.app.ProviderRuleWarningKt {
@@ -1602,6 +1762,9 @@
 -keep class dev.pingclash.app.ProxySortKt {
   public static java.util.List orderedProxyMembers(java.util.List,dev.pingclash.app.ProxySort,boolean,kotlin.jvm.functions.Function1);
 }
+-keep class dev.pingclash.app.ProxyTestInputsKt {
+  public static boolean delayStillValid(java.lang.String,dev.pingclash.app.AppData,dev.pingclash.app.AppData);
+}
 -keep class dev.pingclash.app.ProxyTestState {
   public <init>(boolean,int,int,java.util.Map,java.util.Map,java.util.Map,java.lang.String,int,kotlin.jvm.internal.DefaultConstructorMarker);
   public static dev.pingclash.app.ProxyTestState copy$default(dev.pingclash.app.ProxyTestState,boolean,int,int,java.util.Map,java.util.Map,java.util.Map,java.lang.String,int,java.lang.Object);
@@ -1617,12 +1780,16 @@
   dev.pingclash.app.QrImport INSTANCE;
 }
 -keep class dev.pingclash.app.R$string {
+  int ad_blocking;
+  int agreement_text;
   int auto_reconnect;
   int close;
   int close_connection;
+  int color_green;
   int compatibility_warning;
   int delete;
   int diagnostic_624c9062b5;
+  int direct;
   int disconnect_the_vpn_before_changing_forward;
   int dns_queries;
   int download_and_import;
@@ -1639,19 +1806,32 @@
   int profile_inventory;
   int profile_quota_refilling;
   int profile_remaining_percent;
+  int provider_configuration_failure;
   int rename;
   int reparse_local_profile;
+  int routing_main_proxy;
+  int routing_regions;
   int rule_category_unknown;
+  int service_routing;
   int settings_discard;
   int settings_system_apps;
   int settings_unsaved_title;
+  int setup_blocking_title;
+  int setup_how_title;
+  int setup_language_title;
+  int setup_profile_title;
+  int setup_ready_title;
+  int setup_routing_title;
+  int setup_skip_hint;
+  int setup_welcome_title;
   int solid_color_low_contrast;
   int the_link_returned_a_web_page_rather;
-  int ui_back;
+  int timeout;
+  int ui_import_downloads_from;
   int ui_latency_fast;
   int ui_latency_high;
   int ui_latency_moderate;
-  int ui_next;
+  int ui_more;
   int ui_profile_details;
   int understood_do_not_remind_again;
   int vpn_dns_invalid;
@@ -1678,6 +1858,13 @@
 -keep class dev.pingclash.app.RemoteProfilesKt {
   public static dev.pingclash.app.ProviderFailure providerFailure(org.json.JSONObject);
 }
+-keep class dev.pingclash.app.RoutedService {
+  public java.lang.String getChecked();
+  public java.util.List getGeosite();
+  public java.lang.String getId();
+  public dev.pingclash.app.ServiceRegion getRegion();
+  public java.util.List getSuffixes();
+}
 -keep class dev.pingclash.app.RoutingAppIconKt {
   public static void RoutingAppIcon(java.lang.String,dev.pingclash.app.AppIconLoader,androidx.compose.runtime.Composer,int);
 }
@@ -1701,6 +1888,14 @@
   public void release(android.view.Window,java.lang.Object);
   dev.pingclash.app.SecurePage INSTANCE;
 }
+-keep class dev.pingclash.app.ServiceCatalogueKt {
+  public static java.util.Set getROUTE_VALUES();
+  public static java.util.List getSERVICE_CATALOGUE();
+  public static java.util.Set getSERVICE_IDS();
+  public static java.util.List guideRows(dev.pingclash.app.ServiceRegion);
+  public static dev.pingclash.app.ServiceRegion homeRegion(java.lang.String,java.lang.String);
+  public static java.util.List regionOrder(dev.pingclash.app.ServiceRegion);
+}
 -keep class dev.pingclash.app.ServiceCheckState {
   public <init>(boolean,java.util.Map);
   public <init>(boolean,java.util.Map,int,kotlin.jvm.internal.DefaultConstructorMarker);
@@ -1719,6 +1914,20 @@
   public static java.util.List getServiceTargets();
   public static java.util.List serviceSelection(java.util.List);
 }
+-keep enum dev.pingclash.app.ServiceRegion {
+  public static kotlin.enums.EnumEntries getEntries();
+  public java.lang.String getFlag();
+  dev.pingclash.app.ServiceRegion HONG_KONG;
+  dev.pingclash.app.ServiceRegion MAINLAND;
+  dev.pingclash.app.ServiceRegion TAIWAN;
+  dev.pingclash.app.ServiceRegion US;
+}
+-keep class dev.pingclash.app.ServiceRoutesKt {
+  public static java.lang.String groupRoute(java.lang.String);
+  public static java.util.List routingGroups(dev.pingclash.app.LocalProfile);
+  public static java.util.List serviceRouteRules$default(java.util.Map,java.lang.String,java.util.Set,int,java.lang.Object);
+  public static java.util.List serviceRouteRules(java.util.Map,java.lang.String,java.util.Set);
+}
 -keep class dev.pingclash.app.ServiceTarget {
   public <init>(java.lang.String,java.lang.String,java.lang.String);
   public static dev.pingclash.app.ServiceTarget copy$default(dev.pingclash.app.ServiceTarget,java.lang.String,java.lang.String,java.lang.String,int,java.lang.Object);
@@ -1726,16 +1935,60 @@
   public java.lang.String getUrl();
   int $stable;
 }
+-keep class dev.pingclash.app.SettingsBackup {
+  public static java.lang.String export$default(dev.pingclash.app.SettingsBackup,dev.pingclash.app.AppData,boolean,kotlin.jvm.functions.Function1,int,java.lang.Object);
+  public java.lang.String export(dev.pingclash.app.AppData,boolean,kotlin.jvm.functions.Function1);
+  public dev.pingclash.app.SettingsBackupContent read(java.lang.String);
+  public java.lang.String readFile(java.io.InputStream);
+  dev.pingclash.app.SettingsBackup INSTANCE;
+}
+-keep class dev.pingclash.app.SettingsBackupContent {
+  public java.util.List getProfiles();
+  public dev.pingclash.app.ClientSettings getSettings();
+  public java.lang.String toString();
+}
 -keep class dev.pingclash.app.SettingsDeltaKt {
   public static java.util.Set getDeferredSettingFields();
+  public static java.util.Set getLiveAppearanceFields();
   public static dev.pingclash.app.ClientSettings mergeSettingsDelta$default(dev.pingclash.app.ClientSettings,dev.pingclash.app.ClientSettings,dev.pingclash.app.ClientSettings,java.util.Set,int,java.lang.Object);
   public static dev.pingclash.app.ClientSettings mergeSettingsDelta(dev.pingclash.app.ClientSettings,dev.pingclash.app.ClientSettings,dev.pingclash.app.ClientSettings,java.util.Set);
 }
 -keep class dev.pingclash.app.SettingsFailure {
   public java.lang.String getPublicMessage();
 }
+-keep class dev.pingclash.app.SettingsHost {
+  public <init>(kotlin.jvm.functions.Function0,java.lang.String,kotlin.jvm.functions.Function0,kotlin.jvm.functions.Function0,int,kotlin.jvm.internal.DefaultConstructorMarker);
+  int $stable;
+}
 -keep class dev.pingclash.app.SettingsHubKt {
-  public static void SettingsHub(dev.pingclash.app.AppData,dev.pingclash.app.VpnUiState,boolean,dev.pingclash.app.AppViewModel,kotlin.jvm.functions.Function0,androidx.compose.runtime.Composer,int);
+  public static void SettingsHub(dev.pingclash.app.AppData,dev.pingclash.app.VpnUiState,boolean,dev.pingclash.app.AppViewModel,dev.pingclash.app.SettingsHost,androidx.compose.runtime.Composer,int);
+}
+-keep class dev.pingclash.app.SetupDocumentsKt {
+  public static java.lang.String guideAsset(java.lang.String);
+}
+-keep enum dev.pingclash.app.SetupNeed {
+  dev.pingclash.app.SetupNeed AGREEMENT;
+  dev.pingclash.app.SetupNeed GUIDE;
+  dev.pingclash.app.SetupNeed NONE;
+}
+-keep class dev.pingclash.app.SetupScreen {
+  public void reset();
+  dev.pingclash.app.SetupScreen INSTANCE;
+}
+-keep class dev.pingclash.app.SetupState {
+  public <init>(android.content.Context);
+  public void agree(boolean);
+  public void dismissFeature();
+  public int getAgreement();
+  public boolean getFeaturePending();
+  public boolean getGuideDone();
+  public dev.pingclash.app.SetupNeed need(boolean);
+  public boolean takeHint();
+  public java.lang.String view(boolean);
+  dev.pingclash.app.SetupState$Companion Companion;
+}
+-keep class dev.pingclash.app.SetupState$Companion {
+  public void complete(android.content.Context);
 }
 -keep class dev.pingclash.app.SolidColorPickerKt {
   public static void SolidColorPicker(java.lang.String,java.util.List,kotlin.jvm.functions.Function2,androidx.compose.runtime.Composer,int);
@@ -1775,6 +2028,7 @@
   public java.lang.String clean(java.lang.String);
   public java.lang.String file(java.lang.String);
   public java.lang.String fromHeaders(java.lang.String,java.lang.String);
+  public java.lang.String fromLink(java.net.URI,java.net.URI);
   dev.pingclash.app.SubscriptionNames INSTANCE;
 }
 -keep class dev.pingclash.app.SubscriptionNamesKt {
@@ -1803,6 +2057,12 @@
 }
 -keep class dev.pingclash.app.SubscriptionTransportKt {
   public static java.util.Map redirectedSubscriptionHeaders(java.util.Map,java.net.URI,java.net.URI);
+}
+-keep class dev.pingclash.app.SubscriptionUpdateJob {
+}
+-keep class dev.pingclash.app.SubscriptionUpdateJobKt {
+  public static long subscriptionDueIn$default(dev.pingclash.app.LocalProfile,int,long,boolean,int,java.lang.Object);
+  public static long subscriptionDueIn(dev.pingclash.app.LocalProfile,int,long,boolean);
 }
 -keep class dev.pingclash.app.TcpLatencyProbe {
   public dev.pingclash.app.ProxyDelay run(android.content.Context,dev.pingclash.app.LocalNode,int,dev.pingclash.diagnostics.RunControl);
@@ -1847,6 +2107,10 @@
   dev.pingclash.app.TrailTone PENDING;
   dev.pingclash.app.TrailTone STALE;
 }
+-keep class dev.pingclash.app.UiLanguage {
+  public java.lang.String getCode();
+  public java.lang.String getName();
+}
 -keep class dev.pingclash.app.UiStrings {
   public void apply(java.lang.String);
   public java.lang.String preference();
@@ -1865,16 +2129,20 @@
   public static dev.pingclash.app.VpnConfigurationFailure options$default(dev.pingclash.app.VpnConfigurationFailure$Companion,org.json.JSONObject,java.lang.String,int,java.lang.Object);
   public dev.pingclash.app.VpnConfigurationFailure options(org.json.JSONObject,java.lang.String);
   public void requireConnectable(dev.pingclash.app.AppData);
+  public static java.lang.String runtimeOptions$default(dev.pingclash.app.VpnConfigurationFailure$Companion,dev.pingclash.app.AppData,boolean,int,java.lang.Object);
 }
 -keep enum dev.pingclash.app.VpnPhase {
   public java.lang.String getWire();
   dev.pingclash.app.VpnPhase ESTABLISHED;
 }
 -keep class dev.pingclash.app.VpnRuntime {
+  public java.lang.Object awaitRouting(long,kotlin.coroutines.Continuation);
   public void connect(android.content.Context);
   public void disconnect(android.content.Context);
+  public boolean getRoutingSettled();
   public kotlinx.coroutines.flow.StateFlow getState();
   public void publish$app_release(dev.pingclash.app.VpnUiState);
+  public static void reconfigure$default(dev.pingclash.app.VpnRuntime,android.content.Context,kotlin.jvm.functions.Function0,int,java.lang.Object);
   dev.pingclash.app.VpnRuntime INSTANCE;
 }
 -keep class dev.pingclash.app.VpnStateGlyphKt {
@@ -1899,11 +2167,8 @@
 -keep enum dev.pingclash.app.WebsiteFailure {
   dev.pingclash.app.WebsiteFailure CERTIFICATE;
   dev.pingclash.app.WebsiteFailure DNS;
-  dev.pingclash.app.WebsiteFailure HTTP;
-  dev.pingclash.app.WebsiteFailure REDIRECT;
   dev.pingclash.app.WebsiteFailure REFUSED;
   dev.pingclash.app.WebsiteFailure RESET;
-  dev.pingclash.app.WebsiteFailure RESPONSE;
   dev.pingclash.app.WebsiteFailure RESTRICTED;
   dev.pingclash.app.WebsiteFailure TIMEOUT;
 }
@@ -1920,12 +2185,27 @@
 }
 -keep class dev.pingclash.app.WebsiteReplyKt {
   public static byte[] readWebsitePreview(java.io.InputStream);
-  public static boolean restrictedWebsiteLocation(java.net.URL);
-  public static boolean safeWebsiteRedirect(java.net.URL,java.net.URL);
   public static dev.pingclash.app.WebsiteFailure websiteResponseFailure(dev.pingclash.app.ServiceTarget,dev.pingclash.app.WebsiteReply);
 }
 -keep class dev.pingclash.app.WebsiteRoute {
   public <init>(android.net.Network,boolean);
+}
+-keep class dev.pingclash.app.WidgetToggleReceiver {
+}
+-keep interface dev.pingclash.diagnostics.CoreAdapter {
+}
+-keep class dev.pingclash.diagnostics.CoreAdapter$NotRequested {
+  public <init>();
+}
+-keep class dev.pingclash.diagnostics.DiagnosticEngine {
+  public <init>(dev.pingclash.diagnostics.SocketProbe,dev.pingclash.diagnostics.CoreAdapter);
+  public dev.pingclash.diagnostics.Models$Report run(dev.pingclash.diagnostics.Models$Request,dev.pingclash.diagnostics.DiagnosticEngine$BindingFactory,dev.pingclash.diagnostics.RunControl,dev.pingclash.diagnostics.DiagnosticEngine$Observer);
+}
+-keep interface dev.pingclash.diagnostics.DiagnosticEngine$BindingFactory {
+  public dev.pingclash.diagnostics.NetworkBinding open();
+}
+-keep interface dev.pingclash.diagnostics.DiagnosticEngine$Observer {
+  public void update(java.util.List);
 }
 -keep enum dev.pingclash.diagnostics.Models$Code {
   public java.lang.String message();
@@ -1941,10 +2221,16 @@
   dev.pingclash.diagnostics.Models$Code TCP_REFUSED;
   dev.pingclash.diagnostics.Models$Code VPN_ACTIVE;
 }
+-keep enum dev.pingclash.diagnostics.Models$Family {
+  dev.pingclash.diagnostics.Models$Family AUTO;
+}
 -keep class dev.pingclash.diagnostics.Models$Report {
   public <init>(java.lang.String,java.lang.String,java.lang.String,java.util.List,long);
   java.lang.String runId;
   java.util.List steps;
+}
+-keep class dev.pingclash.diagnostics.Models$Request {
+  public <init>(java.lang.String,int,boolean,java.lang.String,dev.pingclash.diagnostics.Models$Family);
 }
 -keep enum dev.pingclash.diagnostics.Models$Stage {
   dev.pingclash.diagnostics.Models$Stage DNS;
@@ -1965,7 +2251,11 @@
 -keep class dev.pingclash.diagnostics.Models$Step {
   public <init>(dev.pingclash.diagnostics.Models$Stage,dev.pingclash.diagnostics.Models$State,dev.pingclash.diagnostics.Models$Code,long,java.lang.String,int);
   public <init>(dev.pingclash.diagnostics.Models$Stage,dev.pingclash.diagnostics.Models$State,dev.pingclash.diagnostics.Models$Code,long,java.lang.String,int,int);
+  dev.pingclash.diagnostics.Models$Code code;
   dev.pingclash.diagnostics.Models$Stage stage;
+  dev.pingclash.diagnostics.Models$State state;
+}
+-keep interface dev.pingclash.diagnostics.NetworkBinding {
 }
 -keep class dev.pingclash.diagnostics.ReportFormatter {
   public static java.lang.String markdown(dev.pingclash.diagnostics.Models$Report);
@@ -1973,6 +2263,9 @@
 -keep class dev.pingclash.diagnostics.RunControl {
   public <init>(long);
   public void cancel();
+}
+-keep class dev.pingclash.diagnostics.SocketProbe {
+  public <init>();
 }
 -keep class dev.pingclash.mobile.Mobile {
   public static java.lang.String exportConfiguration(java.lang.String);
@@ -2083,6 +2376,7 @@
 }
 -keep class kotlin.collections.ArraysKt___ArraysJvmKt {
   public static byte[] copyOfRange(byte[],int,int);
+  public static byte[] plus(byte[],byte[]);
 }
 -keep class kotlin.collections.ArraysKt___ArraysKt {
   public static boolean contains(byte[],byte);
@@ -2132,6 +2426,7 @@
   public static java.util.List takeLast(java.util.List,int);
   public static java.util.List toList(java.lang.Iterable);
   public static java.util.Set toSet(java.lang.Iterable);
+  public static java.util.List zipWithNext(java.lang.Iterable);
 }
 -keep class kotlin.collections.IntIterator {
   public int nextInt();
@@ -2139,6 +2434,7 @@
 -keep class kotlin.collections.MapsKt {
 }
 -keep class kotlin.collections.MapsKt__MapsJVMKt {
+  public static int mapCapacity(int);
   public static java.util.Map mapOf(kotlin.Pair);
 }
 -keep class kotlin.collections.MapsKt__MapsKt {
@@ -2148,6 +2444,9 @@
   public static java.util.Map mutableMapOf(kotlin.Pair[]);
 }
 -keep class kotlin.collections.SetsKt {
+}
+-keep class kotlin.collections.SetsKt__SetsJVMKt {
+  public static java.util.Set setOf(java.lang.Object);
 }
 -keep class kotlin.collections.SetsKt__SetsKt {
   public static java.util.Set setOf(java.lang.Object[]);
@@ -2383,6 +2682,7 @@
 -keep class kotlin.ranges.RangesKt {
 }
 -keep class kotlin.ranges.RangesKt___RangesKt {
+  public static int coerceAtLeast(int,int);
   public static int coerceIn(int,int,int);
   public static kotlin.ranges.IntProgression step(kotlin.ranges.IntProgression,int);
   public static kotlin.ranges.IntRange until(int,int);
@@ -2408,6 +2708,7 @@
 }
 -keep class kotlin.text.Regex {
   public <init>(java.lang.String);
+  public boolean matches(java.lang.CharSequence);
   public java.lang.String replace(java.lang.CharSequence,java.lang.String);
   public java.util.List split(java.lang.CharSequence,int);
 }

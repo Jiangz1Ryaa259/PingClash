@@ -135,14 +135,6 @@ private fun DrawScope.drawLiquidSwitch(
             CornerRadius(height / 2),
             style = Stroke(1.dp.toPx()),
         )
-        // A local highlight, never captured backdrop blur or a bitmap cache.
-        drawLine(
-            Color.White.copy(alpha = .72f * alpha),
-            origin + Offset(width * .3f, 2.dp.toPx()),
-            origin + Offset(width * .7f, 2.dp.toPx()),
-            1.dp.toPx(),
-            StrokeCap.Round,
-        )
         val cy = size.height / 2
         if (checked) {
             drawLine(

@@ -25,3 +25,7 @@ PingClash_Tools/
 **/__pycache__/
 
 *.py[cod]
+
+# Local agent and tool state
+.claude/
+*.tmp

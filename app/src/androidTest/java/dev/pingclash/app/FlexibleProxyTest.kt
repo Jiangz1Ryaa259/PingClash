@@ -283,16 +283,17 @@ class FlexibleProxyTest {
             compose.onNodeWithTag("nav-1").performClick()
             val group = profile.displayGroups().first().name
             compose.onNodeWithTag("group-choice-$group-VPN B").assertIsEnabled().performClick()
+            // Check at once, while the switch is still being applied: the check must wait for
+            // the new route instead of meeting the swap.
+            compose.waitUntil(15000) { repo.data.value.selected?.name == "VPN B" }
+            val target = ServiceTarget("fixture", "Fixture", "https://192.0.2.123/")
+            checks.start(3000, listOf("fixture"), listOf(target))
             compose.waitUntil(15000) {
-                repo.data.value.selected?.name == "VPN B" &&
-                    !model.ui.value.busy &&
-                    VpnRuntime.state.value.phase == "established"
+                !model.ui.value.busy && VpnRuntime.state.value.phase == "established"
             }
             assertSame(tun, field.get(service))
             assertEquals(start, VpnRuntime.state.value.sessionStartedElapsed)
-            val target = ServiceTarget("fixture", "Fixture", "https://192.0.2.123/")
-            checks.start(3000, listOf("fixture"), listOf(target))
-            compose.waitUntil(7000) { !checks.state.value.running }
+            compose.waitUntil(10000) { !checks.state.value.running }
             assertTrue(
                 "${checks.state.value}; first=${first.intercepted.get()}; " +
                     "second=${second.intercepted.get()}; tls=${tls.handshakes.get()}",

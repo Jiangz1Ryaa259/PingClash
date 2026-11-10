@@ -45,7 +45,7 @@ class ContextNoticeTest {
     @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun fiveLockedSettingsPagesExplainTheLockOnlyInTheOverlayAndClearItOnExit() = manualClock {
+    fun fourLockedSettingsPagesExplainTheLockOnlyInTheOverlayAndClearItOnExit() = manualClock {
         val center = IssueNoticeCenter()
         val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
         fixture(center) {
@@ -54,11 +54,11 @@ class ContextNoticeTest {
                 VpnUiState("established", sessionStartedElapsed = 123),
                 true,
                 model,
-                {},
+                SettingsHost({}),
             )
         }
         settle()
-        for (page in listOf("network", "dns", "apps", "rules", "lan")) {
+        for (page in listOf("network", "dns", "apps", "rules")) {
             compose.onNodeWithTag("settings-$page").performScrollTo().performClick()
             settle()
             compose.onNodeWithTag("context-reminder").assertIsDisplayed()

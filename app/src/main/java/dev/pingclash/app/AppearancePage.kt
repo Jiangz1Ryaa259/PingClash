@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// Preview and tile proportions, icon tints and spacing are the page's design values.
+// Tile proportions, icon tints and spacing are the page's design values.
 @file:Suppress("MagicNumber")
 
 package dev.pingclash.app
@@ -14,14 +14,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,14 +27,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -48,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Settings > Language and appearance: a live preview, background tiles and grouped rows. */
+/** Settings > Language and appearance: background tiles and grouped rows. */
 @Composable
 internal fun AppearancePage(data: AppData, model: AppViewModel) {
     val context = LocalContext.current
@@ -62,7 +54,6 @@ internal fun AppearancePage(data: AppData, model: AppViewModel) {
         model.appearance(client.language, client.theme, scenery = change)
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        AppearancePreview(client)
         GroupTitle(tr(R.string.ui_section_background))
         SceneTiles(client, hasPicture) { scene ->
             if (scene == "image" && !hasPicture) pick()
@@ -105,46 +96,6 @@ private fun PictureRows(model: AppViewModel, pick: () -> Unit) {
             color = MaterialTheme.colorScheme.error,
             onClick = model::removeBackground,
         )
-    }
-}
-
-/** A small phone showing the current background, the badge and the navigation bar. */
-@Composable
-private fun AppearancePreview(client: ClientSettings) {
-    val configuration = LocalConfiguration.current
-    val aspect =
-        configuration.screenWidthDp.toFloat() / configuration.screenHeightDp.coerceAtLeast(1)
-    Surface(
-        Modifier.fillMaxWidth().testTag("appearance-preview"),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .7f),
-    ) {
-        Box(Modifier.padding(vertical = 14.dp), contentAlignment = Alignment.Center) {
-            Box(
-                Modifier.height(168.dp)
-                    .aspectRatio(aspect)
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(3.dp, Color(0xFF1C1C1E), RoundedCornerShape(16.dp))
-            ) {
-                SceneArt(client, Modifier.fillMaxSize())
-                Canvas(Modifier.fillMaxSize()) {
-                    val card = Size(size.width * .36f, size.height * .3f)
-                    drawRoundRect(
-                        Color.White.copy(alpha = .9f),
-                        Offset((size.width - card.width) / 2, size.height * .2f),
-                        card,
-                        CornerRadius(card.width * .16f),
-                    )
-                    val bar = Size(size.width * .82f, size.height * .07f)
-                    drawRoundRect(
-                        Color.White.copy(alpha = .85f),
-                        Offset((size.width - bar.width) / 2, size.height * .88f),
-                        bar,
-                        CornerRadius(bar.height / 2),
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -233,8 +184,8 @@ private fun SceneTiles(client: ClientSettings, hasPicture: Boolean, onPick: (Str
                 )
                 Text(
                     tr(label),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (chosen) MaterialTheme.colorScheme.primary else Muted,
+                    style = MaterialTheme.typography.labelMedium.onPage(),
+                    color = if (chosen) pageInk().accent else pageInk().muted,
                     // Longer names ("Ocean and waves") wrap rather than being cut off.
                     maxLines = 2,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -254,11 +205,8 @@ private fun DisplayRows(client: ClientSettings, model: AppViewModel) {
             PopUpChoice(
                 tr(R.string.language),
                 client.language,
-                listOf(
-                    "system" to tr(R.string.system_default),
-                    "zh" to tr(R.string.text),
-                    "en" to tr(R.string.english),
-                ),
+                // Each language under its own name, so it can be found from any other language.
+                listOf("system" to tr(R.string.system_default)) + SETUP_LANGUAGES,
                 true,
             ) {
                 model.appearance(it, client.theme)

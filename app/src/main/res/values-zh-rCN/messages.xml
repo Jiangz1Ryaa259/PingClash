@@ -66,6 +66,7 @@
     <string name="diagnose_main_proxy">"诊断主代理"</string>
     <string name="vpn_tunnel_established">"VPN 隧道已建立"</string>
     <string name="no_active_connections">"没有活动连接"</string>
+    <string name="connections_vpn_off">"VPN 未连接"</string>
     <plurals name="count_proxy_proxies">
         <item quantity="other">"%1$s 个节点 · %2$s"</item>
     </plurals>
@@ -193,7 +194,6 @@
     </plurals>
     <string name="establishing_tunnel">"正在建立隧道"</string>
     <string name="profile_name">"配置名称"</string>
-    <string name="text">"简体中文"</string>
     <string name="total_downloaded">"累计下载"</string>
     <string name="import_and_choose_a_proxy_first">"请先导入并选择节点"</string>
     <string name="vpn_permission_revoked_connection_cleaned">"VPN 授权已撤销，连接已清理"</string>
@@ -268,7 +268,6 @@
     <string name="reconnect">"重启连接"</string>
     <string name="subscription">"订阅"</string>
     <string name="some_nodes_skip_certificate_verification_s">部分节点跳过证书校验，无法确认服务器身份。连接仍沿用原配置。</string>
-    <string name="english">"英语"</string>
     <string name="other">"其他"</string>
     <string name="local_profiles_could_not_be_read_the">"本地资料读取失败，原文件已保留"</string>
     <string name="automatically_selected">" · 自动选择"</string>

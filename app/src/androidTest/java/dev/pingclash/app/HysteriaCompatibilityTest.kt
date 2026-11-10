@@ -145,6 +145,32 @@ class HysteriaCompatibilityTest {
                 VpnRuntime.state.value.phase in listOf("established", "error")
             }
             assertEquals("established", VpnRuntime.state.value.phase)
+            // Settings > Connection diagnostics > Check a domain or IP manually, while the VPN
+            // carries this app: the check goes around the tunnel on the real network.
+            val auxiliary =
+                dev.pingclash.diagnostics
+                    .DiagnosticEngine(
+                        dev.pingclash.diagnostics.SocketProbe(),
+                        dev.pingclash.diagnostics.CoreAdapter.NotRequested(),
+                    )
+                    .run(
+                        dev.pingclash.diagnostics.Models.Request(
+                            host,
+                            httpPort,
+                            false,
+                            "",
+                            dev.pingclash.diagnostics.Models.Family.AUTO,
+                        ),
+                        { AndroidNetworkBinding.open(app) },
+                        dev.pingclash.diagnostics.RunControl(25_000),
+                    ) {}
+            assertTrue(
+                "Manual check failed: ${auxiliary.steps.map { "${it.stage}:${it.state}:${it.code}" }}",
+                auxiliary.steps.none {
+                    it.state != dev.pingclash.diagnostics.Models.State.PASSED &&
+                        it.state != dev.pingclash.diagnostics.Models.State.SKIPPED
+                },
+            )
             val completed = CountDownLatch(1)
             var result: Bundle? = null
             val receiver =

@@ -19,6 +19,23 @@ import java.util.Locale
 // the encrypted in-app language preference changes.
 internal val LocalUiLanguage = staticCompositionLocalOf { "system" }
 
+/** A language the app speaks: its code, its locale tag, and its name written in itself. */
+internal class UiLanguage(val code: String, val tag: String, val name: String)
+
+/**
+ * Every translation. A new language needs an entry here, its values-xx folder and locale config.
+ */
+internal val UI_LANGUAGES =
+    listOf(
+        UiLanguage("zh", "zh-CN", "简体中文"),
+        UiLanguage("en", "en", "English"),
+        UiLanguage("ja", "ja", "日本語"),
+    )
+
+internal fun uiLanguageSupported(code: String) = UI_LANGUAGES.any { it.code == code }
+
+private fun uiLanguageTag(code: String) = UI_LANGUAGES.firstOrNull { it.code == code }?.tag
+
 internal object UiStrings {
     private lateinit var app: Application
     private var legacyLanguage by mutableStateOf("system")
@@ -42,28 +59,20 @@ internal object UiStrings {
 
     fun preference(): String =
         if (Build.VERSION.SDK_INT >= 33) {
-            when (
-                app.getSystemService(LocaleManager::class.java).applicationLocales.get(0)?.language
-            ) {
-                "zh" -> "zh"
-                "en" -> "en"
-                else -> "system"
-            }
+            app.getSystemService(LocaleManager::class.java)
+                .applicationLocales
+                .get(0)
+                ?.language
+                ?.takeIf(::uiLanguageSupported) ?: "system"
         } else legacyLanguage
 
     fun apply(language: String) {
-        require(language in listOf("system", "zh", "en"))
+        require(language == "system" || uiLanguageSupported(language))
         legacyLanguage = language
         cached = null
         if (Build.VERSION.SDK_INT >= 33)
             app.getSystemService(LocaleManager::class.java).applicationLocales =
-                LocaleList.forLanguageTags(
-                    when (language) {
-                        "zh" -> "zh-CN"
-                        "en" -> "en"
-                        else -> ""
-                    }
-                )
+                LocaleList.forLanguageTags(uiLanguageTag(language).orEmpty())
     }
 
     fun resources(): Resources {
@@ -84,9 +93,7 @@ internal object UiStrings {
                 app.createConfigurationContext(
                         Configuration(base.configuration).apply {
                             setLocales(
-                                LocaleList(
-                                    Locale.forLanguageTag(if (language == "zh") "zh-CN" else "en")
-                                )
+                                LocaleList(Locale.forLanguageTag(uiLanguageTag(language) ?: "en"))
                             )
                         }
                     )

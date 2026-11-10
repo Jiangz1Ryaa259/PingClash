@@ -97,12 +97,19 @@ private fun rememberEditorPicture(staged: BackgroundFrame?): Pair<ImageBitmap, B
     return if (staged == null) stored else pending
 }
 
+/** Laid over the user's picture so that the app's cards and text sit well on it. */
+@Composable
+internal fun pictureScrim(): Color =
+    if (MaterialTheme.colorScheme.background.luminance() > .5f) Color.White.copy(alpha = .32f)
+    else Color.Black.copy(alpha = .4f)
+
 /** The user's picture behind every page, under a theme-aware dim layer so text stays legible. */
 @Composable
-internal fun CustomImageBackdrop(modifier: Modifier = Modifier) {
-    val picture = rememberFramedPicture()
-    val light = MaterialTheme.colorScheme.background.luminance() > .5f
-    val scrim = if (light) Color.White.copy(alpha = .32f) else Color.Black.copy(alpha = .4f)
+internal fun CustomImageBackdrop(
+    picture: Pair<ImageBitmap, BackgroundFrame>?,
+    modifier: Modifier = Modifier,
+) {
+    val scrim = pictureScrim()
     Canvas(modifier.testTag("custom-background")) {
         picture?.let { (image, frame) -> drawFramedBackground(image, frame) }
         drawRect(scrim)

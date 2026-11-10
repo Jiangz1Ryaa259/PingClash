@@ -5,7 +5,9 @@ package dev.pingclash.app
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
@@ -28,12 +31,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+
+// Room the strip keeps for its padding and two buttons, and each tile's width with its gap: wide
+// enough for "Not tested" and the failure words on one line.
+private val TileReserved = 110.dp
+private val TileMinimum = 70.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,28 +68,7 @@ internal fun HomeServiceChecks(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                IconButton(
-                    { expanded = true },
-                    Modifier.testTag("service-check-more").semantics {
-                        contentDescription = tr(R.string.ui_more)
-                    },
-                ) {
-                    AppGlyph(PcIcon.ChevronDown)
-                }
-                IconButton(
-                    { onTest(shown.map { it.id }) },
-                    enabled = state.services.running || websiteMeasurementEnabled(state),
-                    modifier =
-                        Modifier.testTag("service-check-start").semantics {
-                            contentDescription =
-                                tr(
-                                    if (state.services.running) R.string.cancel
-                                    else R.string.ui_measure
-                                )
-                        },
-                ) {
-                    AppGlyph(if (state.services.running) PcIcon.Power else PcIcon.Bolt)
-                }
+                ServiceButtons(state, shown, onTest) { expanded = true }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 shown.forEach { target ->
@@ -95,6 +83,76 @@ internal fun HomeServiceChecks(
         }
 }
 
+/**
+ * The website checks docked at the bottom of the home card: as many tiles as fit, then the full
+ * list and measure buttons. No title: the tiles say what they are.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun HomeServiceStrip(
+    state: DashboardState,
+    onTest: (List<String>) -> Unit,
+    shownCount: Int = 4,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    BoxWithConstraints(Modifier.fillMaxWidth().testTag("home-service-checks")) {
+        val fit =
+            ((maxWidth - TileReserved) / TileMinimum).toInt().coerceIn(2, shownCount.coerceIn(2, 4))
+        val shown = serviceTargets.take(fit)
+        Row(
+            Modifier.fillMaxWidth().padding(start = 10.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            shown.forEach { target ->
+                ServiceTile(
+                    target,
+                    state,
+                    Modifier.weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = .05f)),
+                ) {
+                    onTest(listOf(target.id))
+                }
+            }
+            ServiceButtons(state, shown, onTest) { expanded = true }
+        }
+    }
+    if (expanded)
+        ModalBottomSheet(onDismissRequest = { expanded = false }, containerColor = Panel) {
+            ServiceTargetsPanel(state, onTest)
+        }
+}
+
+/** The full-list and measure buttons, shared by the card and the docked strip. */
+@Composable
+private fun ServiceButtons(
+    state: DashboardState,
+    shown: List<ServiceTarget>,
+    onTest: (List<String>) -> Unit,
+    onMore: () -> Unit,
+) {
+    IconButton(
+        onMore,
+        Modifier.testTag("service-check-more").semantics {
+            contentDescription = tr(R.string.ui_more)
+        },
+    ) {
+        AppGlyph(PcIcon.ChevronDown)
+    }
+    IconButton(
+        { onTest(shown.map { it.id }) },
+        enabled = state.services.running || websiteMeasurementEnabled(state),
+        modifier =
+            Modifier.testTag("service-check-start").semantics {
+                contentDescription =
+                    tr(if (state.services.running) R.string.cancel else R.string.ui_measure)
+            },
+    ) {
+        AppGlyph(if (state.services.running) PcIcon.Power else PcIcon.Bolt)
+    }
+}
+
 @Composable
 private fun ServiceTile(
     target: ServiceTarget,
@@ -104,7 +162,7 @@ private fun ServiceTile(
 ) {
     Column(
         modifier
-            .heightIn(min = 48.dp)
+            .heightIn(min = 52.dp)
             .testTag("service-target-${target.id}")
             .fluidClickable(
                 depth = .97f,
@@ -113,7 +171,7 @@ private fun ServiceTile(
                 onClick = onClick,
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
     ) {
         Text(
             target.name,

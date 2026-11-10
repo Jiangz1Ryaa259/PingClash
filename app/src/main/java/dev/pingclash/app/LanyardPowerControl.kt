@@ -73,7 +73,10 @@ internal fun LanyardPowerControl(
 ) {
     val moving = LocalMotionAllowed.current && rememberForeground()
     val three = LocalLanyardThree.current
-    val available = enabled && phase != "stopping" && three.acceptsInput()
+    // A tap always counts, even while the 3D card restarts (just after returning to Home): the
+    // VPN does not depend on the renderer. Only dragging waits, since the card must follow it.
+    val available = enabled && phase != "stopping"
+    val draggable = moving && three.acceptsInput()
     val density = LocalDensity.current
     val haptics = LocalHapticFeedback.current
     val action by rememberUpdatedState(onClick)
@@ -145,7 +148,7 @@ internal fun LanyardPowerControl(
                 // hit layer must never feed its local deltas back into the pose.
                 .testTag("vpn-power")
                 .lanyardAction(available, label, description, performTap)
-                .lanyardGestures(available, moving, density.density, pose, performTap)
+                .lanyardGestures(available, draggable, density.density, pose, performTap)
         ) {
             Box(
                 Modifier.fillMaxSize()

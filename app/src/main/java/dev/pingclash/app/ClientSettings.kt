@@ -58,6 +58,13 @@ data class ClientSettings(
     /** Disconnect on [trustedWifi] networks and connect on any other network. */
     val wifiAuto: Boolean = false,
     val trustedWifi: List<String> = emptyList(),
+    /**
+     * Service id -> [ROUTE_PROXY], [ROUTE_DIRECT] or a [groupRoute]; a service that is absent uses
+     * Default.
+     */
+    val serviceRoutes: Map<String, String> = emptyMap(),
+    /** [BLOCKING_OFF], [BLOCKING_ADS] or [BLOCKING_TELEMETRY]. */
+    val blocking: String = BLOCKING_OFF,
 ) {
     /** A solid background is designed for the light theme; dark mode is off while it is used. */
     val effectiveTheme
@@ -106,6 +113,9 @@ data class ClientSettings(
             put("subscriptionHours", subscriptionHours)
             put("wifiAuto", wifiAuto)
             put("trustedWifi", JSONArray(trustedWifi))
+            // Sorted, so the same choices always serialise the same way.
+            put("serviceRoutes", JSONObject(serviceRoutes.toSortedMap() as Map<*, *>))
+            put("blocking", blocking)
         }
 
     companion object {
@@ -164,7 +174,28 @@ data class ClientSettings(
                     } ?: DEFAULT_SOLID_SWATCHES,
                 )
                 .withAutomation(p)
+                .withServiceRoutes(p)
         }
+
+        /**
+         * Service routing and blocking. Unknown services (an old backup, a removed row) and unknown
+         * values are dropped rather than failing the whole read.
+         */
+        private fun ClientSettings.withServiceRoutes(p: JSONObject) =
+            copy(
+                serviceRoutes =
+                    p.optJSONObject("serviceRoutes")?.let { routes ->
+                        routes
+                            .keys()
+                            .asSequence()
+                            .filter { it in SERVICE_IDS && validServiceRoute(routes.optString(it)) }
+                            .associateWith(routes::optString)
+                            .toSortedMap()
+                    } ?: emptyMap(),
+                blocking =
+                    p.optString("blocking", BLOCKING_OFF).takeIf { it in BLOCKING_VALUES }
+                        ?: BLOCKING_OFF,
+            )
 
         /** Start on boot, background updates and the Wi-Fi rule; unknown values fall back. */
         private fun ClientSettings.withAutomation(p: JSONObject) =
@@ -218,6 +249,13 @@ internal fun AppData.runtimeOptions(settings: ClientSettings = client): String {
             .map(String::trim)
             .filter { it.isNotBlank() && !it.startsWith("#") }
             .toList() +
+            // The user's own choices, then the subscription: services and blocking apply to
+            // every profile and survive its updates.
+            serviceRouteRules(
+                settings.serviceRoutes,
+                settings.blocking,
+                activeProfile?.routingGroups().orEmpty().toSet(),
+            ) +
             (if (settings.useProviderRules) activeProfile?.rules.orEmpty() else emptyList())
     if (settings.mode == "rule" && settings.useProviderRules)
         require((activeProfile?.rulesOmitted ?: 0) == 0) {
@@ -309,7 +347,7 @@ internal fun validateClientSettings(value: ClientSettings) {
         tr(R.string.invalid_app_routing_list_include_mode_requ)
     }
     require(
-        value.language in listOf("system", "zh", "en") &&
+        (value.language == "system" || uiLanguageSupported(value.language)) &&
             value.theme in listOf("system", "light", "dark") &&
             value.customRules.toByteArray().size <= 64 * 1024 &&
             value.probeTimeout in 1000..20000 &&
@@ -318,6 +356,16 @@ internal fun validateClientSettings(value: ClientSettings) {
         tr(R.string.display_or_latency_options_are_invalid_or)
     }
     validateAutomation(value)
+    validateServiceRoutes(value)
+}
+
+internal fun validateServiceRoutes(value: ClientSettings) {
+    require(
+        value.serviceRoutes.all { (id, route) -> id in SERVICE_IDS && validServiceRoute(route) } &&
+            value.blocking in BLOCKING_VALUES
+    ) {
+        tr(R.string.routing_invalid)
+    }
 }
 
 private fun validateAutomation(value: ClientSettings) {

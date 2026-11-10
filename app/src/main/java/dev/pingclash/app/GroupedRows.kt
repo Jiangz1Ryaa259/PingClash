@@ -36,9 +36,9 @@ internal fun GroupTitle(text: String) {
     Text(
         text,
         Modifier.padding(start = 6.dp, top = 10.dp),
-        style = MaterialTheme.typography.labelLarge,
+        style = MaterialTheme.typography.labelLarge.onPage(),
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onSurface,
+        color = pageInk().text,
     )
 }
 
