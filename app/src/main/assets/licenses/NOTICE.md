@@ -13,7 +13,7 @@ Offline geographic rule data: MetaCubeX/meta-rules-dat, GPL-3.0 repository; pinn
 ASN.mmdb: unchanged October 2026 DB-IP IP to ASN Lite database, copyright DB-IP.com, CC BY 4.0. https://db-ip.com/db/download/ip-to-asn-lite — https://creativecommons.org/licenses/by/4.0/ . Reduced coverage/accuracy. Exact hashes: docs/rule-data.md in the source archive.
 Full corresponding Go dependency sources and notices are included in the accompanying source archive.
 
-- github.com/andybalholm/brotli v1.1.1
+- github.com/andybalholm/brotli v1.2.7
 - github.com/bahlo/generic-list-go v0.2.0
 - github.com/bodgit/plumbing v1.3.0
 - github.com/bodgit/windows v1.0.1
@@ -37,7 +37,7 @@ Full corresponding Go dependency sources and notices are included in the accompa
 - github.com/hashicorp/golang-lru/v2 v2.0.7
 - github.com/insomniacslk/dhcp v0.0.0-20260719225207-c76316d4aa82
 - github.com/josharian/native v1.1.0
-- github.com/klauspost/compress v1.18.7
+- github.com/klauspost/compress v1.20.2
 - github.com/klauspost/cpuid/v2 v2.2.6
 - github.com/klauspost/reedsolomon v1.12.3
 - github.com/mdlayher/netlink v1.7.2
@@ -116,7 +116,7 @@ Full corresponding Go dependency sources and notices are included in the accompa
 - go4.org/netipx v0.0.0-20260823151212-3075585bcbeb
 - golang.org/x/crypto v0.58.0
 - golang.org/x/exp v0.0.0-20240904232852-e7e105dedf7e
-- golang.org/x/net v0.61.0
+- golang.org/x/net v0.62.0
 - golang.org/x/sync v0.24.0
 - golang.org/x/sys v0.49.0
 - golang.org/x/text v0.43.0

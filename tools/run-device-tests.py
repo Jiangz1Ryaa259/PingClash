@@ -179,6 +179,17 @@ def device_failed(output):
             or 'not available until after user' in output)
 
 
+def ensure_installed(device):
+    """An emulator that crashes just after an install can lose it: install again when missing."""
+    if 'dev.pingclash.app.test/' in device.adb('shell', 'pm', 'list', 'instrumentation'):
+        return
+    print('Test APKs missing after a restart; installing them again', flush=True)
+    for apk in APKS:
+        out = device.adb('install', '-r', str(apk), timeout=300)
+        if 'Success' not in out:
+            raise SystemExit(f'Install failed for {apk.name}: {out.strip()[-200:]}')
+
+
 def run_class(device, name, hy):
     try:
         return subprocess.run(
@@ -240,6 +251,7 @@ def main():
             for attempt in range(1, CRASH_ATTEMPTS + 1):
                 if not device.alive():
                     device.restart()
+                ensure_installed(device)
                 device.reset()
                 started = time.time()
                 output = run_class(device, name, hy)
