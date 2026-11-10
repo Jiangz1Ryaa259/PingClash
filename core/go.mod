@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/dlclark/regexp2 v1.12.0
 	github.com/gofrs/uuid/v5 v5.4.0
-	github.com/klauspost/compress v1.20.2
+	github.com/klauspost/compress v1.20.3
 	github.com/metacubex/mihomo v1.19.32
 	github.com/metacubex/quic-go v0.61.1-0.20260727080200-2548683b76f4
 	github.com/metacubex/sing v0.5.8
