@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -32,10 +33,13 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -148,6 +152,10 @@ private fun rememberSceneThumbnail(resource: Int): ImageBitmap? {
     return image
 }
 
+/**
+ * The four scenes side by side; on a narrow screen, where a name would not fit in two lines under
+ * its picture (English "Plain background" at 320 dp), two by two with wider pictures.
+ */
 @Composable
 private fun SceneTiles(client: ClientSettings, hasPicture: Boolean, onPick: (String) -> Unit) {
     val scenes =
@@ -157,41 +165,87 @@ private fun SceneTiles(client: ClientSettings, hasPicture: Boolean, onPick: (Str
             "none" to R.string.ui_scene_none,
             "image" to R.string.ui_scene_image,
         )
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        scenes.forEach { (scene, label) ->
-            val chosen = client.scene == scene && (scene != "image" || hasPicture)
-            val shape = RoundedCornerShape(12.dp)
-            Column(
-                Modifier.weight(1f)
-                    .fluidClickable(role = Role.RadioButton) { onPick(scene) }
-                    .testTag("scene-$scene")
-                    .semantics { selected = chosen },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                SceneArt(
-                    client,
-                    Modifier.fillMaxWidth()
-                        .aspectRatio(.75f)
-                        .clip(shape)
-                        .border(
-                            if (chosen) 2.5.dp else .5.dp,
-                            if (chosen) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outlineVariant,
-                            shape,
-                        ),
-                    scene,
-                )
-                Text(
-                    tr(label),
-                    style = MaterialTheme.typography.labelMedium.onPage(),
-                    color = if (chosen) pageInk().accent else pageInk().muted,
-                    // Longer names ("Ocean and waves") wrap rather than being cut off.
-                    maxLines = 2,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                )
+    val labels = scenes.map { tr(it.second) }
+    val style = MaterialTheme.typography.labelMedium.onPage()
+    val measurer = rememberTextMeasurer()
+    val gap = 10.dp
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val oneRow = with(LocalDensity.current) { ((maxWidth - gap * 3) / 4).roundToPx() }
+        val fits =
+            remember(labels, style, oneRow) {
+                labels.all {
+                    measurer
+                        .measure(
+                            it,
+                            style,
+                            constraints = Constraints(maxWidth = oneRow.coerceAtLeast(0)),
+                        )
+                        .lineCount <= 2
+                }
+            }
+        val columns = if (fits) scenes.size else 2
+        Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+            scenes.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                    row.forEach { (scene, label) ->
+                        SceneTile(
+                            client,
+                            scene,
+                            tr(label),
+                            client.scene == scene && (scene != "image" || hasPicture),
+                            if (fits) .75f else 1.6f,
+                            Modifier.weight(1f),
+                        ) {
+                            onPick(scene)
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+@Suppress("LongParameterList") // One tile: its scene, name, state, shape and callback.
+@Composable
+private fun SceneTile(
+    client: ClientSettings,
+    scene: String,
+    label: String,
+    chosen: Boolean,
+    aspect: Float,
+    modifier: Modifier,
+    onPick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(12.dp)
+    Column(
+        modifier
+            .fluidClickable(role = Role.RadioButton, onClick = onPick)
+            .testTag("scene-$scene")
+            .semantics { selected = chosen },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        SceneArt(
+            client,
+            Modifier.fillMaxWidth()
+                .aspectRatio(aspect)
+                .clip(shape)
+                .border(
+                    if (chosen) 2.5.dp else .5.dp,
+                    if (chosen) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.outlineVariant,
+                    shape,
+                ),
+            scene,
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium.onPage(),
+            color = if (chosen) pageInk().accent else pageInk().muted,
+            // Longer names ("Ocean and waves") wrap rather than being cut off.
+            maxLines = 2,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
     }
 }
 

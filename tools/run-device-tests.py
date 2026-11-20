@@ -14,11 +14,15 @@ Progress is saved after every class: --resume skips classes that already passed 
 Validation is tools/android_test_inventory.py's: every expected test must report, and the only
 accepted skip is the API-33+ ocean shader on older platforms. Install the APKs first (--install
 installs the current debug build). Results go to .tools/test-results/<tag>-<Class>.txt.
+
+--screen 320x640@160 runs on the screen GitHub CI's emulator has (its AVD has no hardware
+profile, so 320 dp wide instead of the local 360 or 411 dp); the size is reset afterwards.
 """
 import argparse
 import json
 import os
 import pathlib
+import re
 import subprocess
 import sys
 import time
@@ -77,6 +81,7 @@ class Device:
         self.serial = f'emulator-{self.port}'
         self.process = None
         self.restarts = 0
+        self.screen = None
 
     def adb(self, *args, timeout=120):
         try:
@@ -155,6 +160,10 @@ class Device:
         self.adb('shell', 'settings', 'put', 'global', 'private_dns_mode', 'off')
         self.adb('shell', 'settings', 'put', 'system', 'font_scale', '1.0')
         self.adb('shell', 'cmd', 'uimode', 'night', 'no')
+        if self.screen:
+            size, density = self.screen.split('@')
+            self.adb('shell', 'wm', 'size', size)
+            self.adb('shell', 'wm', 'density', density)
         self.adb('shell', 'input', 'keyevent', '3')
 
 
@@ -229,8 +238,11 @@ def main():
     parser.add_argument('--resume', action='store_true', help='skip classes already passed')
     parser.add_argument('--install', action='store_true', help='install the debug APKs first')
     parser.add_argument('--keep', action='store_true', help='leave the emulator running')
+    parser.add_argument('--screen', help='screen as WxH@DPI, e.g. 320x640@160 (the CI screen)')
     parser.add_argument('classes', nargs='*', help='run only these classes')
     args = parser.parse_args()
+    if args.screen and not re.fullmatch(r'\d{3,4}x\d{3,4}@\d{2,3}', args.screen):
+        parser.error('--screen takes WxH@DPI, e.g. 320x640@160')
 
     OUT.mkdir(parents=True, exist_ok=True)
     summary_path = OUT / f'{args.tag}-summary.json'
@@ -248,6 +260,7 @@ def main():
         wanted = [w for w in wanted if w[0].rsplit('.', 1)[1] in set(args.classes)]
 
     device = Device(args.api)
+    device.screen = args.screen
     started_here = False
     if not device.alive():
         device.start()
@@ -298,6 +311,9 @@ def main():
             fixture.wait(10)
         except subprocess.TimeoutExpired:
             fixture.kill()
+        if args.screen and device.alive():
+            device.adb('shell', 'wm', 'size', 'reset')
+            device.adb('shell', 'wm', 'density', 'reset')
         if started_here and not args.keep:
             device.stop()
     rows = [summary[n.rsplit('.', 1)[1]] for n, _ in wanted if n.rsplit('.', 1)[1] in summary]

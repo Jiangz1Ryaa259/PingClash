@@ -168,7 +168,11 @@ class InteractionUpgradeTest {
     @Test
     fun invalidLinksNeverDownloadAndTheHostIsShownBeforeTheOneTap() {
         var submits = 0
-        fixture { ImportDialog(AppUiState(), {}, onSubmit = { _, _, _ -> submits++ }) }
+        // ProfileImportActivity shows the form on its own, without the main navigation bar over
+        // it: framed, the bar covered the submit button once a 320 dp screen scrolled it down.
+        fixture(framed = false) {
+            ImportDialog(AppUiState(), {}, onSubmit = { _, _, _ -> submits++ })
+        }
         compose
             .onNodeWithTag("subscription-content")
             .performTextInput("http://fixture.invalid/feed")
@@ -250,7 +254,10 @@ class InteractionUpgradeTest {
             quota = SubscriptionQuota(10, 20, 100, 1800000000),
         )
 
-    private fun fixture(content: @androidx.compose.runtime.Composable () -> Unit) {
+    private fun fixture(
+        framed: Boolean = true,
+        content: @androidx.compose.runtime.Composable () -> Unit,
+    ) {
         compose.runOnUiThread {
             compose.activity.setContent {
                 PingClashTheme("light") {
@@ -258,7 +265,7 @@ class InteractionUpgradeTest {
                         LocalAllowLanyardThree provides false,
                         LocalMotionAllowed provides false,
                     ) {
-                        ScenicFrame(0, "none", true, {}) { content() }
+                        if (framed) ScenicFrame(0, "none", true, {}) { content() } else content()
                     }
                 }
             }

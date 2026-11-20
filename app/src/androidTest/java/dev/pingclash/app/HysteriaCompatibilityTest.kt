@@ -148,7 +148,10 @@ class HysteriaCompatibilityTest {
             }
             assertEquals("established", VpnRuntime.state.value.phase)
             // Settings > Connection diagnostics > Check a domain or IP manually, while the VPN
-            // carries this app: the check goes around the tunnel on the real network.
+            // carries this app: the check goes around the tunnel on the real network, where the
+            // fixture is the emulator's host loopback. Its host name exists only on the fixture's
+            // resolver behind HY2; a host DNS that answers every name (a fake-IP proxy) once
+            // made that name look resolvable here, and GitHub's runner rightly could not.
             val auxiliary =
                 dev.pingclash.diagnostics
                     .DiagnosticEngine(
@@ -157,7 +160,7 @@ class HysteriaCompatibilityTest {
                     )
                     .run(
                         dev.pingclash.diagnostics.Models.Request(
-                            host,
+                            "10.0.2.2",
                             httpPort,
                             false,
                             "",
@@ -171,6 +174,13 @@ class HysteriaCompatibilityTest {
                 auxiliary.steps.none {
                     it.state != dev.pingclash.diagnostics.Models.State.PASSED &&
                         it.state != dev.pingclash.diagnostics.Models.State.SKIPPED
+                },
+            )
+            assertTrue(
+                "Manual check did not reach the fixture: ${auxiliary.steps.map { "${it.stage}:${it.state}" }}",
+                auxiliary.steps.any {
+                    it.stage == dev.pingclash.diagnostics.Models.Stage.TCP &&
+                        it.state == dev.pingclash.diagnostics.Models.State.PASSED
                 },
             )
             val completed = CountDownLatch(1)

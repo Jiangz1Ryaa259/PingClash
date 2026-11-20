@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package dev.pingclash.app
 
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.json.JSONObject
@@ -192,10 +195,10 @@ class ServiceRoutingTest {
             compose.onNodeWithTag("choice-${tr(R.string.ad_blocking)}-$BLOCKING_ADS").performClick()
             compose.waitUntil(5000) { repo.data.value.client.blocking == BLOCKING_ADS }
             compose.onNodeWithTag("routing-region-UK").performScrollTo().performClick()
-            compose.onNodeWithTag("route-bbc-direct").performClick()
+            serviceRow("route-bbc-direct").performClick()
             compose.waitUntil(5000) { repo.data.value.client.serviceRoutes["bbc"] == ROUTE_DIRECT }
             compose.onNodeWithTag("routing-region-AI").performScrollTo().performClick()
-            compose.onNodeWithTag("route-claude-proxy").performClick()
+            serviceRow("route-claude-proxy").performClick()
             compose.waitUntil(5000) {
                 repo.data.value.client.serviceRoutes["claude"] == ROUTE_PROXY
             }
@@ -251,7 +254,7 @@ class ServiceRoutingTest {
             compose.onNodeWithTag("settings-routing").performScrollTo().performClick()
             compose.waitForIdle()
             compose.onNodeWithTag("routing-region-US").performScrollTo().performClick()
-            compose.onNodeWithTag("route-netflix-group").performClick()
+            serviceRow("route-netflix-group").performClick()
             val device =
                 androidx.test.uiautomator.UiDevice.getInstance(
                     InstrumentationRegistry.getInstrumentation()
@@ -262,7 +265,7 @@ class ServiceRoutingTest {
                 repo.data.value.client.serviceRoutes["netflix"] == groupRoute(group)
             }
             // The segmented choice still reads Proxy, and the core accepts the rule.
-            compose.onNodeWithTag("route-netflix-group").assertIsDisplayed()
+            serviceRow("route-netflix-group").assertIsDisplayed()
             captureSyntheticFixture(compose, device, "routing-group-row.png")
             val client = repo.data.value.client
             repo.clientSettings(client, before.dnsAddress, before.probeUrl)
@@ -273,7 +276,7 @@ class ServiceRoutingTest {
                     .toString()
             assertTrue(rules, rules.contains("GEOSITE,NETFLIX,$group"))
             // Back to the main proxy from the same list.
-            compose.onNodeWithTag("route-netflix-group").performClick()
+            serviceRow("route-netflix-group").performClick()
             compose.onNodeWithTag("route-group-${tr(R.string.routing_main_proxy)}").performClick()
             compose.waitUntil(5000) {
                 repo.data.value.client.serviceRoutes["netflix"] == ROUTE_PROXY
@@ -303,5 +306,14 @@ class ServiceRoutingTest {
         assertEquals(ServiceRegion.TAIWAN, homeRegion("TW", "zh"))
         assertEquals(ServiceRegion.MAINLAND, regionOrder(homeRegion("CN", "zh")).first())
         assertEquals(ServiceRegion.US, regionOrder(homeRegion("DE", "de")).first())
+    }
+
+    /**
+     * A control in the service list, scrolled into view first as a user would: on a short screen
+     * (GitHub CI's 320 x 640 dp emulator) the list shows about one row.
+     */
+    private fun serviceRow(tag: String): SemanticsNodeInteraction {
+        compose.onNodeWithTag("routing-list").performScrollToNode(hasTestTag(tag))
+        return compose.onNodeWithTag(tag)
     }
 }

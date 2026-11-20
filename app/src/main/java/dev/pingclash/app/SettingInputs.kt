@@ -7,6 +7,8 @@ package dev.pingclash.app
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -42,7 +45,9 @@ import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
@@ -209,7 +214,8 @@ private fun done(focus: FocusManager) = focus.clearFocus()
 
 /**
  * A text setting as one row: the name on the left and the value typed in place on the right, in
- * grey until focused. Empty shows [placeholder].
+ * grey until focused. Empty shows [placeholder]. When the name needs more than two lines beside the
+ * value, as a long translation on a narrow screen does, the value goes under the name.
  */
 @Composable
 internal fun TextFieldRow(
@@ -219,43 +225,86 @@ internal fun TextFieldRow(
     placeholder: String = "",
     onChange: (String) -> Unit,
 ) {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.bodyLarge
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val gap = 12.dp
+        val titleWidth = with(LocalDensity.current) { ((maxWidth - gap) * TITLE_SHARE).roundToPx() }
+        val beside =
+            remember(title, style, titleWidth) {
+                measurer
+                    .measure(
+                        title,
+                        style,
+                        constraints = Constraints(maxWidth = titleWidth.coerceAtLeast(0)),
+                    )
+                    .lineCount <= 2
+            }
+        if (beside)
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 50.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(gap),
+            ) {
+                Text(title, Modifier.weight(TITLE_SHARE), style = style, maxLines = 2)
+                Box(Modifier.weight(1 - TITLE_SHARE), contentAlignment = Alignment.CenterEnd) {
+                    TextFieldValue(title, value, enabled, placeholder, TextAlign.End, onChange)
+                }
+            }
+        else
+            Column(
+                Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(title, style = style)
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                    TextFieldValue(title, value, enabled, placeholder, TextAlign.Start, onChange)
+                }
+            }
+    }
+}
+
+private const val TITLE_SHARE = .45f
+
+/** The typed value of a [TextFieldRow], with its placeholder while empty and unfocused. */
+@Suppress("LongParameterList") // The row's own parameters, plus which side the text sits on.
+@Composable
+private fun TextFieldValue(
+    title: String,
+    value: String,
+    enabled: Boolean,
+    placeholder: String,
+    align: TextAlign,
+    onChange: (String) -> Unit,
+) {
     var focused by remember { mutableStateOf(false) }
     val focus = LocalFocusManager.current
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 50.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(title, Modifier.weight(.45f), style = MaterialTheme.typography.bodyLarge, maxLines = 2)
-        Box(Modifier.weight(.55f), contentAlignment = Alignment.CenterEnd) {
-            if (value.isEmpty() && !focused)
-                Text(
-                    placeholder,
-                    color = Muted.copy(alpha = .6f),
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                )
-            BasicTextField(
-                value,
-                onChange,
-                Modifier.fillMaxWidth()
-                    .testTag("field-$title")
-                    .semantics { contentDescription = title }
-                    .onFocusChanged { focused = it.isFocused },
-                enabled = enabled,
-                singleLine = true,
-                textStyle =
-                    MaterialTheme.typography.bodyLarge.copy(
-                        color = if (focused) MaterialTheme.colorScheme.onSurface else Muted,
-                        textAlign = TextAlign.End,
-                    ),
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                keyboardOptions =
-                    KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { done(focus) }),
-            )
-        }
-    }
+    if (value.isEmpty() && !focused)
+        Text(
+            placeholder,
+            color = Muted.copy(alpha = .6f),
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 1,
+        )
+    BasicTextField(
+        value,
+        onChange,
+        Modifier.fillMaxWidth()
+            .testTag("field-$title")
+            .semantics { contentDescription = title }
+            .onFocusChanged { focused = it.isFocused },
+        enabled = enabled,
+        singleLine = true,
+        textStyle =
+            MaterialTheme.typography.bodyLarge.copy(
+                color = if (focused) MaterialTheme.colorScheme.onSurface else Muted,
+                textAlign = align,
+            ),
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        keyboardOptions =
+            KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { done(focus) }),
+    )
 }
 
 /** Plain text edited at full width inside a group, such as rule lists. */
