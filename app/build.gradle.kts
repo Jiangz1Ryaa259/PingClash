@@ -13,8 +13,8 @@ android {
         applicationId = "dev.pingclash.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 183
-        versionName = "0.2.5"
+        versionCode = 184
+        versionName = "0.2.6"
         // Marks first-run setup done before the app starts, so tests open on the app itself.
         testInstrumentationRunner = "dev.pingclash.app.PingClashTestRunner"
         testProguardFiles("proguard-test-rules.pro")

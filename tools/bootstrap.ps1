@@ -5,10 +5,10 @@ $tools=Join-Path $projectRoot '.tools'
 $go=Join-Path $tools 'go\bin\go.exe'
 New-Item -ItemType Directory -Path (Join-Path $tools 'downloads') -Force|Out-Null
 if(-not(Test-Path -LiteralPath $go)){
-    $zip=Join-Path $tools 'downloads\go1.27.3.windows-amd64.zip'
-    & curl.exe --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --ssl-revoke-best-effort --connect-timeout 10 --max-time 300 --retry 3 --retry-all-errors --retry-max-time 900 --retry-delay 1 --output $zip 'https://go.dev/dl/go1.27.3.windows-amd64.zip'
+    $zip=Join-Path $tools 'downloads\go1.27.4.windows-amd64.zip'
+    & curl.exe --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --ssl-revoke-best-effort --connect-timeout 10 --max-time 300 --retry 3 --retry-all-errors --retry-max-time 900 --retry-delay 1 --output $zip 'https://go.dev/dl/go1.27.4.windows-amd64.zip'
     if($LASTEXITCODE -ne 0){throw 'Go download failed.'}
-    if((Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne 'f26081f438319757f8a1b46d7d0b2c5ec7583d4038e485e0aa725cfde7885fff'){throw 'Official Go archive checksum mismatch.'}
+    if((Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant() -ne '178ab98950ac69ab25069307dc6ade79f3816e414cce95b4da166a115cde1e7e'){throw 'Official Go archive checksum mismatch.'}
     if(Test-Path -LiteralPath (Join-Path $tools 'go')){throw 'Inspect the incomplete local Go directory before retrying.'}
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [IO.Compression.ZipFile]::ExtractToDirectory($zip,$tools)
