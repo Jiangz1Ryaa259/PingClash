@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -84,10 +83,10 @@ internal fun RoutingFeatureCard(onOpen: () -> Unit, onDismiss: () -> Unit) {
                     )
                     Text(tr(R.string.routing_feature_body), color = Muted)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onDismiss, Modifier.testTag("routing-feature-dismiss")) {
+                        GlassTextButton(onDismiss, Modifier.testTag("routing-feature-dismiss")) {
                             Text(tr(R.string.routing_feature_dismiss))
                         }
-                        TextButton(onOpen, Modifier.testTag("routing-feature-open")) {
+                        GlassTextButton(onOpen, Modifier.testTag("routing-feature-open")) {
                             Text(
                                 tr(R.string.routing_feature_open),
                                 fontWeight = FontWeight.SemiBold,

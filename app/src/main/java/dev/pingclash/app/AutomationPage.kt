@@ -6,6 +6,7 @@ import android.app.StatusBarManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 internal fun AutomationPage(s: SettingsDraft, editable: Boolean) {
     val draft = s.value
     val context = LocalContext.current
+    val askNotifications =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     SettingsSection(tr(R.string.ui_auto_group_start)) {
         SettingSwitch(tr(R.string.ui_auto_boot), draft.startOnBoot, editable) {
             s.change(draft.copy(startOnBoot = it))
@@ -54,6 +56,17 @@ internal fun AutomationPage(s: SettingsDraft, editable: Boolean) {
             editable,
         ) {
             s.change(draft.copy(subscriptionHours = it.toInt()))
+        }
+        RowDivider(underIcons = false)
+        SettingSwitch(tr(R.string.ui_auto_quota_reminder), draft.quotaReminder, editable) { on ->
+            s.change(draft.copy(quotaReminder = on))
+            if (
+                on &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+                        PackageManager.PERMISSION_GRANTED
+            )
+                askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
     WifiSections(s, editable)
@@ -158,7 +171,7 @@ private fun TrustedNetworkRow(name: String, editable: Boolean, onRemove: () -> U
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        TextButton(onRemove, enabled = editable) {
+        GlassTextButton(onRemove, enabled = editable) {
             Text(tr(R.string.ui_auto_remove), color = MaterialTheme.colorScheme.error)
         }
     }

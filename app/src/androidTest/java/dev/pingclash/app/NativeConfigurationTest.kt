@@ -18,6 +18,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import dev.pingclash.mobile.Mobile
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -150,7 +151,11 @@ class NativeConfigurationTest {
                         )
                     }
                     assertTrue(
-                        "Native path failed at ${result?.getString("stage")}",
+                        "Native path failed at ${result?.getString("stage")} on run ${it + 1}" +
+                            " (${result?.getString("error")}, intercepted ${fixture.intercepted.get()}," +
+                            " address ${result?.getString("address")}," +
+                            " dns ${fixture.dnsRequests.get()}, socks ${fixture.handshakes.get()}," +
+                            " target ${fixture.lastTarget}, core ${Mobile.vpnStatus()})",
                         result?.getBoolean("success") == true,
                     )
                     assertTrue(result?.getBoolean("serviceDenied") == true)
@@ -177,14 +182,41 @@ class NativeConfigurationTest {
     private fun awaitPowerControl() {
         // The peer activity returns asynchronously; wait for the resumed UI and
         // its actual enabled state before attempting the next user action.
+        try {
+            waitForPowerControl()
+        } catch (timeout: androidx.compose.ui.test.ComposeTimeoutException) {
+            val controls = compose.onAllNodesWithTag("vpn-power").fetchSemanticsNodes().size
+            val model =
+                androidx.lifecycle.ViewModelProvider(compose.activity)[AppViewModel::class.java]
+            val ui = model.ui.value
+            throw AssertionError(
+                "Power control not ready: ${compose.activity.lifecycle.currentState}, " +
+                    "$controls control(s), VPN ${VpnRuntime.state.value.phase}, busy ${ui.busy}, " +
+                    "native ${model.nativeReady}, load failed ${model.data.value.loadFailed}, " +
+                    "settings pending ${model.settingsPending.value}, message ${ui.message}, " +
+                    "seen $powerTrace",
+                timeout,
+            )
+        }
+    }
+
+    // What the wait saw, each change with the milliseconds since it began, for a failure message.
+    private val powerTrace = mutableListOf<String>()
+
+    private fun waitForPowerControl() {
+        val model = androidx.lifecycle.ViewModelProvider(compose.activity)[AppViewModel::class.java]
+        val started = System.currentTimeMillis()
+        powerTrace.clear()
         compose.waitUntil(15_000) {
-            compose.activity.lifecycle.currentState == androidx.lifecycle.Lifecycle.State.RESUMED &&
-                compose
-                    .onAllNodesWithTag("vpn-power")
-                    .fetchSemanticsNodes()
-                    .singleOrNull()
-                    ?.config
-                    ?.contains(SemanticsProperties.Disabled) == false
+            val nodes = compose.onAllNodesWithTag("vpn-power").fetchSemanticsNodes()
+            val disabled = nodes.singleOrNull()?.config?.contains(SemanticsProperties.Disabled)
+            val state = compose.activity.lifecycle.currentState
+            val seen =
+                "$state/${nodes.size}/disabled=$disabled/busy=${model.ui.value.busy}/" +
+                    VpnRuntime.state.value.phase
+            if (powerTrace.lastOrNull()?.substringAfter(' ') != seen)
+                powerTrace += "${System.currentTimeMillis() - started} $seen"
+            state == androidx.lifecycle.Lifecycle.State.RESUMED && disabled == false
         }
     }
 }

@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -80,9 +77,9 @@ internal fun PopUpChoice(
                     AppGlyph(PcIcon.ChevronDown, Modifier.size(16.dp), Muted)
                 }
             }
-            DropdownMenu(open, { open = false }, shape = RoundedCornerShape(16.dp)) {
+            GlassMenu(open, { open = false }) {
                 choices.forEach { (id, name) ->
-                    DropdownMenuItem(
+                    GlassMenuItem(
                         text = { Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                         onClick = {
                             open = false

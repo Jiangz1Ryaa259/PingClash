@@ -13,10 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -66,7 +64,7 @@ internal fun IssueNoticeHost(center: IssueNoticeCenter) {
             Modifier.align(AbsoluteAlignment.TopRight).statusBarsPadding().padding(12.dp),
         )
         expanded?.let { notice ->
-            AlertDialog(
+            GlassDialog(
                 onDismissRequest = { center.detail.value = null },
                 title = { Text(notice.title) },
                 properties =
@@ -93,7 +91,7 @@ internal fun IssueNoticeHost(center: IssueNoticeCenter) {
                     }
                 },
                 dismissButton = {
-                    TextButton(
+                    GlassTextButton(
                         { copied = copyIssueSummary(context, notice) },
                         Modifier.testTag("issue-copy"),
                     ) {
@@ -101,7 +99,7 @@ internal fun IssueNoticeHost(center: IssueNoticeCenter) {
                     }
                 },
                 confirmButton = {
-                    TextButton({ center.detail.value = null }) { Text(tr(R.string.close)) }
+                    GlassTextButton({ center.detail.value = null }) { Text(tr(R.string.close)) }
                 },
             )
         }

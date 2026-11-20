@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { adaptReference } from '../adapt.mjs';
 
 const original = (await readFile(new URL('../reference/Lanyard.jsx', import.meta.url), 'utf8')).replace(/\r\n/g, '\n');
-const adapted = await adaptReference();
+const adapted = await adaptReference({ write: false });
 const provenance = JSON.parse(await readFile(new URL('../reference.json', import.meta.url), 'utf8'));
 function section(source, name) {
   const start = source.indexOf(`const ${name} =`);

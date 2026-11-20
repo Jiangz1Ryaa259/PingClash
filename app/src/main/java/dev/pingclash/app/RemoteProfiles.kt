@@ -143,7 +143,8 @@ internal object RemoteProfiles {
                 } else pending += spec
             }
         }
-        ProviderDownloads(
+        val downloads =
+            ProviderDownloads(
                 ProviderFetchRequest(text, userAgent, deadline),
                 bodies to updated,
                 now,
@@ -151,8 +152,21 @@ internal object RemoteProfiles {
                 options.deferRules ||
                     previous?.bodies?.get(spec.getString("id")) == DEFERRED_PROVIDER_BODY
             }
-            .run(pending)
-        return PreparedRemoteProfile(resolve(text, bodies), RemoteProfile(text, bodies, updated))
+        downloads.run(pending)
+        // A later refresh that still cannot fetch a waiting rule provider records why and waits
+        // before the next try, instead of fetching it again at every pass of the coordinator.
+        val failed = downloads.failures.firstOrNull()?.takeUnless { options.deferRules }
+        val remote =
+            if (failed == null) RemoteProfile(text, bodies, updated)
+            else
+                RemoteProfile(
+                    text,
+                    bodies,
+                    updated,
+                    retryAfter = now + DEFERRED_RETRY_SECONDS,
+                    error = "${failed.index}:${failed.kind}:${failed.code}",
+                )
+        return PreparedRemoteProfile(resolve(text, bodies), remote)
     }
 
     fun due(remote: RemoteProfile, now: Long = Instant.now().epochSecond): Boolean {
@@ -173,6 +187,20 @@ internal const val MAX_REMOTE_PROVIDERS = 128
 
 /** Stored body of a rule provider deferred at import; the core resolves it to an empty set. */
 internal const val DEFERRED_PROVIDER_BODY = ""
+
+/** The failure saved as "index:kind:code" in [RemoteProfile.error]; null when there is none. */
+internal fun providerFailureRecord(record: String): ProviderFailure? {
+    if (record.isBlank()) return null
+    val parts = record.split(':')
+    return ProviderFailure(
+        parts.getOrNull(0)?.toIntOrNull() ?: 0,
+        parts.getOrNull(1).orEmpty(),
+        parts.getOrNull(2).orEmpty(),
+    )
+}
+
+/** How long a refresh waits after a rule provider that is still waiting failed again. */
+internal const val DEFERRED_RETRY_SECONDS = 15 * 60L
 
 private const val PARALLEL_PROVIDER_DOWNLOADS = 4
 
@@ -208,13 +236,16 @@ private class ProviderDownloads(
     private val updated = cache.second
     private val budget = ProviderCacheBudget()
 
+    /** Why rule providers were left waiting in this run, in the order they failed. */
+    val failures = mutableListOf<ProviderFailure>()
+
     fun run(pending: MutableList<JSONObject>) {
         bodies.values.forEach { budget.include(it, JSONObject().put("index", 0).put("kind", "")) }
         pending.sortBy { if (it.getString("kind") == "rule") 2 else if (direct(it)) 0 else 1 }
         while (pending.isNotEmpty()) {
             if (Thread.currentThread().isInterrupted) throw InterruptedException()
             if (System.nanoTime() >= request.deadline) {
-                pending.removeAll(::defer)
+                pending.removeAll(deferFor("provider_timeout"))
                 if (pending.isNotEmpty()) checkSubscriptionDeadline(request.deadline)
             } else {
                 // Evaluate both: proxied downloads can use proxy bodies fetched directly.
@@ -267,8 +298,18 @@ private class ProviderDownloads(
                 updated[spec.getString("id")] = now
                 budget.include(content, spec)
             },
-            { failure -> if (failure is InterruptedException || !defer(spec)) throw failure },
+            { failure ->
+                if (failure is InterruptedException || !defer(spec)) throw failure
+                failures +=
+                    failure as? ProviderFailure
+                        ?: ProviderFailure(spec.getInt("index"), "rule", "provider_payload")
+            },
         )
+    }
+
+    /** [defer], noting [code] as the reason when the provider is left waiting. */
+    private fun deferFor(code: String): (JSONObject) -> Boolean = { spec ->
+        defer(spec).also { if (it) failures += ProviderFailure(spec.getInt("index"), "rule", code) }
     }
 
     // Only rule providers may wait; a proxy provider is needed to build groups.
@@ -280,7 +321,7 @@ private class ProviderDownloads(
     }
 
     private fun stalled(pending: MutableList<JSONObject>) {
-        pending.removeAll(::defer)
+        pending.removeAll(deferFor("provider_proxy_unavailable"))
         val spec = pending.firstOrNull() ?: return
         throw ProviderFailure(
             spec.getInt("index"),

@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -165,7 +164,8 @@ internal fun BackgroundEditor(
                 .systemBarsPadding()
                 .testTag("background-editor")
         ) {
-            EditorTopBar(onCancel) { onDone(frame) }
+            // Done waits for the picture: before it is read, the frame would be a default one.
+            EditorTopBar(onCancel, ready = image != null) { onDone(frame) }
             EditorFrame(image, frame, Modifier.weight(1f), { box = it }) { pan, zoom ->
                 // Each touch event moves on from the latest edit, which may be newer than the
                 // frame this composition saw: several events can arrive between two frames.
@@ -185,12 +185,12 @@ internal fun BackgroundEditor(
 }
 
 @Composable
-private fun EditorTopBar(onCancel: () -> Unit, onDone: () -> Unit) {
+private fun EditorTopBar(onCancel: () -> Unit, ready: Boolean, onDone: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TextButton(onCancel, Modifier.testTag("background-cancel")) {
+        GlassTextButton(onCancel, Modifier.testTag("background-cancel")) {
             Text(tr(R.string.cancel), color = Color.White)
         }
         Text(
@@ -200,8 +200,12 @@ private fun EditorTopBar(onCancel: () -> Unit, onDone: () -> Unit) {
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
         )
-        TextButton(onDone, Modifier.testTag("background-done")) {
-            Text(tr(R.string.ui_done), color = Color(0xFF409CFF), fontWeight = FontWeight.SemiBold)
+        GlassTextButton(onDone, Modifier.testTag("background-done"), enabled = ready) {
+            Text(
+                tr(R.string.ui_done),
+                color = Color(0xFF409CFF).copy(alpha = if (ready) 1f else .4f),
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }

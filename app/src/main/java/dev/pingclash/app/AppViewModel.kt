@@ -19,10 +19,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.json.JSONObject
 
@@ -57,6 +60,8 @@ data class ProxyTestState(
     val values: Map<String, ProxyDelay> = emptyMap(),
     val tcpValues: Map<String, ProxyDelay> = emptyMap(),
     val aliases: Map<String, String> = emptyMap(),
+    /** Recent URL test results per node, in memory only ([plusResult]). */
+    val history: Map<String, List<Long>> = emptyMap(),
     val kind: String = "url",
 )
 
@@ -92,6 +97,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val memberTcpJobs = ConcurrentHashMap<String, Job>()
     private val tcpRuns = ConcurrentHashMap.newKeySet<RunControl>()
     private val testRuns = ConcurrentHashMap.newKeySet<String>()
+    /** Core delay batches of [testProxies], cancelled with the tests. */
+    private val batchRuns = ConcurrentHashMap.newKeySet<String>()
     @Volatile private var control: RunControl? = null
     @Volatile private var nativeRun: String? = null
 
@@ -107,6 +114,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     // A probe from a previous VPN session must not look like a live
                     // indication of the current system tunnel.
                     serviceChecks.cancel()
+                    unlockChecks.cancelAll()
                     invalidateProxyEnvironment()
                     cancelDiagnosis()
                 }
@@ -133,6 +141,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         values = state.values.filterKeys { delayStillValid(it, before, after) },
                         tcpValues =
                             state.tcpValues.filterKeys { delayStillValid(it, before, after) },
+                        history = state.history.filterKeys { delayStillValid(it, before, after) },
                     )
                 }
                 before = after
@@ -151,6 +160,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private val routingWriter = Dispatchers.IO.limitedParallelism(1)
+
     fun message(text: String, warning: Boolean = true) {
         mutableUi.update {
             it.copy(message = text, messageWarning = warning, messageStage = IssueStage.OPERATION)
@@ -164,6 +176,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             return message(tr(R.string.operation_in_progress), warning = false)
         mutableUi.update { it.copy(busy = true, message = null) }
         viewModelScope.launch(Dispatchers.IO) {
+            // Node choices made before this operation are saved first.
+            selections.awaitIdle()
             var warning = false
             var stage = IssueStage.OPERATION
             val message =
@@ -227,10 +241,35 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 } ?: tr(R.string.operation_incomplete_check_the_configurati)
         }
 
+    /** Settings > Connection diagnostics: every check in order, one conclusion. */
+    internal val doctor by lazy { ConnectionDoctor(viewModelScope, this) }
+
+    /** Settings > Service routing: whether a service works through its route, user-started. */
+    internal val unlockChecks by lazy { UnlockChecks(viewModelScope, app) }
+
     private val mutableExit = MutableStateFlow(ExitState())
     /** The address the internet sees from this phone right now; in memory only. */
     internal val exit = mutableExit.asStateFlow()
     private var exitJob: Job? = null
+    private var exitJobRoute: String? = null
+    @Volatile private var exitGeneration = 0
+
+    /**
+     * Whether to check the exit of [route] now. A check for that route already running goes on; one
+     * for a route since replaced gives way. Coming back to the app re-checks at most once a minute;
+     * the refresh button always does. Automatic checks never compete with latency tests or a
+     * diagnosis.
+     */
+    private fun exitCheckWanted(route: String, force: Boolean): Boolean {
+        val running = exitJob?.isActive == true
+        if (running && exitJobRoute == route) return false
+        if (running) exitJob?.cancel()
+        val last = mutableExit.value.info
+        val fresh =
+            last?.route == route && System.currentTimeMillis() - last.checkedAt < EXIT_FRESH_MS
+        val measuring = mutableProxyTests.value.running || mutableDiagnosis.value.running
+        return force || !(fresh || measuring)
+    }
 
     /**
      * Asks which address the internet sees, over the route traffic really takes now, and classifies
@@ -239,16 +278,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun refreshExit(force: Boolean = false) {
         val route = exitRoute(vpn.value, data.value)
-        if (!app.nativeReady || route == null || exitJob?.isActive == true) return
-        // Coming back to the app re-checks at most once a minute; the refresh button always does.
-        val last = mutableExit.value.info
-        val fresh =
-            last?.route == route && System.currentTimeMillis() - last.checkedAt < EXIT_FRESH_MS
-        // Automatic checks never compete with latency tests or a diagnosis.
-        val measuring = mutableProxyTests.value.running || mutableDiagnosis.value.running
-        if (!force && (fresh || measuring)) return
+        if (!app.nativeReady || route == null || !exitCheckWanted(route, force)) return
         val main = data.value.selected
         mutableExit.update { it.copy(checking = true) }
+        exitJobRoute = route
+        val generation = ++exitGeneration
         exitJob =
             viewModelScope.launch(Dispatchers.IO) {
                 val info =
@@ -266,12 +300,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         .getOrNull()
                         // The route changed while checking: this answer belongs to the old one.
                         ?.takeIf { exitRoute(vpn.value, data.value) == route }
-                mutableExit.update { previous ->
-                    ExitState(
-                        info ?: previous.info?.takeIf { it.route == route },
-                        checking = false,
-                        failed = info == null,
-                    )
+                // Only the latest check reports. An answer dropped because the route changed is
+                // not a failure, and no older route's details are kept.
+                if (generation == exitGeneration) {
+                    val unchanged = exitRoute(vpn.value, data.value) == route
+                    mutableExit.update { previous ->
+                        ExitState(
+                            info ?: previous.info?.takeIf { unchanged && it.route == route },
+                            checking = false,
+                            failed = info == null && unchanged,
+                        )
+                    }
                 }
             }
     }
@@ -476,6 +515,42 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         ""
     }
 
+    /** Proxies' node and group choices: shown at once, saved in order, latest tap per group. */
+    internal val selections by lazy {
+        SelectionQueue(
+            viewModelScope,
+            apply = { choice ->
+                val current = data.value
+                // A choice on a profile deleted or no longer active since is dropped quietly.
+                val stale =
+                    current.profiles.none { it.id == choice.profileId } ||
+                        choice.group.isEmpty() && current.activeProfileId != choice.profileId
+                val save: () -> Unit = {
+                    if (choice.group.isEmpty())
+                        app.repository.selectIn(choice.profileId, choice.value)
+                    else app.repository.selectGroup(choice.profileId, choice.group, choice.value)
+                }
+                if (stale) Unit
+                else if (vpn.value.stage == VpnPhase.ESTABLISHED) VpnRuntime.reconfigure(app, save)
+                else save()
+            },
+            failed = { failure ->
+                mutableUi.update {
+                    it.copy(
+                        message = publicFailure(failure),
+                        messageWarning = true,
+                        messageStage = failureStage(failure),
+                    )
+                }
+            },
+        )
+    }
+
+    /** Picks [choice] in [group] of [profile]; an empty group name is the main proxy's node id. */
+    fun choose(profile: LocalProfile, group: String, choice: String) {
+        if (app.nativeReady) selections.choose(SelectionQueue.Choice(profile.id, group, choice))
+    }
+
     fun select(id: String) = selection { app.repository.select(id) }
 
     fun activate(profileId: String) = selection { app.repository.activate(profileId) }
@@ -520,6 +595,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val settingsWrites = Channel<Pair<ClientSettings, ClientSettings>>(Channel.UNLIMITED)
     private val pendingSettings = MutableStateFlow(0)
     val settingsPending = pendingSettings.asStateFlow()
+    private val rejectedSettings =
+        kotlinx.coroutines.flow.MutableSharedFlow<Pair<ClientSettings, ClientSettings>>(
+            extraBufferCapacity = 8
+        )
+
+    /** Setting changes (before, after) that could not be saved; the page puts them back. */
+    val settingsRejected = rejectedSettings.asSharedFlow()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -530,6 +612,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     throw cancelled
                 } catch (failure: Exception) {
                     message(publicFailure(failure))
+                    rejectedSettings.tryEmit(before to after)
                 } finally {
                     pendingSettings.update { it - 1 }
                 }
@@ -549,9 +632,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /** Saves service routing and blocking; a connected VPN applies them at once. */
+    // Saving encrypts and writes the profile store: not on the main thread, and one save after
+    // another in the order asked, so a later choice is never overwritten by an earlier one.
     fun serviceRouting(routes: Map<String, String>, blocking: String) {
-        runCatching { app.repository.serviceRouting(routes, blocking) }
-            .onFailure { message(it.message ?: tr(R.string.vpn_update_failed)) }
+        viewModelScope.launch(routingWriter) {
+            runCatching { app.repository.serviceRouting(routes, blocking) }
+                .onFailure { message(it.message ?: tr(R.string.vpn_update_failed)) }
+        }
     }
 
     fun appearance(
@@ -616,7 +703,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         )
                     }
                 }
-                .onFailure { message(backgroundRejectionMessage(BackgroundRejection.UNREADABLE)) }
+                .onFailure {
+                    message(backgroundRejectionMessage(BackgroundRejection.UNREADABLE))
+                    // A picked picture that could not be kept is thrown away, not left staged.
+                    if (stagedBackground.value != null) {
+                        stagedBackground.value = null
+                        runCatching { CustomBackground.discard(app) }
+                    }
+                }
             editingBackground.value = false
         }
     }
@@ -695,10 +789,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Saves settings (and, when asked, profiles with their links) to a file the user chose. */
     fun exportBackup(uri: Uri, withProfiles: Boolean) = noticeOperation {
-        val bytes = SettingsBackup.export(data.value, withProfiles).toByteArray(Charsets.UTF_8)
+        val skipped = mutableListOf<String>()
+        val bytes =
+            SettingsBackup.export(data.value, withProfiles, skipped = skipped)
+                .toByteArray(Charsets.UTF_8)
         require(bytes.size <= SettingsBackup.MAX_BYTES)
         app.contentResolver.openOutputStream(uri, "wt")?.use { it.write(bytes) }
             ?: error("export_unavailable")
+        // Saved, but say so when a local profile could not go in.
+        if (skipped.isNotEmpty())
+            throw ProfileImportFailure(tr(R.string.ui_backup_saved_skipped, skipped.size))
         tr(if (withProfiles) R.string.ui_backup_saved_private else R.string.ui_backup_saved)
     }
 
@@ -724,17 +824,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun restoreProfiles(profiles: List<BackupProfile>): Pair<Int, Int> {
-        val present = data.value.profiles
         var added = 0
         var failed = 0
         profiles
-            .filterNot { entry ->
-                present.any {
-                    entry.subscription != null && it.source == entry.subscription ||
-                        entry.configuration != null && it.source == null && it.name == entry.name
-                }
-            }
+            .distinctBy { it.subscription ?: ("\u0000" + it.name) }
             .forEach { entry ->
+                // Checked against the profiles as they are now, those just restored included.
+                if (entry.presentIn(data.value.profiles)) return@forEach
                 runCatching {
                         val link = entry.subscription
                         if (link != null) {
@@ -766,6 +862,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             return message(tr(R.string.operation_in_progress), warning = false)
         mutableUi.update { it.copy(busy = true, message = null) }
         viewModelScope.launch(Dispatchers.IO) {
+            // As in [operation]: node choices made before are saved first (a backup takes them).
+            selections.awaitIdle()
             val (text, warning) =
                 try {
                     block() to false
@@ -783,7 +881,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun testProxies(profile: LocalProfile, names: List<String>, groupName: String = "") {
+    /** Starts a latency test of [names]; false when another test, operation or diagnosis runs. */
+    @Suppress("ReturnCount") // A guard, an empty plan and the started test each answer.
+    fun testProxies(profile: LocalProfile, names: List<String>, groupName: String = ""): Boolean {
         if (
             !app.nativeReady ||
                 testJob?.isCompleted == false ||
@@ -791,7 +891,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 mutableUi.value.busy ||
                 mutableDiagnosis.value.running
         )
-            return
+            return false
         proxyEnvironment = currentProxyEnvironment()
         // Keep only names in the queue. A profile definition may be 2 MiB;
         // materializing an envelope for every member would multiply that by 500.
@@ -806,7 +906,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     values = it.values + plan.summaryValues(emptyMap(), false),
                 )
             }
-            return
+            return true
         }
         val version = proxyVersion
         val settings = data.value.client
@@ -865,93 +965,27 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 try {
-                    val retry = ConcurrentHashMap.newKeySet<String>()
-                    // Early exits reject unavailable configuration/reservations and defer failed
-                    // scans.
-                    @Suppress("ReturnCount")
-                    fun runProbe(name: String, timeout: Int, finalAttempt: Boolean) {
-                        val key = plan.key(name)
-                        val config = profile.proxyConfig(name)
-                        if (config == null) {
-                            val result = ProxyDelay("failed")
-                            results[name] = result
-                            pending[key] = result
-                            completed.incrementAndGet()
-                            return
-                        }
-                        val id = UUID.randomUUID().toString()
-                        if (!Mobile.prepareProbe(id, timeout + 1000L)) {
-                            completed.incrementAndGet()
-                            val result = ProxyDelay("busy")
-                            results[name] = result
-                            pending[key] = result
-                            return
-                        }
-                        testRuns.add(id)
-                        try {
-                            if (proxyVersion != version || !mutableProxyTests.value.running) {
-                                Mobile.cancel(id)
-                                return
-                            }
-                            results[name] = ProxyDelay("running")
-                            pending[key] = ProxyDelay("running")
-                            val reply =
-                                JSONObject(
-                                    Mobile.probeDelay(
-                                        config,
-                                        target,
-                                        id,
-                                        timeout.toLong(),
-                                        settings.unifiedDelay,
-                                    )
-                                )
-                            if (proxyVersion == version && mutableProxyTests.value.running) {
-                                val state =
-                                    when (reply.optString("code")) {
-                                        "proxy_delay_measured" -> "passed"
-                                        "cancelled" -> "idle"
-                                        "timeout_stage_unknown",
-                                        "proxy_channel_timeout",
-                                        "proxy_quic_handshake_timeout" -> "timeout"
-                                        else -> "failed"
-                                    }
-                                if (state in setOf("failed", "timeout") && !finalAttempt) {
-                                    retry.add(name)
-                                    val queued = ProxyDelay("queued")
-                                    results[name] = queued
-                                    pending[key] = queued
-                                    return
-                                }
-                                completed.incrementAndGet()
-                                val result = ProxyDelay(state, reply.optLong("elapsedMs"))
-                                results[name] = result
-                                pending[key] = result
-                            }
-                        } finally {
-                            testRuns.remove(id)
-                            Mobile.discardProbe(id)
-                        }
+                    val batch =
+                        DelayBatchRun(
+                            profile,
+                            target,
+                            settings,
+                            { mutableProxyTests.value.running && proxyVersion == version },
+                            batchRuns,
+                        )
+                    fun publish(name: String, result: ProxyDelay) {
+                        if (proxyVersion != version || !mutableProxyTests.value.running) return
+                        if (result.state != "queued") completed.incrementAndGet()
+                        results[name] = result
+                        pending[plan.key(name)] = result
                     }
+                    // A short pass first, so working nodes show at once; only timeouts get a
+                    // second pass at the full timeout. A refused or failed node is final.
                     val fastTimeout = minOf(settings.probeTimeout, FAST_SCAN_TIMEOUT)
                     val fast = fastTimeout < settings.probeTimeout
-                    runDelayPlan(
-                        plan,
-                        settings.probeConcurrency.coerceAtMost(MAX_BATCH_DELAY_WORKERS),
-                        { mutableProxyTests.value.running && proxyVersion == version },
-                    ) {
-                        runProbe(it, fastTimeout, !fast)
-                    }
-                    if (fast && retry.isNotEmpty()) {
-                        val retryPlan =
-                            ProxyDelayPlan(profile, plan.names.filter { it in retry }, groupName)
-                        runDelayPlan(
-                            retryPlan,
-                            settings.probeConcurrency.coerceAtMost(MAX_BATCH_DELAY_WORKERS),
-                            { mutableProxyTests.value.running && proxyVersion == version },
-                        ) {
-                            runProbe(it, settings.probeTimeout, true)
-                        }
-                    }
+                    val again = batch.measure(plan.names, fastTimeout, !fast, ::publish)
+                    if (fast && again.isNotEmpty())
+                        batch.measure(again, settings.probeTimeout, true, ::publish)
                 } finally {
                     updates.cancel()
                     synchronized(flushLock) {
@@ -964,15 +998,26 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                                         it.values.filterValues { v ->
                                             v.state !in setOf("running", "queued")
                                         } + plan.summaryValues(results, false),
+                                    history = it.history + plan.historyEntries(it.history, results),
                                 )
                             else it
                         }
                     }
                 }
             }
+        return true
     }
 
-    fun testTcpProxies(profile: LocalProfile, names: List<String>, groupName: String = "") {
+    /**
+     * TCP-connects to each of [names]; a nested group in [exits] is measured through the node it
+     * uses now, its result kept under the group's own name.
+     */
+    fun testTcpProxies(
+        profile: LocalProfile,
+        names: List<String>,
+        groupName: String = "",
+        exits: Map<String, String> = emptyMap(),
+    ) {
         if (testJob?.isCompleted == false || mutableUi.value.busy || mutableDiagnosis.value.running)
             return
         proxyEnvironment = currentProxyEnvironment()
@@ -1007,7 +1052,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
                 try {
-                    List(settings.probeConcurrency.coerceIn(1, 16)) {
+                    List(settings.probeConcurrency.coerceIn(1, MAX_TCP_WORKERS)) {
                             async {
                                 while (mutableProxyTests.value.running && proxyVersion == version) {
                                     val index = queue.getAndIncrement()
@@ -1028,7 +1073,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                                         val result =
                                             TcpLatencyProbe.run(
                                                 app,
-                                                profile.nodes.firstOrNull { it.name == name },
+                                                profile.nodes.firstOrNull {
+                                                    it.name == (exits[name] ?: name)
+                                                },
                                                 settings.probeTimeout,
                                                 run,
                                             )
@@ -1048,7 +1095,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         }
                         .awaitAll()
                 } finally {
-                    updates.cancel()
+                    // The flusher is stopped and waited for first, so the last results cannot be
+                    // dropped by its update landing after "not running".
+                    withContext(NonCancellable) { updates.cancelAndJoin() }
                     flush()
                     mutableProxyTests.update {
                         if (proxyVersion == version)
@@ -1105,6 +1154,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         proxyGeneration.incrementAndGet()
         val sockets = tcpRuns.snapshot()
         val native = testRuns.snapshot()
+        val batches = batchRuns.snapshot()
         val batch = testJob
         testJob = null
         batch?.cancel()
@@ -1127,6 +1177,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO + NonCancellable) {
             sockets.forEach { it.cancel() }
             native.forEach { Mobile.cancel(it) }
+            batches.forEach { Mobile.cancelDelayBatch(it) }
         }
     }
 
@@ -1153,27 +1204,21 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun diagnose() = diagnoseSnapshot(data.value)
 
-    fun diagnoseTarget(profileId: String, name: String, groupName: String = "") {
-        val snapshot = data.value
-        val profile =
-            snapshot.activeProfile?.takeIf {
-                it.id == profileId &&
-                    mutableProxyTests.value.memberFinished(profileId, name, groupName)
-            } ?: return
+    /** Runs the connection doctor on [name] of the active profile instead of the main proxy. */
+    fun doctorFor(profileId: String, name: String) {
+        val profile = data.value.activeProfile?.takeIf { it.id == profileId } ?: return
         val id =
             profile.nodes.firstOrNull { it.name == name }?.id
                 ?: profile.groups
                     .firstOrNull { it.name == name && it.supported }
                     ?.let { profile.groupId(it.name) }
                 ?: return
-        diagnoseSnapshot(snapshot.copy(selectedId = id), allowDuringTests = true)
+        doctor.start(id)
     }
 
-    fun repeatDiagnosis() =
-        diagnoseSnapshot(
-            data.value.copy(selectedId = mutableDiagnosis.value.nodeId ?: data.value.selectedId),
-            allowDuringTests = true,
-        )
+    /** A diagnosis of [snapshot]'s selected node; the doctor uses it for another target. */
+    internal fun diagnoseData(snapshot: AppData) =
+        diagnoseSnapshot(snapshot, allowDuringTests = true)
 
     private fun diagnoseSnapshot(snapshot: AppData, allowDuringTests: Boolean = false) {
         val node = snapshot.selected ?: return message(tr(R.string.import_and_choose_a_proxy_first))
@@ -1416,12 +1461,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 Mobile.discardProbe(runID)
                 control = null
                 nativeRun = null
+                // A profile switched or deleted meanwhile no longer has this node: the page then
+                // starts clean on the current one instead of looking for the old node.
                 mutableDiagnosis.value =
-                    DiagnosticUiState(
-                        steps = report?.steps.orEmpty(),
-                        report = report,
-                        nodeId = node.id,
-                    )
+                    if (data.value.activeProfile?.containsTarget(node.id) != true)
+                        DiagnosticUiState()
+                    else
+                        DiagnosticUiState(
+                            steps = report?.steps.orEmpty(),
+                            report = report,
+                            nodeId = node.id,
+                        )
             }
         }
     }
@@ -1472,7 +1522,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun cancelDiagnosis() {
         val current = control
         val id = nativeRun
-        viewModelScope.launch(Dispatchers.IO) {
+        // Not in viewModelScope: onCleared cancels that before this would run.
+        CleanupScope.launch {
             current?.cancel()
             if (id != null) Mobile.cancel(id)
         }
@@ -1480,10 +1531,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private companion object {
         const val FAST_SCAN_TIMEOUT = 2500
-        const val MAX_BATCH_DELAY_WORKERS = 15
+        /** TCP checks are app sockets, not core batches; they keep the earlier ceiling. */
+        const val MAX_TCP_WORKERS = 16
     }
 
     override fun onCleared() {
+        doctor.cancel()
         serviceChecks.close()
         cancelProxyTests()
         cancelDiagnosis()

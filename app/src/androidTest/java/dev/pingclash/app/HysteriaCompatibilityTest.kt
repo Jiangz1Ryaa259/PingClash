@@ -103,8 +103,10 @@ class HysteriaCompatibilityTest {
             compose.onNodeWithTag("nav-1").performClick()
             compose.onNodeWithText("证书校验：按配置跳过").assertDoesNotExist()
             compose.onNodeWithText("节点证书未验证", substring = true).assertDoesNotExist()
+            compose.openProxyGroup("主代理回归")
             compose.onNodeWithTag("group-choice-主代理回归-HY2 自签回归").assertIsDisplayed()
             captureSyntheticFixture(compose, device, "node-policy-light.png")
+            compose.closeProxyGroup()
             app.repository.select(profile.groupId("主代理回归"))
             assertEquals("group", ProfileRepository(app).data.value.selected?.type)
             assertEquals(

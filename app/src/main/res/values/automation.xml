@@ -45,5 +45,6 @@
     <string name="ui_backup_saved_private">Backed up. The file contains subscription links and passwords; keep it private.</string>
     <string name="ui_backup_restored">Settings restored.</string>
     <string name="ui_backup_restored_profiles">Settings restored and %1$d profile(s) added.</string>
+    <string name="ui_backup_saved_skipped">Backed up, but %1$d local profile(s) could not be included.</string>
     <string name="ui_backup_restored_partly">Settings restored and %1$d profile(s) added; %2$d could not be added.</string>
 </resources>

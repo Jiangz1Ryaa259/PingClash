@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -133,7 +132,7 @@ private fun ColumnScope.LanguageStep(data: AppData, model: AppViewModel, onNext:
     StepFrame(
         tr(R.string.setup_language_title),
         {
-            Button(onNext, Modifier.testTag("setup-next"), enabled = chosen.isNotEmpty()) {
+            GlassButton(onNext, Modifier.testTag("setup-next"), enabled = chosen.isNotEmpty()) {
                 Text(tr(R.string.setup_next), fontWeight = FontWeight.SemiBold)
             }
         },

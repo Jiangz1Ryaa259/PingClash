@@ -22,10 +22,13 @@ type nativeUDPBridge struct {
 	record              *connectionRecord
 	timer               *time.Timer
 	closed              atomic.Bool
-	once                sync.Once
-	ownerOnce           sync.Once
-	uid                 uint32
-	process             string
+	// Held for reading while a packet is handed to the tunnel, for writing while closing, so no
+	// packet is handed over once the bridge has started to close.
+	handing   sync.RWMutex
+	once      sync.Once
+	ownerOnce sync.Once
+	uid       uint32
+	process   string
 }
 
 func (s *vpnSession) nativePacket(data []byte, flow M.Metadata, writer N.PacketWriter) {
@@ -71,6 +74,8 @@ func (s *vpnSession) nativePacket(data []byte, flow M.Metadata, writer N.PacketW
 		bridge.timer.Reset(2 * time.Minute)
 	}
 	root.mu.Unlock()
+	bridge.handing.RLock()
+	defer bridge.handing.RUnlock()
 	if bridge.closed.Load() {
 		return
 	}
@@ -88,7 +93,9 @@ func (s *vpnSession) nativePacket(data []byte, flow M.Metadata, writer N.PacketW
 }
 func (b *nativeUDPBridge) Close() error {
 	b.once.Do(func() {
+		b.handing.Lock()
 		b.closed.Store(true)
+		b.handing.Unlock()
 		b.root.mu.Lock()
 		if b.timer != nil {
 			b.timer.Stop()
@@ -99,13 +106,10 @@ func (b *nativeUDPBridge) Close() error {
 		delete(b.root.connections, b.record.id)
 		delete(b.root.resources, b)
 		b.root.mu.Unlock()
-		statistic.DefaultManager.Range(func(tracker statistic.Tracker) bool {
-			m := tracker.Info().Metadata
-			if m.Type == C.TUN && m.NetWork == C.UDP && m.SrcIP == b.source.Addr && m.SrcPort == b.source.Port {
-				_ = tracker.Close()
-			}
-			return true
-		})
+		// Every packet handed over has reached the tunnel by now (closing waited for them), so
+		// this finds their flows. A dial still finishing ends at its first reply: WriteBack on a
+		// closed bridge fails and the tunnel drops that NAT entry.
+		b.closeTrackers()
 	})
 	return nil
 }
@@ -140,4 +144,15 @@ func (p *nativePacket) WriteBack(data []byte, addr net.Addr) (int, error) {
 	}
 	b.root.mu.Unlock()
 	return len(data), nil
+}
+
+// closeTrackers closes the tunnel's UDP flows from this bridge's source.
+func (b *nativeUDPBridge) closeTrackers() {
+	statistic.DefaultManager.Range(func(tracker statistic.Tracker) bool {
+		m := tracker.Info().Metadata
+		if m.Type == C.TUN && m.NetWork == C.UDP && m.SrcIP == b.source.Addr && m.SrcPort == b.source.Port {
+			_ = tracker.Close()
+		}
+		return true
+	})
 }

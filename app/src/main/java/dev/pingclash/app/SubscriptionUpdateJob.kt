@@ -72,7 +72,9 @@ class SubscriptionUpdateJob : JobService() {
                 if (Thread.currentThread().isInterrupted) return due.size
                 // A failure leaves the stored profile untouched.
                 runCatching { repository.refreshSubscription(profile) }
-                runCatching { repository.refreshProviders(profile) }
+                // The providers of the profile as just saved: the old copy no longer matches.
+                val saved = repository.data.value.profiles.firstOrNull { it.id == profile.id }
+                if (saved != null) runCatching { repository.refreshProviders(saved) }
             }
             runCatching { repository.applyPendingProvidersLive() }
             return due.size

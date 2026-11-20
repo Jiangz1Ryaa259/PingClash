@@ -172,7 +172,7 @@
     <string name="hide_import_details">"收起未导入详情"</string>
     <string name="the_core_is_busy_try_again_shortly">"内核当前繁忙，请稍后重试"</string>
     <string name="connect_timeout_seconds">"连接超时（秒）"</string>
-    <string name="check_a_domain_or_ip_manually">"手动检查域名 / IP →"</string>
+    <string name="check_a_domain_or_ip_manually">"手动检查域名 / IP"</string>
     <string name="no_proxies_could_be_imported">"没有可导入的节点。"</string>
     <string name="show_session_traffic">"显示本次流量"</string>
     <string name="connectivity_request_succeeded_ms">"连通性：本次访问成功 · %1$s ms"</string>
@@ -228,6 +228,7 @@
     <string name="network_options_are_invalid_or_exceed_limi">"网络选项无效或超过限制"</string>
     <string name="download_and_import">"下载并导入"</string>
     <string name="package_name">"应用包名"</string>
+    <string name="app_routing_limit">"最多可选择 %1$d 个应用。"</string>
     <string name="package_name_invalid">"包名无效。请使用以点分隔的格式，例如 com.example.app（不能是 PingClash 本身）。"</string>
     <string name="parameters_or_their_combination_were_rejec">"参数或组合未被内核接受"</string>
     <string name="unresolved_dialer_dependency_missing_proxy">"拨号依赖未解析（缺少节点、循环或组类型未支持）"</string>

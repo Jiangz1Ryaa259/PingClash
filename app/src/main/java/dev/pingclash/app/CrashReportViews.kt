@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -77,7 +75,7 @@ internal fun CrashReportCard() {
 private fun CrashReportDialog(text: String, onClose: () -> Unit) {
     val context = LocalContext.current
     var copied by remember { mutableStateOf(false) }
-    AlertDialog(
+    GlassDialog(
         onDismissRequest = onClose,
         title = { Text(tr(R.string.crash_report)) },
         text = {
@@ -94,7 +92,7 @@ private fun CrashReportDialog(text: String, onClose: () -> Unit) {
             }
         },
         dismissButton = {
-            TextButton(
+            GlassTextButton(
                 {
                     context
                         .getSystemService(ClipboardManager::class.java)
@@ -106,6 +104,6 @@ private fun CrashReportDialog(text: String, onClose: () -> Unit) {
                 Text(tr(if (copied) R.string.ui_copied else R.string.crash_report_copy))
             }
         },
-        confirmButton = { TextButton(onClose) { Text(tr(R.string.close)) } },
+        confirmButton = { GlassTextButton(onClose) { Text(tr(R.string.close)) } },
     )
 }

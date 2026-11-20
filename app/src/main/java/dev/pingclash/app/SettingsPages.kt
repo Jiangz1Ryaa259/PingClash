@@ -130,7 +130,7 @@ private fun TestingSection(s: SettingsDraft, target: String, onTarget: (String) 
         }
         RowDivider(underIcons = false)
         NumberRow(
-            NumberSpec(tr(R.string.concurrent_tests), 1..16),
+            NumberSpec(tr(R.string.concurrent_tests), PROBE_CONCURRENCY_RANGE),
             draft.probeConcurrency,
             s.enabled,
             NumberInput.STEPPER,

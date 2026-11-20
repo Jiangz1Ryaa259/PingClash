@@ -52,17 +52,26 @@ internal fun serviceRouteRules(
     routes: Map<String, String>,
     blocking: String,
     groups: Set<String> = emptySet(),
-): List<String> {
-    val rules = mutableListOf<String>()
+): List<String> = serviceRuleOrigins(routes, blocking, groups).map { it.first }
+
+/** [serviceRouteRules], each with the choice it came from. */
+internal fun serviceRuleOrigins(
+    routes: Map<String, String>,
+    blocking: String,
+    groups: Set<String> = emptySet(),
+): List<Pair<String, RuleOrigin>> {
+    val rules = mutableListOf<Pair<String, RuleOrigin>>()
     if (blocking == BLOCKING_ADS || blocking == BLOCKING_TELEMETRY)
-        rules += "GEOSITE,CATEGORY-ADS-ALL,REJECT"
-    if (blocking == BLOCKING_TELEMETRY) rules += "GEOSITE,CATEGORY-ADS-AND-TELEMETRY,REJECT"
+        rules += "GEOSITE,CATEGORY-ADS-ALL,REJECT" to RuleOrigin.Blocking
+    if (blocking == BLOCKING_TELEMETRY)
+        rules += "GEOSITE,CATEGORY-ADS-AND-TELEMETRY,REJECT" to RuleOrigin.Blocking
     val ordered = SERVICE_CATALOGUE.filterNot { it.broad } + SERVICE_CATALOGUE.filter { it.broad }
     for (service in ordered) {
         val target = routeTarget(routes[service.id], groups) ?: continue
-        service.geosite.forEach { rules += "GEOSITE,$it,$target" }
-        service.suffixes.forEach { rules += "DOMAIN-SUFFIX,$it,$target" }
-        service.full.forEach { rules += "DOMAIN,$it,$target" }
+        val origin = RuleOrigin.Service(service.id)
+        service.geosite.forEach { rules += "GEOSITE,$it,$target" to origin }
+        service.suffixes.forEach { rules += "DOMAIN-SUFFIX,$it,$target" to origin }
+        service.full.forEach { rules += "DOMAIN,$it,$target" to origin }
     }
     return rules
 }

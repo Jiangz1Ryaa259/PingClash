@@ -88,7 +88,8 @@ internal fun selectedUrlDelay(data: AppData, tests: ProxyTestState): ProxyDelay?
     val profile = data.activeProfile
     val name = data.selected?.name
     if (profile == null || name == null) return null
-    return tests.values[delayKey(profile.id, name)]
+    // Through the aliases as the Proxies page reads it, so both show the same result.
+    return tests.delayFor(profile.id, name)
         ?: tests.values.entries
             .firstOrNull {
                 it.key.startsWith(profile.id + '\u0000') && it.key.endsWith("\u0000" + name)

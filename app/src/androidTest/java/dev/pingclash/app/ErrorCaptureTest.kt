@@ -60,7 +60,7 @@ class ErrorCaptureTest {
     fun privateInputIsMaskedBeforeErrorCaptureAndCopiedSummaryIsSafe() {
         compose.onNodeWithTag("nav-2").performClick()
         compose.onNodeWithTag("profile-add").performClick()
-        compose.onNodeWithTag("import-method-url").performClick()
+        compose.chooseImport("url")
         compose.waitUntil(5000) {
             runCatching {
                     compose.onNodeWithTag("import-page").assertIsDisplayed()

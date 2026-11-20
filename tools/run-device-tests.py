@@ -158,7 +158,18 @@ class Device:
         self.adb('shell', 'input', 'keyevent', '3')
 
 
+def build_fixture():
+    """Builds the host fixture from core/tools/hyfixture when it is not there yet."""
+    if FIXTURE.exists():
+        return
+    go = TOOLS / 'go/bin/go.exe'
+    env = dict(os.environ, GOTOOLCHAIN='local')
+    subprocess.run([str(go), 'build', '-p=2', '-mod=readonly', '-trimpath', '-ldflags', '-s -w',
+                    '-o', str(FIXTURE), './tools/hyfixture'], cwd=ROOT / 'core', env=env, check=True)
+
+
 def start_fixture():
+    build_fixture()
     ident = uuid.uuid4().hex
     ready = OUT / (ident + '-ready.json')
     stop = OUT / (ident + '-stop')
@@ -199,8 +210,15 @@ def run_class(device, name, hy):
              hy['host'], RUNNER],
             capture_output=True, text=True, encoding='utf-8', errors='replace',
             timeout=CLASS_TIMEOUT).stdout
-    except subprocess.TimeoutExpired:
-        return 'TIMEOUT'
+    except subprocess.TimeoutExpired as hung:
+        # Keep what the class printed and the device log, so a hang says where it stopped.
+        partial = hung.stdout or b''
+        if isinstance(partial, bytes):
+            partial = partial.decode('utf-8', 'replace')
+        log = device.adb('logcat', '-d', '-t', '3000', timeout=60)
+        (OUT / f'hang-{name.rsplit(".", 1)[1]}-{int(time.time())}-logcat.txt').write_text(
+            log, encoding='utf-8')
+        return 'TIMEOUT\n' + partial
 
 
 def main():

@@ -127,6 +127,8 @@ data class LocalProfile(
     val providerRulesSkipped: Int = 0,
     /** Epoch seconds of the last successful subscription download; 0 when unknown. */
     val subscriptionUpdated: Long = 0,
+    /** Quota usage at recent updates of this period, for the forecast ([quotaForecast]). */
+    val usage: List<UsageSample> = emptyList(),
 ) {
     val autoUpdates
         get() = source?.let(::validHttps) == true
@@ -392,6 +394,15 @@ class ProfileRepository(private val context: Context) {
                         if (subscriptionResponse != null || previousProfile == null)
                             java.time.Instant.now().epochSecond
                         else previousProfile.subscriptionUpdated,
+                    usage =
+                        previousProfile?.usage.orEmpty().let { samples ->
+                            if (subscriptionResponse == null) samples
+                            else
+                                samples.plusUsage(
+                                    subscriptionResponse.quota,
+                                    java.time.Instant.now().epochSecond,
+                                )
+                        },
                 )
                 .withRuleDetails(parsed, previousProfile, explicitSelections != null)
 
@@ -461,10 +472,15 @@ class ProfileRepository(private val context: Context) {
 
     // Unchanged pre-existing body (previously baselined as refreshProviders): one
     // transaction covering download, validation, live/pending commit and error record.
-    @Suppress("LongMethod", "CyclomaticComplexMethod", "ReturnCount")
+    // Throws: a bad payload, the failure of a refresh asked for, and a waiting provider's failure.
+    @Suppress("LongMethod", "CyclomaticComplexMethod", "ReturnCount", "ThrowsCount")
     private fun refreshProvidersNow(profile: LocalProfile, remote: RemoteProfile, force: Boolean) {
+        // A waiting rule provider that failed again: the rest is saved, and a refresh the user
+        // asked for then says so.
+        var waitingFailure: ProviderFailure? = null
         try {
             val prepared = RemoteProfiles.load(remote.original, profile.userAgent, remote, force)
+            waitingFailure = prepared.remote?.error?.let(::providerFailureRecord)
             // Parse the complete graph before replacing even the encrypted cache.
             val checked = JSONObject(Mobile.importProfile(prepared.content))
             if (checked.optString("state") != "passed")
@@ -542,6 +558,7 @@ class ProfileRepository(private val context: Context) {
             }
             if (force) throw problem
         }
+        if (force) waitingFailure?.let { throw it }
     }
 
     /**
@@ -703,6 +720,17 @@ class ProfileRepository(private val context: Context) {
         commit(next)
     }
 
+    /**
+     * The main proxy chosen on [profileId]'s Proxies page, saved later by the queue: dropped when
+     * another profile has been made active since, so a late save never switches the profile back.
+     */
+    @Synchronized
+    fun selectIn(profileId: String, id: String): Boolean {
+        if (mutableData.value.activeProfileId != profileId) return false
+        select(id)
+        return true
+    }
+
     @Synchronized
     fun activate(profileId: String) {
         ensureSelectable()
@@ -846,6 +874,8 @@ class ProfileRepository(private val context: Context) {
                     usage = if (value.keepUsage) current.usage else LocalUsage(),
                 )
             )
+            // As clientSettings does: a new language takes effect now, VPN on or off.
+            if (value.language != current.client.language) UiStrings.apply(value.language)
         } else clientSettings(value, current.dnsAddress, current.probeUrl)
     }
 
@@ -1150,6 +1180,7 @@ class ProfileRepository(private val context: Context) {
                                     put("quota", profile.quota?.json())
                                     put("remote", profile.remote?.json())
                                     put("subscriptionUpdated", profile.subscriptionUpdated)
+                                    put("usage", JSONArray(profile.usage.map { it.json() }))
                                     put(
                                         "nodes",
                                         JSONArray().apply {
@@ -1269,6 +1300,7 @@ class ProfileRepository(private val context: Context) {
             },
             optional(0) { providerSkippedCount(profile) },
             profile.optLong("subscriptionUpdated").coerceAtLeast(0),
+            optional(emptyList()) { UsageSample.readAll(profile.optJSONArray("usage")) },
         )
     }
 }

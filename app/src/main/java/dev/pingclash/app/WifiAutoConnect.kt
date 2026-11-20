@@ -68,6 +68,8 @@ internal object WifiAutoConnect {
         val request =
             NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                // The app's own VPN coming and going is not a network change to act on.
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
                 .build()
         runCatching { manager.registerNetworkCallback(request, wake) }
         callback =
@@ -106,8 +108,12 @@ internal object WifiAutoConnect {
                 prefs.getString(LAST_RULE, null) == rule.name
         )
             return
-        prefs.edit().putString(LAST_RULE, rule.name).apply()
-        if (rule == WifiRule.TRUSTED) VpnShortcuts.stop(app) else VpnShortcuts.start(app)
+        // Remembered once acted on, or when the user must act (no VPN permission: asking at every
+        // network change would nag). A start that failed is tried again at the next change.
+        val acted =
+            if (rule == WifiRule.TRUSTED) runCatching { VpnShortcuts.stop(app) }.isSuccess
+            else VpnShortcuts.start(app) || !VpnShortcuts.canStart(app)
+        if (acted) prefs.edit().putString(LAST_RULE, rule.name).apply()
     }
 
     fun currentRule(

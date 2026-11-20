@@ -2,6 +2,7 @@ package dev.pingclash.app
 
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -76,10 +77,13 @@ class ProxyPageTest {
             assertEquals(names.take(2), p.displayGroups()[1].proxies)
             compose.onNodeWithTag("nav-1").performClick()
             compose.onNodeWithText("添加订阅").assertDoesNotExist()
+            // The route starts at the main group; hidden groups never show.
+            compose.onNodeWithTag("route-stop-✨ 主代理").assertIsDisplayed()
+            compose.onNodeWithTag("group-tab-隐藏辅助组").assertDoesNotExist()
+            compose.openProxyGroup("✨ 主代理")
             compose.onNodeWithTag("group-choice-✨ 主代理-🇭🇰 香港").assertIsDisplayed()
             compose.onNodeWithTag("group-choice-✨ 主代理-${names[0]}").assertDoesNotExist()
-            compose.onNodeWithTag("group-tab-隐藏辅助组").assertDoesNotExist()
-            // Invoke the whole-card selection, independently of its nested-group arrow.
+            // Select the nested group itself, independently of its arrow that opens it.
             compose.onNodeWithTag("group-choice-✨ 主代理-🇭🇰 香港").performSemanticsAction(
                 SemanticsActions.OnClick
             ) {
@@ -99,8 +103,9 @@ class ProxyPageTest {
                 )
             }
             assertEquals("✨ 主代理", app.repository.data.value.selected?.name)
-            compose.onNodeWithTag("strategy-pager").performTouchInput { swipeLeft() }
-            compose.waitForIdle()
+            compose.closeProxyGroup()
+            // The chosen group joins the route as its next stop.
+            compose.openProxyGroup("🇭🇰 香港")
             compose.onNodeWithTag("group-choice-🇭🇰 香港-${names[0]}").assertIsDisplayed()
             compose.onNodeWithTag("group-choice-🇭🇰 香港-${names[2]}").assertDoesNotExist()
             compose.onNodeWithTag("group-choice-🇭🇰 香港-${names[1]}").performClick()
@@ -114,24 +119,27 @@ class ProxyPageTest {
                 ProfileRepository(app).data.value.activeProfile!!.groups[1].selected,
             )
             compose.onNodeWithTag("group-choice-🇭🇰 香港-${names[1]}").assertIsSelected()
-            compose.onNodeWithTag("nav-1").assertIsDisplayed()
             captureSyntheticFixture(
                 compose,
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()),
                 "proxy-group-region.png",
             )
-            compose.onNodeWithTag("strategy-pager").performTouchInput { swipeRight() }
-            compose.waitForIdle()
+            compose.closeProxyGroup()
+            compose.onNodeWithTag("nav-1").assertIsDisplayed()
+            compose
+                .onNode(hasAnyAncestor(hasTestTag("route-exit")) and hasText(names[1]))
+                .assertIsDisplayed()
             captureSyntheticFixture(
                 compose,
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()),
-                "proxy-grid-light.png",
+                "proxy-route-light.png",
             )
+            compose.openProxyGroup("✨ 主代理")
             compose.onNodeWithContentDescription("搜索代理").performClick()
             compose.onNodeWithTag("proxy-search").performTextInput("法兰克福")
             compose.onNodeWithTag("group-choice-✨ 主代理-${names[6]}").assertIsDisplayed()
             compose.onNodeWithTag("group-choice-✨ 主代理-${names[4]}").assertDoesNotExist()
-            compose.onNodeWithText("关闭").performClick()
+            compose.closeProxyGroup()
             val model = ViewModelProvider(compose.activity)[AppViewModel::class.java]
             val beforeFile = java.io.File(app.filesDir, "profiles.enc").readBytes()
             model.testProxies(app.repository.data.value.activeProfile!!, listOf(names[0], names[1]))
@@ -148,15 +156,17 @@ class ProxyPageTest {
                         android.content.res.Configuration.UI_MODE_NIGHT_YES
                 }
                 compose.onNodeWithTag("nav-1").performClick()
-                captureSyntheticFixture(compose, device, "proxy-grid-dark.png")
+                captureSyntheticFixture(compose, device, "proxy-route-dark.png")
                 device.executeShellCommand("settings put system font_scale 1.8")
                 compose.waitUntil(10000) {
                     compose.activity.resources.configuration.fontScale >= 1.7f
                 }
                 compose.onNodeWithTag("nav-1").performClick()
+                compose.openProxyGroup("✨ 主代理")
                 compose.onNodeWithTag("group-members-✨ 主代理").performScrollToIndex(0)
                 compose.onNodeWithTag("group-choice-✨ 主代理-🚀 高速优选").assertIsDisplayed()
-                captureSyntheticFixture(compose, device, "proxy-grid-large.png")
+                captureSyntheticFixture(compose, device, "proxy-route-large.png")
+                compose.closeProxyGroup()
             } finally {
                 device.executeShellCommand("settings put system font_scale 1.0")
                 device.executeShellCommand("cmd uimode night no")

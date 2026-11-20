@@ -8,12 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -34,11 +31,12 @@ internal class ProxyDetailActions(
 @Composable
 internal fun ProxyMemberDetails(
     state: ProxyMemberPresentation,
+    stability: NodeStability?,
     tcp: ProxyDelay?,
     udpOnly: Boolean,
     actions: ProxyDetailActions,
 ) {
-    ModalBottomSheet(onDismissRequest = actions.dismiss) {
+    GlassSheet(onDismissRequest = actions.dismiss) {
         Column(
             Modifier.fillMaxWidth()
                 .padding(horizontal = 24.dp)
@@ -56,15 +54,16 @@ internal fun ProxyMemberDetails(
             HorizontalDivider()
             DetailMetric(tr(R.string.proxy_url_latency), proxyLatencyText(state.delay))
             DetailMetric("TCP", tcpDetailText(udpOnly, tcp))
+            DetailMetric(tr(R.string.proxy_stability), stabilityText(stability))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(
+                GlassButton(
                     { actions.urlTest?.invoke() },
                     enabled = actions.urlTest != null,
                     modifier = Modifier.weight(1f).testTag("proxy-detail-url"),
                 ) {
                     Text(tr(R.string.proxy_test_url))
                 }
-                OutlinedButton(
+                GlassButton(
                     { actions.tcpTest?.invoke() },
                     enabled = actions.tcpTest != null,
                     modifier = Modifier.weight(1f).testTag("proxy-detail-tcp"),
@@ -72,7 +71,7 @@ internal fun ProxyMemberDetails(
                     Text(tr(R.string.proxy_test_tcp))
                 }
             }
-            Button(
+            GlassButton(
                 { actions.diagnose?.invoke() },
                 enabled = actions.diagnose != null,
                 modifier = Modifier.fillMaxWidth().testTag("proxy-detail-diagnose"),

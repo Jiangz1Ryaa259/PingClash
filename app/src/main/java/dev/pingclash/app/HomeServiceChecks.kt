@@ -20,10 +20,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -78,9 +76,7 @@ internal fun HomeServiceChecks(
         }
     }
     if (expanded)
-        ModalBottomSheet(onDismissRequest = { expanded = false }, containerColor = Panel) {
-            ServiceTargetsPanel(state, onTest)
-        }
+        GlassSheet(onDismissRequest = { expanded = false }) { ServiceTargetsPanel(state, onTest) }
 }
 
 /**
@@ -119,9 +115,7 @@ internal fun HomeServiceStrip(
         }
     }
     if (expanded)
-        ModalBottomSheet(onDismissRequest = { expanded = false }, containerColor = Panel) {
-            ServiceTargetsPanel(state, onTest)
-        }
+        GlassSheet(onDismissRequest = { expanded = false }) { ServiceTargetsPanel(state, onTest) }
 }
 
 /** The full-list and measure buttons, shared by the card and the docked strip. */
@@ -199,7 +193,7 @@ private fun ServiceTargetsPanel(state: DashboardState, onTest: (List<String>) ->
                 Modifier.weight(1f),
                 style = MaterialTheme.typography.titleLarge,
             )
-            TextButton(
+            GlassTextButton(
                 { onTest(serviceTargets.map { it.id }) },
                 enabled = state.services.running || websiteMeasurementEnabled(state),
             ) {

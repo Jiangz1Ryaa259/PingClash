@@ -73,9 +73,18 @@ internal class ProfileReorder(
             val top = initial + delta
             autoScroll(dy, top, top + item.size)
             val center = (top + item.size / 2f).toInt()
+            // A card changes place once the dragged one's centre passes the middle of the next
+            // card in the direction of the drag. Only entering it would swap a short card back
+            // and forth over a tall one.
+            val at = order.indexOf(id)
             list.layoutInfo.visibleItemsInfo
                 .firstOrNull {
-                    it.key != id && it.key in order && center in it.offset until it.offset + it.size
+                    val index = order.indexOf(it.key)
+                    val middle = it.offset + it.size / 2
+                    it.key != id &&
+                        index >= 0 &&
+                        (index > at && dy > 0 && center >= middle ||
+                            index < at && dy < 0 && center <= middle)
                 }
                 ?.let { target ->
                     order =
@@ -102,6 +111,14 @@ internal class ProfileReorder(
         delta = 0f
         held = order
         return order.takeIf { it != start }
+    }
+
+    /** The gesture ended without a drop (the list was locked or left): put everything back. */
+    fun abandon(id: String) {
+        if (dragged != id) return
+        dragged = null
+        delta = 0f
+        held = null
     }
 
     /** One step up or down, for accessibility actions. */
@@ -136,6 +153,11 @@ internal fun Modifier.reorderable(
                 change.consume()
                 reorder.drag(amount.y)
             }
-        if (immediate) detectDragGestures(start, { finish() }, { finish() }, move)
-        else detectDragGesturesAfterLongPress(start, { finish() }, { finish() }, move)
+        // Taken away mid-drag (the list locked): no drop, and the card does not stay lifted.
+        try {
+            if (immediate) detectDragGestures(start, { finish() }, { finish() }, move)
+            else detectDragGesturesAfterLongPress(start, { finish() }, { finish() }, move)
+        } finally {
+            reorder.abandon(id)
+        }
     }

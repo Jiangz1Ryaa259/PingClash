@@ -84,6 +84,8 @@ internal fun ScenicFrame(
             !secure &&
             rememberForeground()
     val backdrop = if (blur && Build.VERSION.SDK_INT >= 33) rememberLayerBackdrop() else null
+    // The scene alone, for the pages' glass: the navigation's layer holds the pages as well.
+    val sceneBackdrop = if (backdrop != null) rememberLayerBackdrop() else null
     val legacyBlur = blur && backdrop == null
     val (rail, clearance) = navigationLayout()
     val sidebar = rememberSidebarWidth()
@@ -102,13 +104,22 @@ internal fun ScenicFrame(
         LocalImmersiveScene provides immersive,
         LocalNavHaze provides if (legacyBlur) haze else null,
         LocalNavigationBackdrop provides backdrop,
+        LocalSceneBackdrop provides sceneBackdrop,
         LocalLanyardCable provides cable,
         LocalLanyardThree provides three,
     ) {
         Box(Modifier.fillMaxSize().sceneBackground(scene, LocalSolidBackground.current, Ink)) {
             Box(Modifier.fillMaxSize().navigationSource(backdrop, haze, legacyBlur)) {
-                if (scene == "image") CustomImageBackdrop(picture, Modifier.fillMaxSize())
-                else OceanBackdrop(TrailTone.PENDING, false, Modifier.fillMaxSize(), scene)
+                Box(
+                    Modifier.fillMaxSize()
+                        .then(
+                            if (sceneBackdrop != null) Modifier.layerBackdrop(sceneBackdrop)
+                            else Modifier
+                        )
+                ) {
+                    if (scene == "image") CustomImageBackdrop(picture, Modifier.fillMaxSize())
+                    else OceanBackdrop(TrailTone.PENDING, false, Modifier.fillMaxSize(), scene)
+                }
                 // The badge layer places itself in window coordinates from the page's anchor, so
                 // it stays full-bleed with the scene; only the pages make room for the sidebar.
                 LanyardSceneLayers(three, cable, selected, secure)

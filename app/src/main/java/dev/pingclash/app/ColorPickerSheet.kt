@@ -23,12 +23,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -69,10 +66,9 @@ internal fun ColorEditDialog(
     onClose: () -> Unit,
 ) {
     // The grid, spectrum and sliders consume their drags, so picking never pulls the sheet down.
-    ModalBottomSheet(
+    GlassSheet(
         onDismissRequest = onClose,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surface,
         dragHandle = null,
         modifier = Modifier.testTag("solid-color-dialog"),
     ) {
@@ -162,7 +158,7 @@ private fun SheetHeader(title: String, action: String, onCancel: () -> Unit, onA
         Modifier.fillMaxWidth().padding(top = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TextButton(onCancel) { Text(tr(R.string.cancel)) }
+        GlassTextButton(onCancel) { Text(tr(R.string.cancel)) }
         Text(
             title,
             Modifier.weight(1f),
@@ -170,7 +166,7 @@ private fun SheetHeader(title: String, action: String, onCancel: () -> Unit, onA
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
         )
-        TextButton(onAction, Modifier.testTag("solid-color-save")) {
+        GlassTextButton(onAction, Modifier.testTag("solid-color-save")) {
             Text(action, fontWeight = FontWeight.SemiBold)
         }
     }
@@ -289,15 +285,17 @@ private fun HexField(current: String, onValid: (String) -> Unit) {
 /** Asks before saving a colour dark enough to make text hard to read. */
 @Composable
 private fun ContrastWarning(onSave: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
+    GlassDialog(
         modifier = Modifier.testTag("solid-contrast-dialog"),
         onDismissRequest = onDismiss,
         title = { Text(tr(R.string.issue_reminder)) },
         text = { Text(tr(R.string.solid_color_low_contrast)) },
         confirmButton = {
-            TextButton(onSave, Modifier.testTag("solid-contrast-save")) { Text(tr(R.string.save)) }
+            GlassTextButton(onSave, Modifier.testTag("solid-contrast-save")) {
+                Text(tr(R.string.save))
+            }
         },
-        dismissButton = { TextButton(onDismiss) { Text(tr(R.string.cancel)) } },
+        dismissButton = { GlassTextButton(onDismiss) { Text(tr(R.string.cancel)) } },
     )
 }
 

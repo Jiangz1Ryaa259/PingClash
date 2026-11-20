@@ -165,6 +165,7 @@ class RouteUsabilityTest {
                         "https://192.0.2.123/",
                     )
                     compose.onNodeWithTag("nav-1").performClick()
+                    compose.openProxyGroup("Main")
                     compose.onNodeWithTag("group-members-Main").performScrollToIndex(30)
                     val tag = "group-choice-Main-Ready"
                     val top = compose.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot.top

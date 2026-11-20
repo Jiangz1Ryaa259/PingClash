@@ -57,11 +57,12 @@ class GroupAvailabilityTest {
             assertEquals(0, profile.groupsUnsupported)
             assertEquals(11, profile.groups[1].unavailable)
             compose.onNodeWithTag("nav-1").performClick()
+            compose.openProxyGroup("主代理")
             compose.onNodeWithTag("group-choice-主代理-节点0").assertIsEnabled().performClick()
             compose.waitUntil(10000) {
                 app.repository.data.value.activeProfile?.groups?.first()?.selected == "节点0"
             }
-            compose.onNodeWithTag("group-tab-自动选择").performClick()
+            compose.openProxyGroup("自动选择")
             compose.onNodeWithTag("group-choice-自动选择-节点1").assertIsEnabled().performClick()
             compose.waitUntil(10000) {
                 app.repository.data.value.activeProfile?.groups?.get(1)?.selected == "节点1"
@@ -121,6 +122,7 @@ class GroupAvailabilityTest {
             assertTrue(runCatching { app.repository.selectGroup(p.id, "手动选择", "缺失成员") }.isFailure)
             assertArrayEquals(previous, File(app.filesDir, "profiles.enc").readBytes())
             compose.onNodeWithTag("nav-1").performClick()
+            compose.openProxyGroup("手动选择")
             compose.onNodeWithTag("group-choice-手动选择-有效节点").assertIsEnabled().performClick()
             compose.waitUntil(10000) {
                 app.repository.data.value.activeProfile?.groups?.first()?.supported == true

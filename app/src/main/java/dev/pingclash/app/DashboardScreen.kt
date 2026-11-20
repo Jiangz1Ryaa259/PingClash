@@ -243,7 +243,7 @@ internal fun connectLabel(state: DashboardState): String =
 @Composable
 internal fun latencyColor(elapsed: Long) =
     when (latencyLabel(elapsed)) {
-        R.string.ui_latency_fast -> Success
-        R.string.ui_latency_moderate -> Warning
-        else -> MaterialTheme.colorScheme.error
+        R.string.ui_latency_fast -> LatencyGood
+        R.string.ui_latency_moderate -> LatencySlow
+        else -> LatencyBad
     }

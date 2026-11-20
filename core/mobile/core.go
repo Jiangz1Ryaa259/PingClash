@@ -153,37 +153,14 @@ func probe(configJSON, targetURL, runID string, timeoutMillis int, delay, unifie
 		entry.expiry.Stop()
 		entry.cancel()
 	}()
-	if graph, ok := proxy.(*runtimeGraph); ok {
-		// Give automatic groups half of the budget for their initial health pass,
-		// then probe through whatever each group currently selects. A large chain
-		// must not report a proxy timeout only because health checks were slow.
-		warm, stop := context.WithTimeout(ctx, time.Duration(timeoutMillis/2)*time.Millisecond)
-		err := graph.activate(warm)
-		stop()
-		if ctx.Err() != nil || err != nil && !errors.Is(err, context.DeadlineExceeded) {
-			if ctx.Err() != nil {
-				err = ctx.Err()
-			}
+	if graph, ok := proxy.(*runtimeGraph); ok && !delay {
+		if err := warmGraph(ctx, graph, timeoutMillis); err != nil {
 			return probeError(runID, ctx, err, 0)
 		}
-		graph.detached.Store(true)
 	}
 	if delay {
-		// This is the same core URLTest called by controller delay endpoints.
-		// No controller or local listening socket is needed by the mobile bridge.
-		// The flag is process-global: while the live executor runs, its url-test
-		// groups and the subscription's unified-delay own it.
-		if !nativeExecutorLive.Load() {
-			adapter.UnifiedDelay.Store(unified)
-		}
-		delayMs, err := adapter.NewProxy(&delayBoundary{proxy}).URLTest(ctx, targetURL, nil)
-		if ctx.Err() != nil {
-			err = ctx.Err()
-		}
-		if err != nil {
-			return probeError(runID, ctx, err, int64(delayMs))
-		}
-		return encode(runID, "passed", "proxy_delay_measured", 0, int64(delayMs))
+		state, code, elapsed := measureDelay(ctx, proxy, targetURL, timeoutMillis, unified)
+		return encode(runID, state, code, 0, elapsed)
 	}
 
 	transport := &http.Transport{
@@ -257,17 +234,67 @@ func (p *delayBoundary) DialContext(ctx context.Context, m *C.Metadata) (C.Conn,
 	return c, nil
 }
 func probeError(id string, ctx context.Context, err error, elapsed int64) string {
+	state, code := probeOutcome(ctx, err)
+	return encode(id, state, code, 0, elapsed)
+}
+
+// probeOutcome is the state and code a failed probe reports.
+func probeOutcome(ctx context.Context, err error) (string, string) {
 	if errors.Is(err, errSocketPolicy) {
-		return encode(id, "blocked", "local_network_restriction", 0, elapsed)
+		return "blocked", "local_network_restriction"
 	}
 	if errors.Is(ctx.Err(), context.Canceled) {
-		return encode(id, "cancelled", "cancelled", 0, elapsed)
+		return "cancelled", "cancelled"
 	}
 	var networkError net.Error
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) || errors.As(err, &networkError) && networkError.Timeout() {
-		return encode(id, "failed", "timeout_stage_unknown", 0, elapsed)
+		return "failed", "timeout_stage_unknown"
 	}
-	return encode(id, "failed", proxyFailureCode(err), 0, elapsed)
+	return "failed", proxyFailureCode(err)
+}
+
+// warmGraph gives automatic groups half of the budget for their initial health pass, then lets
+// the probe go through whatever each group currently selects. A large chain must not report a
+// proxy timeout only because health checks were slow.
+func warmGraph(ctx context.Context, graph *runtimeGraph, timeoutMillis int) error {
+	warm, stop := context.WithTimeout(ctx, time.Duration(timeoutMillis/2)*time.Millisecond)
+	err := graph.activate(warm)
+	stop()
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		return err
+	}
+	graph.detached.Store(true)
+	return nil
+}
+
+// measureDelay is the same core URLTest the controller delay endpoints call; no controller or
+// listening socket is needed. It returns the state, code and milliseconds a probe reports.
+func measureDelay(ctx context.Context, proxy C.ProxyAdapter, targetURL string, timeoutMillis int, unified bool) (string, string, int64) {
+	if graph, ok := proxy.(*runtimeGraph); ok {
+		if err := warmGraph(ctx, graph, timeoutMillis); err != nil {
+			state, code := probeOutcome(ctx, err)
+			return state, code, 0
+		}
+	}
+	// The flag is process-global: while the live executor runs, its url-test groups and the
+	// subscription's unified-delay own it.
+	unifiedDelayOwner.Lock()
+	if !nativeExecutorLive.Load() {
+		adapter.UnifiedDelay.Store(unified)
+	}
+	unifiedDelayOwner.Unlock()
+	delayMs, err := adapter.NewProxy(&delayBoundary{proxy}).URLTest(ctx, targetURL, nil)
+	if ctx.Err() != nil {
+		err = ctx.Err()
+	}
+	if err != nil {
+		state, code := probeOutcome(ctx, err)
+		return state, code, int64(delayMs)
+	}
+	return "passed", "proxy_delay_measured", int64(delayMs)
 }
 
 // Cancel cancels only an existing run. It does not create background work.

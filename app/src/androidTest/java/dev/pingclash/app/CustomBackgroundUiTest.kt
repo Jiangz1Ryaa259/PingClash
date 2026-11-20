@@ -27,7 +27,9 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class CustomBackgroundUiTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    // It hung twice in full runs without saying where; a hang now fails with both stacks.
+    @get:Rule(order = 0) val hang = HangReport(3 * 60_000L)
+    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
 
     @Test
     fun storedPictureIsDrawnBehindPagesAndCanBeRemovedFromAppearance() {

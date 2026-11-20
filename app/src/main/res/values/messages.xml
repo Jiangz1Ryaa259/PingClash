@@ -78,7 +78,7 @@
     <string name="unsupported_0_rtt_option_enabled">"Unsupported 0-RTT option enabled"</string>
     <string name="close_all_connections">"Close all connections"</string>
     <plurals name="count_policy_group_are_unsupported_depende">
-        <item quantity="one">"%1$s policy group are unsupported. Dependent proxy will not fall back to direct connections."</item>
+        <item quantity="one">"%1$s policy group is unsupported. Proxies that depend on it will not fall back to direct connections."</item>
         <item quantity="other">"%1$s policy groups are unsupported. Dependent proxies will not fall back to direct connections."</item>
     </plurals>
     <string name="the_test_target_must_be_an_https">"The test target must be an HTTPS URL without a username or password"</string>
@@ -176,7 +176,7 @@
     <string name="hide_import_details">"Hide import details"</string>
     <string name="the_core_is_busy_try_again_shortly">"The core is busy. Try again shortly."</string>
     <string name="connect_timeout_seconds">"Connect timeout (seconds)"</string>
-    <string name="check_a_domain_or_ip_manually">"Check a domain or IP manually →"</string>
+    <string name="check_a_domain_or_ip_manually">"Check a domain or IP manually"</string>
     <string name="no_proxies_could_be_imported">"No proxies could be imported. "</string>
     <string name="show_session_traffic">"Show session traffic"</string>
     <string name="connectivity_request_succeeded_ms">"Connectivity: request succeeded · %1$s ms"</string>
@@ -194,7 +194,7 @@
     <string name="close_session">"Close session"</string>
     <string name="result">"Result"</string>
     <plurals name="count_unavailable_member_were_isolated_wit">
-        <item quantity="one">"%1$s unavailable member were isolated without direct fallback. Other member remain selectable."</item>
+        <item quantity="one">"%1$s unavailable member was isolated without direct fallback. The other members remain selectable."</item>
         <item quantity="other">"%1$s unavailable members were isolated without direct fallback. Other members remain selectable."</item>
     </plurals>
     <string name="establishing_tunnel">"Establishing tunnel"</string>
@@ -235,6 +235,7 @@
     <string name="network_options_are_invalid_or_exceed_limi">"Network options are invalid or exceed limits"</string>
     <string name="download_and_import">"Download and import"</string>
     <string name="package_name">"Package name"</string>
+    <string name="app_routing_limit">"At most %1$d apps can be chosen."</string>
     <string name="package_name_invalid">"Not a valid package name. Use dotted segments such as com.example.app (not PingClash itself)."</string>
     <string name="parameters_or_their_combination_were_rejec">"Parameters or their combination were rejected by the core"</string>
     <string name="unresolved_dialer_dependency_missing_proxy">"Unresolved dialer dependency: missing proxy, cycle or unsupported group type"</string>

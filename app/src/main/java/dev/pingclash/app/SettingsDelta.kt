@@ -18,6 +18,7 @@ internal val liveAppearanceFields =
         "keepUsage",
         "startOnBoot",
         "subscriptionHours",
+        "quotaReminder",
         "wifiAuto",
         "trustedWifi",
     )

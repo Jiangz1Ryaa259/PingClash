@@ -171,10 +171,18 @@ object VpnRuntime {
     }
 
     fun disconnect(context: Context) {
-        if (state.value.active)
+        if (!state.value.active) return
+        // The service runs in this process: tell it directly. Starting it again from a background
+        // broadcast is refused once it has left the foreground (stopping, or not yet connected).
+        PingVpnService.instance?.let {
+            it.stopFromApp()
+            return
+        }
+        runCatching {
             context.startService(
                 Intent(context, PingVpnService::class.java).setAction(PingVpnService.DISCONNECT)
             )
+        }
     }
 
     internal fun synchronize(): Boolean = PingVpnService.instance?.synchronizeState() == true
@@ -402,9 +410,10 @@ class PingVpnService : VpnService() {
             check(RuleData.prepare(app).get()) { "rule_data_unavailable" }
             stage = "permission"
             check(prepare(this) == null) { "vpn_permission_required" }
+            // A provider failure is a configuration problem, not a permission one.
+            stage = "configuration"
             app.repository.applyPendingProviders()
             val data = app.repository.data.value
-            stage = "configuration"
             VpnConfigurationFailure.requireConnectable(data)
             val runtimeConfig = requireNotNull(data.selectedRuntimeConfig)
             VpnConfigurationFailure.validateNode(runtimeConfig)
@@ -674,6 +683,13 @@ class PingVpnService : VpnService() {
         "TooGenericExceptionCaught"
     ) // JNI/config errors must preserve the last working tunnel.
     private fun reconfigure(settings: ClientSettings): Int {
+        // Nothing to update on a service that is not connecting or connected (the VPN stopped
+        // after the change was made): count the change as done and let this service end.
+        if (!starting.get() && descriptor == null) {
+            VpnRuntime.routingApplied()
+            if (instance === this && !destroying) stopSelfResult(commandStartId)
+            return START_NOT_STICKY
+        }
         // Counted down however the job ends: applied, failed, skipped or cancelled.
         val job =
             scope.launch {
@@ -725,6 +741,9 @@ class PingVpnService : VpnService() {
         return restartPolicy(settings)
     }
 
+    /** A stop asked for from elsewhere in the app, without starting the service again. */
+    internal fun stopFromApp() = requestStop()
+
     private fun requestStop(message: String? = null) {
         stopRequested.set(true)
         getSharedPreferences("vpn_runtime", 0).edit().putBoolean("resume_requested", false).apply()
@@ -735,6 +754,9 @@ class PingVpnService : VpnService() {
     private fun shutdown(message: String? = null, code: String? = null) {
         stopRequested.set(true)
         val endingAttempt = attemptNumber
+        // The last command so far; a CONNECT arriving later has a newer id, so this stop then
+        // leaves the service running for it.
+        val stopId = commandStartId
         if (message != null) {
             terminalMessage = message
             terminalCode = code
@@ -758,12 +780,15 @@ class PingVpnService : VpnService() {
         physicalNetworks.clear()
         runCatching { setUnderlyingNetworks(null) }
         stopForeground(STOP_FOREGROUND_REMOVE)
+        // A CONNECT from now on starts a new attempt (and goes foreground) instead of being taken
+        // for a duplicate of the one ending.
+        starting.set(false)
         // Keep the UI stopping until Android completes onDestroy. Publishing
         // error/idle before then admits a retry into a Service already scheduled
         // for destruction, and that destruction can cancel the new attempt.
         android.os.Handler(mainLooper).post {
             if (!destroying && endingAttempt == attemptNumber && stopRequested.get()) {
-                stopSelfResult(commandStartId)
+                stopSelfResult(stopId)
             }
         }
     }

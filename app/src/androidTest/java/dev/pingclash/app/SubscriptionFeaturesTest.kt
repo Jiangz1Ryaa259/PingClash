@@ -32,7 +32,11 @@ class SubscriptionFeaturesTest {
         try {
             app.repository.activate(profile.id)
             compose.onNodeWithTag("nav-1").performClick()
-            compose.onNodeWithText("UDP fixture").performTouchInput { longClick() }
+            val group = profile.displayGroups().first().name
+            compose.openProxyGroup(group)
+            compose.onNodeWithTag("group-choice-$group-UDP fixture").performTouchInput {
+                longClick()
+            }
             compose.onNodeWithText("N/A (UDP)").assertIsDisplayed()
         } finally {
             app.repository.delete(profile.id)

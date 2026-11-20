@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_optional">可选</string>
+    <string name="import_section_import">导入</string>
+    <string name="import_section_by_hand">手动填写</string>
+    <string name="import_group_link">链接</string>
+    <string name="import_group_link_hint">输入或从剪贴板粘贴</string>
+    <string name="import_group_file">文件</string>
+    <string name="import_group_file_hint">配置文件、文本或 ZIP 包</string>
+    <string name="import_group_qr">二维码</string>
+    <string name="import_group_qr_hint">来自图片或相机</string>
+    <string name="import_node">填写节点</string>
+    <string name="import_node_hint">协议、地址、端口和密码</string>
+    <string name="import_subscription_manual">填写订阅</string>
+    <string name="import_subscription_manual_hint">名称、链接和 User-Agent</string>
+    <string name="node_protocol">协议</string>
+    <string name="node_address">地址</string>
+    <string name="node_password">密码</string>
+    <string name="node_cipher">加密方式</string>
+    <string name="node_transport">传输方式</string>
+    <string name="node_obfuscation">混淆</string>
+    <string name="node_obfuscation_password">混淆密码</string>
+    <string name="node_address_required">请填写服务器地址。</string>
+    <string name="node_secret_required">请填写 UUID 或密码。</string>
+    <string name="node_obfuscation_password_required">请填写混淆密码。</string>
+    <string name="node_ws_path">路径</string>
+    <string name="node_grpc_service">服务名</string>
+</resources>

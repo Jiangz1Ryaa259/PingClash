@@ -8,15 +8,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.Density
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -51,13 +48,6 @@ class ProxyPresentationTest {
             .put("username", "fixture-user")
             .put("password", "fixture-private-password")
 
-    private fun layout(list: Boolean) {
-        if (compose.onAllNodesWithTag("compatibility-warning").fetchSemanticsNodes().isNotEmpty())
-            compose.onNodeWithTag("compatibility-warning").performTouchInput { swipeRight() }
-        compose.onNodeWithTag("proxy-menu").performClick()
-        compose.onNodeWithTag(if (list) "proxy-layout-list" else "proxy-layout-grid").performClick()
-    }
-
     private fun bounds(name: String) =
         compose.onNodeWithTag("group-choice-Main-$name").fetchSemanticsNode().boundsInRoot
 
@@ -69,7 +59,7 @@ class ProxyPresentationTest {
         )
 
     @Test
-    fun layoutSwitchPersistsWithoutChangingOfficialGroupsSelectionOrMeasurements() {
+    fun openingAGroupListsMembersWithoutChangingSelectionOrMeasurements() {
         val repo = app.repository
         val raw =
             JSONObject()
@@ -95,28 +85,24 @@ class ProxyPresentationTest {
         try {
             repo.activate(p.id)
             compose.onNodeWithTag("nav-1").performClick()
-            layout(false)
             val before = repo.data.value
             val measurements = model.proxyTests.value
+            compose.openProxyGroup("Main")
+            // One member per row, full width, in the subscription's order.
             val a = bounds("Tokyo fixture")
             val b = bounds("Singapore fixture")
-            assertEquals(a.top, b.top, 2f)
-            assertTrue(a.right <= b.left)
+            assertTrue(b.top >= a.bottom)
+            assertEquals(a.width, b.width, 2f)
             compose.onNodeWithText("TCP", substring = true).assertDoesNotExist()
-            capture("proxy-compact-grid.png")
-            layout(true)
-            val listA = bounds("Tokyo fixture")
-            val listB = bounds("Singapore fixture")
-            assertTrue(listA.width > a.width * 1.8f)
-            assertTrue(listB.top >= listA.bottom)
+            capture("proxy-group-sheet.png")
+            compose.closeProxyGroup()
             assertEquals(before, repo.data.value)
             assertEquals(measurements, model.proxyTests.value)
-            capture("proxy-single-list.png")
             compose.activityRule.scenario.recreate()
             compose.onNodeWithTag("nav-1").performClick()
-            assertTrue(bounds("Tokyo fixture").width > a.width * 1.8f)
+            compose.openProxyGroup("Main")
+            assertEquals(a.width, bounds("Tokyo fixture").width, 2f)
             assertEquals(before, repo.data.value)
-            layout(false)
         } finally {
             repo.delete(p.id)
         }
@@ -147,6 +133,7 @@ class ProxyPresentationTest {
                     compose.onNodeWithTag("nav-1").performClick()
                     val group = p.displayGroups().first().name
                     val selected = repo.data.value.selectedId
+                    compose.openProxyGroup(group)
                     compose.onNodeWithTag("group-choice-$group-Inspect other").performTouchInput {
                         longClick()
                     }
@@ -167,30 +154,39 @@ class ProxyPresentationTest {
                             ?.state,
                     )
                     compose.onNodeWithTag("proxy-detail-diagnose").performClick()
-                    compose.waitUntil(12000) {
-                        model.diagnosis.value.report != null && !model.diagnosis.value.running
+                    compose.waitUntil(30000) {
+                        model.doctor.state.value.let { !it.running && it.evidence != null }
                     }
                     assertEquals(p.nodes.last().id, model.diagnosis.value.nodeId)
-                    compose
-                        .onNodeWithTag("diagnostic-node-name")
-                        .assertIsDisplayed()
-                        .assertTextEquals("Inspect other")
+                    assertEquals(
+                        "Inspect other",
+                        requireNotNull(model.doctor.state.value.evidence).nodeName,
+                    )
+                    compose.onNodeWithTag("doctor-cause").assertIsDisplayed()
                     assertTrue(
                         model.diagnosis.value.report!!.steps.any { it.stage == Models.Stage.PROXY }
                     )
                     assertTrue(second.handshakes.get() > 0)
-                    assertEquals(0, first.handshakes.get())
+                    // The selected node is reached only when the doctor compares other nodes,
+                    // which it does when the inspected one fails, and then it says so.
+                    val peers = model.doctor.state.value.evidence?.peers.orEmpty()
+                    assertTrue(
+                        peers.any { it.name == "Keep current" } || first.handshakes.get() == 0
+                    )
+                    val firstBefore = first.handshakes.get()
                     assertEquals(selected, repo.data.value.selectedId)
                     assertFalse(VpnRuntime.state.value.active)
                     val count = second.handshakes.get()
-                    model.repeatDiagnosis()
+                    model.diagnoseData(repo.data.value.copy(selectedId = p.nodes.last().id))
                     compose.waitUntil(12000) {
                         !model.diagnosis.value.running && second.handshakes.get() > count
                     }
                     assertEquals(p.nodes.last().id, model.diagnosis.value.nodeId)
                     assertEquals(selected, repo.data.value.selectedId)
-                    assertEquals(0, first.handshakes.get())
+                    // Repeating the node check reaches only the inspected node.
+                    assertEquals(firstBefore, first.handshakes.get())
                 } finally {
+                    model.doctor.cancel()
                     model.cancelDiagnosis()
                     model.cancelProxyTests()
                     compose.waitUntil(5000) { !model.diagnosis.value.running }
@@ -228,7 +224,7 @@ class ProxyPresentationTest {
                 }
             }
         }
-        layout(false)
+        compose.openProxyGroup("Main")
         assertTrue(bounds("TCP fixture").top >= bounds("UDP fixture").bottom)
         compose.onNodeWithText("TCP：", substring = true).assertDoesNotExist()
         compose.onNodeWithTag("group-choice-Main-UDP fixture").performTouchInput { longClick() }

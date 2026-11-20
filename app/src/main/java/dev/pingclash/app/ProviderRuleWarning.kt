@@ -125,14 +125,8 @@ internal fun SubscriptionExpiryNotice(profile: LocalProfile?, center: IssueNotic
 internal fun ProviderFetchNotice(profile: LocalProfile, center: IssueNoticeCenter) {
     val record = profile.remote?.error.orEmpty()
     LaunchedEffect(profile.id, record) {
-        if (record.isNotBlank()) {
-            val parts = record.split(':')
-            val failure =
-                ProviderFailure(
-                    parts.getOrNull(0)?.toIntOrNull() ?: 0,
-                    parts.getOrNull(1).orEmpty(),
-                    parts.getOrNull(2).orEmpty(),
-                )
+        val failure = providerFailureRecord(record)
+        if (failure != null) {
             center.publish(
                 IssueNotice(
                     "provider-fetch:${profile.id}:${record.hashCode()}",

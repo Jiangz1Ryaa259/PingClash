@@ -30,15 +30,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -49,7 +44,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -201,7 +198,7 @@ private fun ProfileSummary(
         border =
             BorderStroke(
                 if (selected) 1.4.dp else .7.dp,
-                if (selected) Mint else MaterialTheme.colorScheme.outlineVariant,
+                if (selected) selectedRim(profile) else MaterialTheme.colorScheme.outlineVariant,
             ),
         modifier =
             Modifier.fillMaxWidth()
@@ -248,6 +245,17 @@ private fun ProfileSummary(
     }
 }
 
+/**
+ * The selected card's rim: light on glass in the dark theme, the level's colour in the light one
+ * (white would vanish there), and the accent for a profile without a quota.
+ */
+@Composable
+private fun selectedRim(profile: LocalProfile): Color {
+    val dark = MaterialTheme.colorScheme.background.luminance() < .5f
+    val level = remainingFraction(profile.quota)?.let(::quotaLevel) ?: return Mint
+    return if (dark) Color.White.copy(alpha = .8f) else quotaLevelColor(level, false)
+}
+
 /** A small badge in the title row (no extra height), gone once the profile is selected. */
 @Composable
 private fun NewProfileChip() {
@@ -278,7 +286,7 @@ private fun ProfileMenu(profile: LocalProfile, locked: Boolean, actions: Profile
         }
     }
     Box {
-        IconButton(
+        MenuIconButton(
             { menu = true },
             Modifier.testTag("profile-menu-${profile.id}").semantics {
                 contentDescription = tr(R.string.ui_more_actions)
@@ -286,8 +294,8 @@ private fun ProfileMenu(profile: LocalProfile, locked: Boolean, actions: Profile
         ) {
             AppGlyph(PcIcon.More)
         }
-        DropdownMenu(menu, { menu = false }) {
-            DropdownMenuItem(
+        GlassMenu(menu, { menu = false }) {
+            GlassMenuItem(
                 text = { Text(tr(R.string.open_proxies)) },
                 onClick = {
                     menu = false
@@ -295,7 +303,7 @@ private fun ProfileMenu(profile: LocalProfile, locked: Boolean, actions: Profile
                 },
                 enabled = !selectionLocked(locked),
             )
-            DropdownMenuItem(
+            GlassMenuItem(
                 text = {
                     Text(tr(if (copied) R.string.ui_copied else R.string.ui_subscription_copy))
                 },
@@ -316,7 +324,7 @@ private fun ProfileMenu(profile: LocalProfile, locked: Boolean, actions: Profile
                 )
                 .forEach { (command, title) ->
                     if (command != ProfileCommand.REFRESH || profile.source != null)
-                        DropdownMenuItem(
+                        GlassMenuItem(
                             text = { Text(tr(title)) },
                             enabled =
                                 when (command) {
@@ -331,7 +339,7 @@ private fun ProfileMenu(profile: LocalProfile, locked: Boolean, actions: Profile
                         )
                 }
             if (compatibilityWarning(profile, null).isNotBlank())
-                DropdownMenuItem(
+                GlassMenuItem(
                     text = { Text(tr(R.string.show_import_details)) },
                     onClick = {
                         menu = false
@@ -340,7 +348,7 @@ private fun ProfileMenu(profile: LocalProfile, locked: Boolean, actions: Profile
                     modifier = Modifier.testTag("profile-compatibility-${profile.id}"),
                 )
             if (profile.definition.isNotBlank())
-                DropdownMenuItem(
+                GlassMenuItem(
                     text = { Text(tr(R.string.reparse_local_profile)) },
                     enabled = !locked,
                     onClick = {
@@ -383,7 +391,7 @@ private fun ProfileQuota(profile: LocalProfile) {
                     )
                     .format(java.time.Instant.ofEpochSecond(it)),
                 style = MaterialTheme.typography.bodySmall,
-                color = Muted,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = .86f),
             )
         }
     }
@@ -428,7 +436,7 @@ internal fun ProfileDetailsSheet(
     onDismiss: () -> Unit,
     onCommand: (ProfileCommand, LocalProfile) -> Unit,
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = Panel) {
+    GlassSheet(onDismissRequest = onDismiss) {
         Column(
             Modifier.fillMaxWidth()
                 .verticalScroll(androidx.compose.foundation.rememberScrollState())
@@ -440,7 +448,7 @@ internal fun ProfileDetailsSheet(
             ProfileInventory(profile)
             SubscriptionDetails(profile)
             if (profile.source != null)
-                TextButton(
+                GlassTextButton(
                     {
                         onDismiss()
                         onCommand(ProfileCommand.UA, profile)
@@ -450,7 +458,7 @@ internal fun ProfileDetailsSheet(
                     Text(tr(R.string.subscription_ua))
                 }
             if (profile.remote != null)
-                TextButton(
+                GlassTextButton(
                     { onCommand(ProfileCommand.PROVIDERS, profile) },
                     enabled = !fetchLocked(locked),
                 ) {

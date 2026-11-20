@@ -20,14 +20,11 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -91,14 +88,7 @@ internal fun AppRoutingPanel(
     val listed = remember(available, selected, filters) { filtered(available, selected, filters) }
     val missing =
         if (installed != null) selected - available.map { it.packageName }.toSet() else emptySet()
-    fun toggle(pkg: String) {
-        onChange(
-            draft.copy(
-                packages =
-                    if (pkg in selected) draft.packages - pkg else (draft.packages + pkg).take(300)
-            )
-        )
-    }
+    val picks = RoutingPicks(draft, selected, notices, onChange)
     PullToRefreshBox(
         refreshing,
         onRefresh = {
@@ -124,29 +114,57 @@ internal fun AppRoutingPanel(
                 icons,
                 selected,
                 enabled && draft.appMode != "all",
-                ::toggle,
+                picks::toggle,
             )
             manualRoutingItems(
                 draft,
                 enabled,
                 ManualPackageInput(manual, { manual = it }) {
-                    notices?.publish(invalidPackageNotice())
+                    notices?.publish(
+                        packageNotice(tr(R.string.package_name_invalid), "package-invalid")
+                    )
                 },
-                onChange,
+                picks::change,
                 missing.filter { it.contains(filters.query, true) },
             )
         }
     }
 }
 
-private fun invalidPackageNotice() =
+/** How many apps per-app routing takes; the settings check refuses more. */
+private const val MAX_ROUTING_APPS = 300
+
+/** Adding and removing apps; at the limit a new app is not added, and the user is told why. */
+private class RoutingPicks(
+    private val draft: ClientSettings,
+    private val selected: Set<String>,
+    private val notices: IssueNoticeCenter?,
+    private val onChange: (ClientSettings) -> Unit,
+) {
+    fun change(next: ClientSettings) {
+        if (next.packages.size <= MAX_ROUTING_APPS) onChange(next)
+        else
+            notices?.publish(
+                packageNotice(tr(R.string.app_routing_limit, MAX_ROUTING_APPS), "app-routing-limit")
+            )
+    }
+
+    fun toggle(pkg: String) =
+        change(
+            draft.copy(
+                packages = if (pkg in selected) draft.packages - pkg else draft.packages + pkg
+            )
+        )
+}
+
+private fun packageNotice(text: String, code: String) =
     IssueNotice(
         java.util.UUID.randomUUID().toString(),
         tr(R.string.issue_warning),
-        tr(R.string.package_name_invalid),
+        text,
         IssueStage.OPERATION,
         IssueSeverity.WARNING,
-        "package-invalid",
+        code,
     )
 
 private fun readRoutingApps(context: android.content.Context): List<RoutingApp> =
@@ -223,19 +241,15 @@ private fun RoutingFilterControls(
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(
+            GlassChip(
                 filters.selected,
                 { onFilters(filters.copy(selected = !filters.selected)) },
                 label = { Text(tr(R.string.settings_selected_apps)) },
-                shape = CircleShape,
-                colors = pageChipColors(),
             )
-            FilterChip(
+            GlassChip(
                 filters.system,
                 { onFilters(filters.copy(system = !filters.system)) },
                 label = { Text(tr(R.string.settings_system_apps)) },
-                shape = CircleShape,
-                colors = pageChipColors(),
             )
         }
     }
@@ -289,7 +303,7 @@ private fun LazyListScope.manualRoutingItems(
                     if (!validPackageName(pkg)) input.reject()
                     else {
                         if (pkg !in draft.packages.toSet())
-                            onChange(draft.copy(packages = (draft.packages + pkg).take(300)))
+                            onChange(draft.copy(packages = draft.packages + pkg))
                         input.change("")
                     }
                 }
@@ -302,7 +316,7 @@ private fun LazyListScope.manualRoutingItems(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(pkg, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            TextButton(
+            GlassTextButton(
                 { onChange(draft.copy(packages = draft.packages - pkg)) },
                 enabled = enabled,
             ) {

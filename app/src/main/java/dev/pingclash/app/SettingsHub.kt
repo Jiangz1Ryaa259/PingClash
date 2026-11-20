@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.pingclash.mobile.Mobile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +62,12 @@ internal fun SettingsHub(
         draft = mergeSettingsDelta(baseline, draft, data.client)
         baseline = data.client
     }
+    // A change that could not be saved is undone on the page too, not left showing.
+    LaunchedEffect(model) {
+        model.settingsRejected.collect { (before, after) ->
+            draft = mergeSettingsDelta(after, before, draft)
+        }
+    }
     val uiBusy = model.ui.collectAsState().value.busy
     val appearanceEditable = !uiBusy
     fun changeDraft(value: ClientSettings) {
@@ -81,7 +88,7 @@ internal fun SettingsHub(
     val textDirty =
         deferredSettingFields.any {
             data.client.json().opt(it)?.toString() != draft.json().opt(it)?.toString()
-        } || dns != data.dnsAddress || target != data.probeUrl
+        } || dns.trim() != data.dnsAddress || target.trim() != data.probeUrl
     var confirmBack by remember { mutableStateOf(false) }
     fun back() {
         if (textDirty) confirmBack = true else page = ""
@@ -137,11 +144,12 @@ internal fun SettingsHub(
                                 else -> page = id
                             }
                         }
-                    "connections" -> ConnectionsPanel(vpn, model, heading)
+                    "connections" -> ConnectionsPanel(data, vpn, model, heading)
                     "dns" -> DnsPage(editor, dns) { dns = it }
                     "network" -> NetworkPage(editor, target) { target = it }
                     "rules" -> RulesPage(editor, data.activeProfile) { showProviderRules = true }
-                    "routing" ->
+                    "routing" -> {
+                        val unlock by model.unlockChecks.state.collectAsStateWithLifecycle()
                         ServiceRoutingPage(
                             data.client,
                             routingEditable(uiBusy, vpn),
@@ -155,9 +163,11 @@ internal fun SettingsHub(
                                     trailing,
                                 )
                             },
+                            routeAccess(data, unlock, model),
                         ) { routes, blocking ->
                             model.serviceRouting(routes, blocking)
                         }
+                    }
                     "apps" -> AppRoutingPanel(draft, !locked, heading) { changeDraft(it) }
                     "appearance" -> AppearancePage(data, model)
                     "control" -> ControlPage(editor, appearanceEditable) { reset = true }
@@ -177,12 +187,12 @@ internal fun SettingsHub(
         }
     }
     if (confirmBack)
-        AlertDialog(
+        GlassDialog(
             onDismissRequest = { confirmBack = false },
             title = { Text(tr(R.string.settings_unsaved_title)) },
             text = { Text(tr(R.string.settings_unsaved_body)) },
             confirmButton = {
-                TextButton({
+                GlassTextButton({
                     draft = data.client
                     dns = data.dnsAddress
                     target = data.probeUrl
@@ -193,11 +203,13 @@ internal fun SettingsHub(
                 }
             },
             dismissButton = {
-                TextButton({ confirmBack = false }) { Text(tr(R.string.settings_keep_editing)) }
+                GlassTextButton({ confirmBack = false }) {
+                    Text(tr(R.string.settings_keep_editing))
+                }
             },
         )
     if (showProviderRules)
-        AlertDialog(
+        GlassDialog(
             onDismissRequest = { showProviderRules = false },
             title = { Text(tr(R.string.view_provider_rules)) },
             text = {
@@ -208,27 +220,31 @@ internal fun SettingsHub(
                 )
             },
             confirmButton = {
-                TextButton({ showProviderRules = false }) { Text(tr(R.string.close)) }
+                GlassTextButton({ showProviderRules = false }) { Text(tr(R.string.close)) }
             },
         )
     if (reset)
-        AlertDialog(
+        GlassDialog(
             onDismissRequest = { reset = false },
             title = { Text((tr(R.string.restore_defaults))) },
             text = { Text((tr(R.string.reset_network_display_preferences_per_app))) },
             confirmButton = {
-                TextButton({
+                GlassTextButton({
                     model.clientSettings(
                         ClientSettings(),
                         DEFAULT_DNS_ADDRESS,
                         "https://www.gstatic.com/generate_204",
                     )
+                    // Unsaved text goes too: otherwise it would be laid back over the defaults.
+                    draft = ClientSettings()
+                    dns = DEFAULT_DNS_ADDRESS
+                    target = "https://www.gstatic.com/generate_204"
                     reset = false
                 }) {
                     Text((tr(R.string.restore_defaults)))
                 }
             },
-            dismissButton = { TextButton({ reset = false }) { Text((tr(R.string.cancel_2))) } },
+            dismissButton = { GlassTextButton({ reset = false }) { Text((tr(R.string.cancel_2))) } },
         )
 }
 
@@ -254,6 +270,7 @@ internal fun Choices(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ConnectionsPanel(
+    data: AppData,
     vpn: VpnUiState,
     model: AppViewModel,
     heading: @Composable () -> Unit,
@@ -263,6 +280,8 @@ private fun ConnectionsPanel(
     var refreshing by remember { mutableStateOf(false) }
     var rows by remember { mutableStateOf(emptyList<ConnectionRow>()) }
     val foreground = rememberForeground()
+    val reasons = remember(data) { RouteReasons(data) }
+    val language = LocalUiLanguage.current
     LaunchedEffect(vpn.phase, foreground, revision) {
         if (vpn.stage != VpnPhase.ESTABLISHED || !foreground) {
             rows = emptyList()
@@ -296,7 +315,7 @@ private fun ConnectionsPanel(
             if (rows.isEmpty())
                 item(key = "empty") { ConnectionsEmpty(vpn.stage == VpnPhase.ESTABLISHED) }
             items(rows, key = { "connection:${it.id}" }) { r ->
-                ConnectionListItem(r) {
+                ConnectionListItem(r, reasons.explain(r, language)) {
                     model.closeConnection(r.id)
                     rows = rows.filterNot { it.id == r.id }
                 }
@@ -356,6 +375,7 @@ internal data class ConnectionRow(
     val up: Long,
     val down: Long,
     val ruleType: String = "",
+    val rulePayload: String = "",
 )
 
 @Composable
@@ -381,7 +401,7 @@ private fun AboutPanel(ready: Boolean) {
                     }
                     .getOrDefault(file)
             }
-        AlertDialog(
+        GlassDialog(
             onDismissRequest = { license = null },
             title = { Text(file) },
             text = {
@@ -391,7 +411,7 @@ private fun AboutPanel(ready: Boolean) {
                     style = MaterialTheme.typography.bodySmall,
                 )
             },
-            confirmButton = { TextButton({ license = null }) { Text((tr(R.string.close))) } },
+            confirmButton = { GlassTextButton({ license = null }) { Text((tr(R.string.close))) } },
         )
     }
 }

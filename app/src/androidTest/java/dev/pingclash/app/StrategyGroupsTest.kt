@@ -75,7 +75,7 @@ class StrategyGroupsTest {
             assertEquals(234, profile.nodes.size)
             assertEquals(0, profile.unsupported)
             compose.onNodeWithTag("nav-1").performClick()
-            compose.onNodeWithTag("strategy-pager").assertIsDisplayed()
+            compose.openProxyGroup("拨号选择")
             compose.onNodeWithTag("group-choice-拨号选择-合成节点0").performClick()
             compose.waitUntil(10000) {
                 app.repository.data.value.profiles
@@ -100,7 +100,7 @@ class StrategyGroupsTest {
                 JSONObject(reread.profiles.first { it.id == profile.id }.nodes.last().config)
                     .has("dialer-chain")
             )
-            compose.onNodeWithContentDescription("代理选项").performClick()
+            compose.onNodeWithTag("group-menu").performClick()
             compose.onNodeWithTag("group-main-拨号选择").performClick()
             compose.waitUntil(10000) { app.repository.data.value.selected?.type == "group" }
             assertEquals(
@@ -109,8 +109,8 @@ class StrategyGroupsTest {
                     .getString("state"),
             )
             assertEquals("拨号选择", ProfileRepository(app).data.value.selected?.name)
-            compose.onNodeWithTag("strategy-pager").performTouchInput { swipeLeft() }
-            compose.onNodeWithTag("group-tab-自动测试").assertIsSelected()
+            compose.openProxyGroup("自动测试")
+            compose.onNodeWithTag("group-auto-自动测试").assertIsSelected()
             compose.onNodeWithTag("group-choice-自动测试-合成节点0").performClick()
             compose.waitUntil(10000) {
                 app.repository.data.value.profiles
@@ -126,11 +126,9 @@ class StrategyGroupsTest {
                     .fetchSemanticsNodes()
                     .isNotEmpty()
             }
-            compose
-                .onNodeWithTag("group-choice-自动测试-合成节点0")
-                .assertIsSelected()
-                .assertIsEnabled()
-                .performClick()
+            compose.onNodeWithTag("group-choice-自动测试-合成节点0").assertIsSelected().assertIsEnabled()
+            // Automatic again: the pin goes and the group chooses for itself.
+            compose.onNodeWithTag("group-auto-自动测试").performClick()
             compose.waitUntil(10000) {
                 app.repository.data.value.profiles
                     .first { it.id == profile.id }
@@ -138,7 +136,7 @@ class StrategyGroupsTest {
                     .selected
                     .isEmpty()
             }
-            compose.onNodeWithTag("strategy-pager").performTouchInput { swipeRight() }
+            compose.closeProxyGroup()
             captureSyntheticFixture(
                 compose,
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()),

@@ -22,12 +22,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -93,7 +91,7 @@ internal fun ImportDialog(
                 AdvancedSection(form, ui.busy, onUserAgent)
             } else NodeSection(form, ui.busy)
             ImportIssue(form, ui)
-            Button(
+            GlassButton(
                 { form.next(onSubmit) },
                 Modifier.fillMaxWidth().height(54.dp).testTag("import-submit"),
                 shape = CircleShape,
@@ -153,7 +151,11 @@ private fun ImportHeader(busy: Boolean, onDismiss: () -> Unit, onFile: (() -> Un
             }
             Box(Modifier.weight(1f))
             if (onFile != null)
-                TextButton(onFile, enabled = !busy, modifier = Modifier.testTag("import-file")) {
+                GlassTextButton(
+                    onFile,
+                    enabled = !busy,
+                    modifier = Modifier.testTag("import-file"),
+                ) {
                     Text(tr(R.string.import_file), color = pageInk().accent)
                 }
         }

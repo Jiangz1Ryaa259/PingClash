@@ -408,7 +408,7 @@ class SubscriptionImportTest {
         compose.onNodeWithTag("nav-2").performClick()
         assertCaptureProtected(false)
         compose.onNodeWithTag("profile-add").performClick()
-        compose.onNodeWithTag("import-method-url").performClick()
+        compose.chooseImport("url")
         compose
             .onNodeWithTag("subscription-content")
             .performTextInput("https://example.invalid/subscribe?token=synthetic-private")
@@ -435,7 +435,7 @@ class SubscriptionImportTest {
         SubscriptionFixture().use { fixture ->
             compose.onNodeWithTag("nav-2").performClick()
             compose.onNodeWithTag("profile-add").performClick()
-            compose.onNodeWithTag("import-method-url").performClick()
+            compose.chooseImport("url")
             compose.onNodeWithTag("subscription-content").performTextInput(fixture.html)
             hideFixtureKeyboard()
             compose.waitForIdle()

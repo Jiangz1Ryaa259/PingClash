@@ -7,9 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -35,7 +33,7 @@ class SubscriptionImportActivity : ComponentActivity() {
             val data by
                 (application as PingClashApplication).repository.data.collectAsStateWithLifecycle()
             PingClashTheme(data.client.effectiveTheme, data.client.dynamicColor) {
-                AlertDialog(
+                GlassDialog(
                     onDismissRequest = { if (state.phase != "importing") finish() },
                     title = { Text(tr(R.string.deep_link_title)) },
                     text = {
@@ -51,18 +49,18 @@ class SubscriptionImportActivity : ComponentActivity() {
                     },
                     confirmButton = {
                         if (state.phase == "confirm") {
-                            TextButton(model::confirm, Modifier.testTag("deep-link-confirm")) {
+                            GlassTextButton(model::confirm, Modifier.testTag("deep-link-confirm")) {
                                 Text(tr(R.string.deep_link_import))
                             }
                         } else if (state.phase != "importing") {
-                            TextButton({ finish() }, Modifier.testTag("deep-link-close")) {
+                            GlassTextButton({ finish() }, Modifier.testTag("deep-link-close")) {
                                 Text(tr(R.string.deep_link_close))
                             }
                         }
                     },
                     dismissButton = {
                         if (state.phase == "confirm")
-                            TextButton({ finish() }, Modifier.testTag("deep-link-cancel")) {
+                            GlassTextButton({ finish() }, Modifier.testTag("deep-link-cancel")) {
                                 Text(tr(R.string.deep_link_cancel))
                             }
                     },

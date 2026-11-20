@@ -66,7 +66,11 @@ internal fun DiagnosticConclusion(
 internal fun AuxiliaryEvidence(steps: List<Models.Step>) {
     val visible = visibleDiagnosticSteps(steps)
     if (visible.isNotEmpty()) {
-        Text(tr(R.string.evidence_timeline), style = MaterialTheme.typography.titleMedium)
+        Text(
+            tr(R.string.evidence_timeline),
+            color = pageInk().text,
+            style = MaterialTheme.typography.titleMedium.onPage(),
+        )
         visible.forEach { StepCard(it) }
     }
 }

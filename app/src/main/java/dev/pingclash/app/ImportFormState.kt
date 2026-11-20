@@ -14,6 +14,7 @@ internal class ImportFormState(initial: ImportDraft) {
     var nameEdited = false
     var visible by mutableStateOf(false)
     var agent by mutableStateOf(DEFAULT_SUBSCRIPTION_UA)
+    val showAgent = initial.showAgent
     var error by mutableStateOf<String?>(null)
 
     fun edit(value: String) {

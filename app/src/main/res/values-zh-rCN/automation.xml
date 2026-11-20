@@ -45,5 +45,6 @@
     <string name="ui_backup_saved_private">已备份。文件包含订阅链接和密码，请妥善保管。</string>
     <string name="ui_backup_restored">设置已恢复。</string>
     <string name="ui_backup_restored_profiles">设置已恢复，并添加了 %1$d 个配置。</string>
+    <string name="ui_backup_saved_skipped">已备份，但有 %1$d 个本地配置未能包含。</string>
     <string name="ui_backup_restored_partly">设置已恢复，添加了 %1$d 个配置；%2$d 个未能添加。</string>
 </resources>

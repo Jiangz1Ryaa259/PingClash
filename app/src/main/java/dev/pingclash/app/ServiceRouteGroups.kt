@@ -14,10 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -53,7 +51,7 @@ internal fun GroupDialog(
 ) {
     val options =
         listOf(ROUTE_PROXY to tr(R.string.routing_main_proxy)) + groups.map { groupRoute(it) to it }
-    AlertDialog(
+    GlassDialog(
         onDismissRequest = onDismiss,
         title = { Text(tr(R.string.routing_group_title)) },
         text = {
@@ -78,7 +76,23 @@ internal fun GroupDialog(
                 }
             }
         },
-        confirmButton = { TextButton(onDismiss) { Text(tr(R.string.cancel)) } },
+        confirmButton = { GlassTextButton(onDismiss) { Text(tr(R.string.cancel)) } },
+    )
+}
+
+@Composable
+internal fun RouteAccessLine(tag: String, access: RouteAccess) {
+    val running = access.result?.status == UnlockStatus.RUNNING
+    Text(
+        unlockText(access.result, LocalUiLanguage.current),
+        Modifier.clickable(enabled = !running, role = Role.Button, onClick = access.onCheck)
+            .heightIn(min = 24.dp)
+            .padding(top = 3.dp)
+            .testTag("route-$tag-access"),
+        color = if (access.result == null) MaterialTheme.colorScheme.primary else Muted,
+        style = MaterialTheme.typography.bodySmall,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
     )
 }
 

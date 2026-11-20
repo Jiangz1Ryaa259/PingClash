@@ -217,7 +217,7 @@ class SubscriptionNamingTest {
         compose.onNodeWithTag("nav-2").performClick()
         compose.onNodeWithText(tr(R.string.import_file)).assertDoesNotExist()
         compose.onNodeWithTag("profile-add").performClick()
-        compose.onNodeWithTag("import-method-url").performClick()
+        compose.chooseImport("url")
         compose.onNodeWithTag("import-file").assertIsDisplayed().performClick()
         val picker = device.wait(Until.findObject(By.pkg("com.android.documentsui")), 5000)
         assertNotNull("System file picker missing", picker)

@@ -15,6 +15,19 @@ import org.junit.runner.RunWith
 class CrashRecorderTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
+    /** A failed cast keeps its two class names, and nothing else a message could hold. */
+    @Test
+    fun aFailedCastKeepsOnlyItsClassNames() {
+        assertTrue(
+            CrashText.throwable(ClassCastException("a.B cannot be cast to c.D\$E"))
+                .contains("cast: a.B -> c.D\$E")
+        )
+        assertFalse(
+            CrashText.throwable(ClassCastException("CANARY-TOKEN cannot be cast to x y"))
+                .contains("cast:")
+        )
+    }
+
     @Test
     fun previousRunReportsBecomeTheLastCrashOnceAndCanBeDeleted() {
         val dir = CrashRecorder.folder(context)

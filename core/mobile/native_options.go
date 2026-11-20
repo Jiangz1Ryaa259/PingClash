@@ -212,8 +212,9 @@ func nativeMappingValid(m map[string]any, fields map[string]nativeField, depth i
 			continue
 		}
 		if kind == "openvpn" && (name == "ca" || name == "cert" || name == "key" || name == "tls-auth" || name == "tls-crypt" || name == "tls-crypt-v2") {
+			// Inline PEM only: a profile never names a file on the device here.
 			value, ok := value.(string)
-			if !ok || len(value) > 16384 {
+			if !ok || len(value) > 16384 || value != "" && !inlinePEM(value) {
 				return false
 			}
 			continue
@@ -368,4 +369,11 @@ func nativePort(m map[string]any) bool {
 	}
 	kind, _ := m["type"].(string)
 	return (kind == "hysteria2" || kind == "hysteria") && m["ports"] != "" && m["ports"] != nil || kind == "mieru" && m["port-range"] != "" && m["port-range"] != nil
+}
+
+// inlinePEM reports whether value holds a PEM block (a certificate, a key or an OpenVPN static
+// key), not a path or other text.
+func inlinePEM(value string) bool {
+	begin := strings.Index(value, "-----BEGIN ")
+	return begin >= 0 && strings.Contains(value[begin:], "-----END ")
 }

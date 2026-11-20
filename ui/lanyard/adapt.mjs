@@ -1,6 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
-export async function adaptReference() {
+// The build writes src/Lanyard.jsx; a test passes { write: false } and only compares.
+export async function adaptReference({ write = true } = {}) {
   let source = (await readFile(new URL('./reference/Lanyard.jsx', import.meta.url), 'utf8')).replace(/\r\n/g, '\n');
   source = "import { syncHostedFace } from './hostLifecycle.mjs';\nimport { createHostedMotion } from './hostMotion.mjs';\n" +
     "import { installHostFace } from './hostFace.mjs';\n" + source;
@@ -111,7 +112,7 @@ export async function adaptReference() {
   replace("      document.removeEventListener('visibilitychange', onVisibility);", `      window.removeEventListener('pingclash-frame', onNativeFrame);
       window.__lanyardReady = false;
       document.removeEventListener('visibilitychange', onVisibility);`);
-  await writeFile(new URL('./src/Lanyard.jsx', import.meta.url),
+  if (write) await writeFile(new URL('./src/Lanyard.jsx', import.meta.url),
     '// React Bits Lanyard; license: ../LICENSE-ReactBits.md. Android host adaptations: adapt.mjs.\n' + source);
   return source;
 }

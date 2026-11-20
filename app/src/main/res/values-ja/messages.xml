@@ -164,7 +164,7 @@
     <string name="hide_import_details">インポートの詳細を隠す</string>
     <string name="the_core_is_busy_try_again_shortly">コアが処理中です。しばらくしてからもう一度お試しください。</string>
     <string name="connect_timeout_seconds">接続タイムアウト（秒）</string>
-    <string name="check_a_domain_or_ip_manually">ドメインまたはIPを手動で確認 →</string>
+    <string name="check_a_domain_or_ip_manually">ドメインまたはIPを手動で確認</string>
     <string name="no_proxies_could_be_imported">プロキシをインポートできませんでした。</string>
     <string name="show_session_traffic">セッションの通信量を表示</string>
     <string name="connectivity_request_succeeded_ms">接続状態：成功 · %1$sms</string>
@@ -214,6 +214,7 @@
     <string name="network_options_are_invalid_or_exceed_limi">ネットワークの設定が正しくないか、上限を超えています</string>
     <string name="download_and_import">ダウンロードしてインポート</string>
     <string name="package_name">パッケージ名</string>
+    <string name="app_routing_limit">選べるアプリは%1$d個までです。</string>
     <string name="package_name_invalid">パッケージ名が正しくありません。com.example.appのようにドットで区切って入力してください（PingClash自体は指定できません）。</string>
     <string name="parameters_or_their_combination_were_rejec">パラメーターまたはその組み合わせがコアに受け付けられませんでした</string>
     <string name="unresolved_dialer_dependency_missing_proxy">ダイヤラーの依存関係を解決できません（プロキシの不足、循環、未対応のグループの種類）</string>

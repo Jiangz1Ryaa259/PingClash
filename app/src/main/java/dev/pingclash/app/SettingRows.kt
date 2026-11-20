@@ -88,7 +88,7 @@ internal fun NavRow(
     Row(
         Modifier.fillMaxWidth()
             .heightIn(min = 50.dp)
-            .fluidClickable(depth = .97f, role = Role.Button, onClick = onClick)
+            .glassClickable(role = Role.Button, onClick = onClick)
             .testTag(tag),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -123,7 +123,7 @@ internal fun LinkRow(title: String, tag: String, enabled: Boolean = true, onClic
     Row(
         Modifier.fillMaxWidth()
             .heightIn(min = 50.dp)
-            .fluidClickable(enabled, depth = .97f, role = Role.Button, onClick = onClick)
+            .glassClickable(enabled, Role.Button, onClick = onClick)
             .testTag(tag),
         verticalAlignment = Alignment.CenterVertically,
     ) {

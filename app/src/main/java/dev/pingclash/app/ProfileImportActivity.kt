@@ -49,10 +49,51 @@ internal enum class ImportMethod(val title: Int, val glyph: PcIcon, val section:
     BUNDLE(R.string.import_from_bundle, PcIcon.Archive, 1),
     IMAGE(R.string.import_from_image, PcIcon.Qr, 2),
     CAMERA(R.string.import_from_camera, PcIcon.Camera, 2),
+    NODE(R.string.import_node, PcIcon.Server, 3),
+    SUBSCRIPTION(R.string.import_subscription_manual, PcIcon.Profile, 3),
+}
+
+/** The ways to add a profile, as the sheet groups them; a group of one opens it at once. */
+internal enum class ImportGroup(
+    val title: Int,
+    val hint: Int,
+    val glyph: PcIcon,
+    val methods: List<ImportMethod>,
+) {
+    LINK(
+        R.string.import_group_link,
+        R.string.import_group_link_hint,
+        PcIcon.Link,
+        listOf(ImportMethod.URL, ImportMethod.CLIPBOARD),
+    ),
+    FILE(
+        R.string.import_group_file,
+        R.string.import_group_file_hint,
+        PcIcon.Folder,
+        listOf(ImportMethod.FILE, ImportMethod.TEXT, ImportMethod.BUNDLE),
+    ),
+    QR(
+        R.string.import_group_qr,
+        R.string.import_group_qr_hint,
+        PcIcon.Qr,
+        listOf(ImportMethod.IMAGE, ImportMethod.CAMERA),
+    ),
+    NODE(R.string.import_node, R.string.import_node_hint, PcIcon.Server, listOf(ImportMethod.NODE)),
+    SUBSCRIPTION(
+        R.string.import_subscription_manual,
+        R.string.import_subscription_manual_hint,
+        PcIcon.Profile,
+        listOf(ImportMethod.SUBSCRIPTION),
+    ),
 }
 
 /** Deliberately not parcelable/saveable: subscription credentials stay in memory. */
-internal class ImportDraft(val content: String = "", val subscription: Boolean = true) {
+internal class ImportDraft(
+    val content: String = "",
+    val subscription: Boolean = true,
+    /** Opened as "fill in a subscription": the User-Agent shows at once. */
+    val showAgent: Boolean = false,
+) {
     override fun toString() = "ImportDraft(redacted)"
 
     internal var form: ImportFormState? = null
@@ -75,6 +116,14 @@ class ProfileImportActivity : ComponentActivity() {
                 .getOrDefault(ImportMethod.URL)
         // Only a small enum is accepted from the launch Intent. No credential extras.
         intent.replaceExtras(null as Bundle?)
+        // The typed forms need no window focus: set them up before the first frame, so the page
+        // does not show the link form for a moment and then change.
+        if (!input.opened && method in listOf(ImportMethod.TEXT, ImportMethod.SUBSCRIPTION)) {
+            input.opened = true
+            input.draft =
+                if (method == ImportMethod.TEXT) ImportDraft(subscription = false)
+                else ImportDraft(showAgent = true)
+        }
         setContent {
             val data by model.data.collectAsStateWithLifecycle()
             val ui by model.ui.collectAsStateWithLifecycle()
@@ -97,7 +146,8 @@ class ProfileImportActivity : ComponentActivity() {
 }
 
 @Composable
-@Suppress("CyclomaticComplexMethod") // Explicit acquisition methods and result callbacks.
+// Explicit acquisition methods and result callbacks, one branch each.
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 private fun ProfileImportContent(
     method: ImportMethod,
     model: AppViewModel,
@@ -132,6 +182,7 @@ private fun ProfileImportContent(
                 ImportMethod.CAMERA ->
                     runCatching { camera.launch(null) }.onFailure { input.unavailable() }
                 ImportMethod.TEXT -> input.draft = ImportDraft(subscription = false)
+                ImportMethod.SUBSCRIPTION -> input.draft = ImportDraft(showAgent = true)
                 else -> Unit
             }
         }
@@ -143,20 +194,25 @@ private fun ProfileImportContent(
         androidx.compose.runtime.CompositionLocalProvider(
             LocalIssueNotices provides model.notices
         ) {
-            ImportDialog(
-                ui.copy(
-                    importIssue = input.error ?: ui.importIssue,
-                    busy = ui.busy || input.loading,
-                ),
-                { onClose(null) },
-                onUserAgent = { agent = it },
-                onFile = { file.launch(arrayOf("*/*")) },
-                initial = input.draft,
-            ) { name, body, subscription ->
-                input.error = null
-                if (subscription) model.subscribe(name, body.trim(), agent)
-                else model.importText(name, body)
-            }
+            if (method == ImportMethod.NODE)
+                NodeEntryPage(ui.busy, ui.importIssue, { onClose(null) }) { name, definition ->
+                    model.importText(name, definition)
+                }
+            else
+                ImportDialog(
+                    ui.copy(
+                        importIssue = input.error ?: ui.importIssue,
+                        busy = ui.busy || input.loading,
+                    ),
+                    { onClose(null) },
+                    onUserAgent = { agent = it },
+                    onFile = { file.launch(arrayOf("*/*")) },
+                    initial = input.draft,
+                ) { name, body, subscription ->
+                    input.error = null
+                    if (subscription) model.subscribe(name, body.trim(), agent)
+                    else model.importText(name, body)
+                }
         }
         if (input.loading) CircularProgressIndicator(Modifier.align(Alignment.Center).size(32.dp))
     }

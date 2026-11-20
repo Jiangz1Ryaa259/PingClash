@@ -7,10 +7,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -96,7 +94,7 @@ internal fun UserGuideDialog(onClose: () -> Unit) {
 
 @Composable
 private fun DocumentDialog(title: String, onClose: () -> Unit, content: @Composable () -> Unit) {
-    AlertDialog(
+    GlassDialog(
         onDismissRequest = onClose,
         title = { Text(title) },
         text = {
@@ -108,7 +106,7 @@ private fun DocumentDialog(title: String, onClose: () -> Unit, content: @Composa
                 content()
             }
         },
-        confirmButton = { TextButton(onClose) { Text(tr(R.string.close)) } },
+        confirmButton = { GlassTextButton(onClose) { Text(tr(R.string.close)) } },
     )
 }
 

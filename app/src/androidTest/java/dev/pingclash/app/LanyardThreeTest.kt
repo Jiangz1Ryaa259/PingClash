@@ -383,13 +383,37 @@ class LanyardThreeTest {
             "window.__blocked=false;fetch('https://example.invalid/').catch(()=>window.__blocked=true)",
         )
         await { evaluate(view, "window.__blocked") == "true" }
-        evaluate(view, "window.PingClashScene.frame({active:false})")
-        Thread.sleep(250)
-        val stopped = status(view).getInt("frames")
-        Thread.sleep(250)
-        assertEquals(stopped, status(view).getInt("frames"))
+        val stopped = pausedFrames(view)
         evaluate(view, "window.PingClashScene.frame({active:true})")
         await { status(view).getInt("frames") > stopped }
+    }
+
+    /**
+     * Pauses the scene and returns its frame count once it has drawn nothing for 250 ms while
+     * paused. The host may rightly resume it in between (the activity coming back to the foreground
+     * re-sends the host's frame, which is active), so only a window in which the scene stayed
+     * paused counts; such a window is tried again, a frame drawn while paused fails.
+     */
+    private fun pausedFrames(view: WebView): Int {
+        repeat(PAUSE_ATTEMPTS) {
+            evaluate(view, "window.PingClashScene.frame({active:false})")
+            Thread.sleep(250)
+            val before = status(view)
+            Thread.sleep(250)
+            val after = status(view)
+            if (!before.getBoolean("active") && !after.getBoolean("active")) {
+                assertEquals(
+                    "Paused scene drew again",
+                    before.getInt("frames"),
+                    after.getInt("frames"),
+                )
+                return after.getInt("frames")
+            }
+        }
+        throw AssertionError(
+            "The host resumed the scene in each of $PAUSE_ATTEMPTS tries; state now " +
+                evaluate(view, "JSON.stringify(window.__pingclashFrame)")
+        )
     }
 
     private fun fixture(content: @androidx.compose.runtime.Composable () -> Unit) {
@@ -477,3 +501,6 @@ private fun assertStationaryCoordinates(held: JSONObject, stationary: JSONObject
         )
     }
 }
+
+/** Pause windows tried before the host is taken to be resuming the scene on its own. */
+private const val PAUSE_ATTEMPTS = 3

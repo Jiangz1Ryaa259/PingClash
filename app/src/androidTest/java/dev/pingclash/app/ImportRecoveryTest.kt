@@ -62,10 +62,14 @@ class ImportRecoveryTest {
     private fun open(method: String) {
         compose.onNodeWithTag("nav-2").performClick()
         compose.onNodeWithTag("profile-add").performClick()
-        ImportMethod.entries.forEach {
-            compose.onNodeWithTag("import-method-${it.name.lowercase()}").assertHasClickAction()
+        // Every way to add is offered: a group of several by its row, a single one directly.
+        ImportGroup.entries.forEach { group ->
+            val tag =
+                group.methods.singleOrNull()?.let { "import-method-${it.name.lowercase()}" }
+                    ?: "import-group-${group.name.lowercase()}"
+            compose.onNodeWithTag(tag).assertHasClickAction()
         }
-        compose.onNodeWithTag("import-method-$method").performClick()
+        compose.chooseImport(method)
         compose.onNodeWithTag("import-page").assertExists()
     }
 
@@ -116,7 +120,7 @@ class ImportRecoveryTest {
             assertEquals(before, app.repository.data.value.profiles.map { it.id })
             compose.onNodeWithTag("nav-2").performClick()
             compose.onNodeWithTag("profile-add").performClick()
-            compose.onNodeWithTag("import-method-text").performClick()
+            compose.chooseImport("text")
             compose.onNodeWithTag("subscription-content").assertIsEnabled()
             compose.onNodeWithTag("import-back").performClick()
         }

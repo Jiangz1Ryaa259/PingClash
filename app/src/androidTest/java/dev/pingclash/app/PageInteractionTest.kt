@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
@@ -148,14 +147,16 @@ class PageInteractionTest {
     @Test
     fun proxyProfileAndWebsiteCardsShrinkOnPressAndCancelWithoutExecuting() {
         var calls = 0
+        val state = routeState()
         fixture {
-            ProxyMemberCard(
-                ProxyMemberPresentation("Node", "AnyTLS", false, true, null, false),
-                ProxyMemberActions({ calls++ }, {}, null, null),
-                Modifier.testTag("press-proxy"),
+            MemberRow(
+                state,
+                state.groups.getValue(ROUTE_MANUAL),
+                "香港 02",
+                routeActions(choose = { _, _ -> calls++ }),
             )
         }
-        pressAndCancel("press-proxy")
+        pressAndCancel("group-choice-$ROUTE_MANUAL-香港 02")
         assertEquals(0, calls)
         fixture {
             ProfilesOverview(

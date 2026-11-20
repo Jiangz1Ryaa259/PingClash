@@ -11,7 +11,7 @@ concurrency:
 jobs:
   android:
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       ANDROID_HOME: ${{ github.workspace }}/.tools/android-sdk
       ANDROID_NDK_HOME: ${{ github.workspace }}/.tools/android-sdk/ndk/27.2.12479018
@@ -57,9 +57,20 @@ jobs:
       - name: Verify translations
         shell: pwsh
         run: python tools/verify-translations.py
+      - name: Check Kotlin formatting
+        shell: pwsh
+        run: ./tools/format-kotlin.ps1 -Check
       - name: Build APK, detekt baseline gate, lint, and Java verification
         shell: pwsh
         run: ./tools/build-android.ps1
+      # The release build type is what ships: R8 shrinking and its own lint. Signing happens
+      # locally afterwards, so this unsigned build needs no key.
+      - name: Release compile, R8 and lint (unsigned)
+        shell: pwsh
+        run: ./gradlew.bat --no-daemon --max-workers=2 :app:assembleRelease :app:lintRelease
+        env:
+          GRADLE_USER_HOME: ${{ github.workspace }}/.tools/gradle
+          ANDROID_USER_HOME: ${{ github.workspace }}/.tools/android-user
       - name: Verify application copy and external guide
         shell: pwsh
         run: python tools/verify-ui-copy.py app/build/outputs/apk/debug/app-debug.apk

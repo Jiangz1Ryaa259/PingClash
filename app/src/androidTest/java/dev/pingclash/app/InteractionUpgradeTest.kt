@@ -139,7 +139,7 @@ class InteractionUpgradeTest {
         device.pressBack()
         compose.onNodeWithTag("profiles-list").performScrollToIndex(12)
         compose.onNodeWithTag("profile-add").assertHasClickAction().performClick()
-        compose.onNodeWithTag("import-method-url").performClick()
+        compose.chooseImport("url")
         assertEquals(1, adds)
         clipboard.clearPrimaryClip()
     }

@@ -22,11 +22,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -68,12 +66,14 @@ internal fun rememberHomeRegion(): ServiceRegion? {
  * Settings > Service routing: ad blocking and the region tabs stay put; only the services of the
  * chosen tab scroll, inside their card. Clear all sits at the top right of the heading.
  */
+@Suppress("LongParameterList") // The page's settings, its heading and two callbacks.
 @Composable
 internal fun ColumnScope.ServiceRoutingPage(
     client: ClientSettings,
     enabled: Boolean,
     groups: List<String>,
     heading: @Composable (trailing: @Composable () -> Unit) -> Unit,
+    access: (String) -> RouteAccess? = { null },
     onChange: (routes: Map<String, String>, blocking: String) -> Unit,
 ) {
     val routes = client.serviceRoutes
@@ -115,6 +115,7 @@ internal fun ColumnScope.ServiceRoutingPage(
                         service.id,
                         detail,
                         if (detail != null && enabled) ({ picking = service.id }) else null,
+                        access(service.id),
                     ),
                     routes.routeOf(listOf(service.id)),
                     enabled,
@@ -134,7 +135,7 @@ internal fun ColumnScope.ServiceRoutingPage(
 
 @Composable
 private fun ClearButton(enabled: Boolean, onClick: () -> Unit) {
-    TextButton(onClick, enabled = enabled, modifier = Modifier.testTag("routing-clear-all")) {
+    GlassTextButton(onClick, enabled = enabled, modifier = Modifier.testTag("routing-clear-all")) {
         Text(
             tr(R.string.routing_clear_all),
             color = pageInk().danger.copy(alpha = if (enabled) 1f else .38f),
@@ -144,12 +145,12 @@ private fun ClearButton(enabled: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun ClearDialog(onDismiss: () -> Unit, onClear: () -> Unit) {
-    AlertDialog(
+    GlassDialog(
         onDismissRequest = onDismiss,
         title = { Text(tr(R.string.routing_clear_title)) },
         text = { Text(tr(R.string.routing_clear_body)) },
         confirmButton = {
-            TextButton(
+            GlassTextButton(
                 {
                     onDismiss()
                     onClear()
@@ -159,7 +160,7 @@ private fun ClearDialog(onDismiss: () -> Unit, onClear: () -> Unit) {
                 Text(tr(R.string.routing_clear_confirm), color = MaterialTheme.colorScheme.error)
             }
         },
-        dismissButton = { TextButton(onDismiss) { Text(tr(R.string.cancel)) } },
+        dismissButton = { GlassTextButton(onDismiss) { Text(tr(R.string.cancel)) } },
     )
 }
 
@@ -209,6 +210,8 @@ internal data class RouteLabel(
     val tag: String,
     val detail: String? = null,
     val onDetail: (() -> Unit)? = null,
+    /** Services whose access can be checked ([UNLOCK_SERVICES]). */
+    val access: RouteAccess? = null,
 )
 
 private val MIN_ROUTE_NAME = 92.dp
@@ -254,6 +257,7 @@ internal fun RouteRow(
             Column {
                 Text(label.name, style = MaterialTheme.typography.bodyLarge)
                 if (label.detail != null) RouteDetail(label)
+                label.access?.let { RouteAccessLine(label.tag, it) }
             }
         }
         val choice: @Composable (Modifier) -> Unit = { modifier ->

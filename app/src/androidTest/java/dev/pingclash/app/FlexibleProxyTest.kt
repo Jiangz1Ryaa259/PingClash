@@ -18,6 +18,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import dev.pingclash.mobile.Mobile
 import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
@@ -192,6 +193,7 @@ class FlexibleProxyTest {
                     before.probeUrl,
                 )
                 compose.onNodeWithTag("nav-1").performClick()
+                compose.openProxyGroup("Main")
                 compose.onNodeWithTag("proxy-test-group").performClick()
                 compose.waitUntil(5000) { sockets.isNotEmpty() && model.proxyTests.value.running }
                 val nodeIds = repo.data.value.activeProfile!!.nodes.map { it.id }
@@ -220,6 +222,80 @@ class FlexibleProxyTest {
                 repo.delete(profile.id)
             }
         }
+    }
+
+    /** A live connection reports its matched rule, and the list says which choice sent it. */
+    @Test
+    fun aLiveConnectionSaysWhichOfTheUsersRulesSentIt() {
+        WebsiteTlsFixture().use { tls ->
+            ControlledServers(mapOf(("192.0.2.123" to 443) to tls.port)).use { fixture ->
+                checkLiveReason(fixture)
+            }
+        }
+    }
+
+    private fun checkLiveReason(fixture: ControlledServers) {
+        val repo = app.repository
+        val before = repo.data.value
+        val raw =
+            JSONObject()
+                .put("proxies", JSONArray().put(socks("Only", fixture.socks.localPort)))
+                .toString()
+        val profile = repo.importProfile("Route reason fixture", raw)
+        try {
+            repo.activate(profile.id)
+            repo.clientSettings(
+                before.client.copy(
+                    mode = "rule",
+                    customRules = "IP-CIDR,192.0.2.123/32,PROXY",
+                    inspectConnections = true,
+                ),
+                before.dnsAddress,
+                before.probeUrl,
+            )
+            approveOwn()
+            VpnRuntime.connect(app)
+            compose.waitUntil(10000) {
+                VpnRuntime.state.value.phase in setOf("established", "error")
+            }
+            assertEquals("established", VpnRuntime.state.value.phase)
+            // Hold one connection open through the tunnel while the list is read.
+            vpnNetwork().socketFactory.createSocket("192.0.2.123", 443).use {
+                val row = liveRow("192.0.2.123")
+                assertEquals("IP-CIDR", row.ruleType)
+                assertEquals("192.0.2.123/32", row.rulePayload)
+                assertEquals(
+                    tr(R.string.connection_reason_custom, 1),
+                    RouteReasons(repo.data.value).explain(row, "en"),
+                )
+            }
+        } finally {
+            VpnRuntime.disconnect(app)
+            compose.waitUntil(10000) { !VpnRuntime.state.value.active }
+            repo.clientSettings(before.client, before.dnsAddress, before.probeUrl)
+            repo.delete(profile.id)
+        }
+    }
+
+    private fun vpnNetwork(): android.net.Network {
+        val manager = app.getSystemService(ConnectivityManager::class.java)
+        fun find() =
+            manager.allNetworks.firstOrNull {
+                manager
+                    .getNetworkCapabilities(it)
+                    ?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+            }
+        compose.waitUntil(10000) { find() != null }
+        return find()!!
+    }
+
+    private fun liveRow(address: String): ConnectionRow {
+        fun find() =
+            parseConnectionRows(Mobile.vpnConnections()).firstOrNull {
+                address in it.destination && it.ruleType.isNotBlank()
+            }
+        compose.waitUntil(10000) { find() != null }
+        return find()!!
     }
 
     @Test
@@ -282,6 +358,7 @@ class FlexibleProxyTest {
             val start = VpnRuntime.state.value.sessionStartedElapsed
             compose.onNodeWithTag("nav-1").performClick()
             val group = profile.displayGroups().first().name
+            compose.openProxyGroup(group)
             compose.onNodeWithTag("group-choice-$group-VPN B").assertIsEnabled().performClick()
             // Check at once, while the switch is still being applied: the check must wait for
             // the new route instead of meeting the swap.

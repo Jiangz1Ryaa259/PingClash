@@ -23,6 +23,14 @@ static int throw_runtime_exception(JNIEnv* env, char const* message)
     return -1;
 }
 
+/** Frees a NULL-terminated list of strdup()ed strings and the list; NULL is fine. */
+static void free_strings(char** list)
+{
+    if (!list) return;
+    for (char** item = list; *item; ++item) free(*item);
+    free(list);
+}
+
 static int create_subprocess(JNIEnv* env,
         char const* cmd,
         char const* cwd,
@@ -132,54 +140,69 @@ JNIEXPORT jint JNICALL Java_com_termux_terminal_JNI_createSubprocess(
         jint cell_width,
         jint cell_height)
 {
+    // Every failure below frees what was copied so far. A NULL from a JNI call already has an
+    // exception pending, so it is returned as is: throwing a second one would be undefined.
     jsize size = args ? (*env)->GetArrayLength(env, args) : 0;
     char** argv = NULL;
+    char** envp = NULL;
     if (size > 0) {
-        argv = (char**) malloc((size + 1) * sizeof(char*));
+        argv = (char**) calloc(size + 1, sizeof(char*));
         if (!argv) return throw_runtime_exception(env, "Couldn't allocate argv array");
         for (int i = 0; i < size; ++i) {
             jstring arg_java_string = (jstring) (*env)->GetObjectArrayElement(env, args, i);
             char const* arg_utf8 = (*env)->GetStringUTFChars(env, arg_java_string, NULL);
-            if (!arg_utf8) return throw_runtime_exception(env, "GetStringUTFChars() failed for argv");
+            if (!arg_utf8) {
+                free_strings(argv);
+                return -1;
+            }
             argv[i] = strdup(arg_utf8);
             (*env)->ReleaseStringUTFChars(env, arg_java_string, arg_utf8);
         }
-        argv[size] = NULL;
     }
 
     size = envVars ? (*env)->GetArrayLength(env, envVars) : 0;
-    char** envp = NULL;
     if (size > 0) {
-        envp = (char**) malloc((size + 1) * sizeof(char *));
-        if (!envp) return throw_runtime_exception(env, "malloc() for envp array failed");
+        envp = (char**) calloc(size + 1, sizeof(char *));
+        if (!envp) {
+            free_strings(argv);
+            return throw_runtime_exception(env, "malloc() for envp array failed");
+        }
         for (int i = 0; i < size; ++i) {
             jstring env_java_string = (jstring) (*env)->GetObjectArrayElement(env, envVars, i);
             char const* env_utf8 = (*env)->GetStringUTFChars(env, env_java_string, 0);
-            if (!env_utf8) return throw_runtime_exception(env, "GetStringUTFChars() failed for env");
+            if (!env_utf8) {
+                free_strings(argv);
+                free_strings(envp);
+                return -1;
+            }
             envp[i] = strdup(env_utf8);
             (*env)->ReleaseStringUTFChars(env, env_java_string, env_utf8);
         }
-        envp[size] = NULL;
     }
 
     int procId = 0;
     char const* cmd_cwd = (*env)->GetStringUTFChars(env, cwd, NULL);
-    char const* cmd_utf8 = (*env)->GetStringUTFChars(env, cmd, NULL);
+    char const* cmd_utf8 = cmd_cwd ? (*env)->GetStringUTFChars(env, cmd, NULL) : NULL;
+    if (!cmd_cwd || !cmd_utf8) {
+        if (cmd_cwd) (*env)->ReleaseStringUTFChars(env, cwd, cmd_cwd);
+        free_strings(argv);
+        free_strings(envp);
+        return -1;
+    }
     int ptm = create_subprocess(env, cmd_utf8, cmd_cwd, argv, envp, &procId, rows, columns, cell_width, cell_height);
     (*env)->ReleaseStringUTFChars(env, cmd, cmd_utf8);
     (*env)->ReleaseStringUTFChars(env, cwd, cmd_cwd);
-
-    if (argv) {
-        for (char** tmp = argv; *tmp; ++tmp) free(*tmp);
-        free(argv);
-    }
-    if (envp) {
-        for (char** tmp = envp; *tmp; ++tmp) free(*tmp);
-        free(envp);
-    }
+    free_strings(argv);
+    free_strings(envp);
+    // create_subprocess has thrown already; touching the array now would be undefined.
+    if (ptm < 0) return -1;
 
     int* pProcId = (int*) (*env)->GetPrimitiveArrayCritical(env, processIdArray, NULL);
-    if (!pProcId) return throw_runtime_exception(env, "JNI call GetPrimitiveArrayCritical(processIdArray, &isCopy) failed");
+    if (!pProcId) {
+        // The child is left without its terminal: close it, which hangs the child up.
+        close(ptm);
+        return -1;
+    }
 
     *pProcId = procId;
     (*env)->ReleasePrimitiveArrayCritical(env, processIdArray, pProcId, 0);

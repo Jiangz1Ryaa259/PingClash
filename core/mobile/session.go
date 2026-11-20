@@ -226,6 +226,8 @@ func (s *vpnSession) close() {
 		for e := range s.retiredRouting {
 			epochs = append(epochs, e)
 		}
+		// Readers such as VPNGroupState find no routing from here on, not one being stopped.
+		s.currentRouting = nil
 		s.routingMu.Unlock()
 		if len(epochs) == 0 {
 			s.closeRouting()

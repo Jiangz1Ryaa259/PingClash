@@ -113,20 +113,23 @@ func VPNConnections() string {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		for _, r := range s.connections {
-			route, rule, destination := r.route, "", r.destination
+			route, rule, payload, destination := r.route, "", "", r.destination
 			if actual, ok := native[r.nativeKey]; ok {
 				route = actual.route
 				rule = actual.rule
+				payload = actual.payload
 				destination = withNativeHost(destination, actual.host)
 			}
-			rows = append(rows, map[string]any{"id": r.id, "network": r.network, "route": route, "ruleType": rule, "destination": destination, "seconds": int64(time.Since(r.started).Seconds()), "uploaded": r.up.Load(), "downloaded": r.down.Load()})
+			rows = append(rows, map[string]any{"id": r.id, "network": r.network, "route": route, "ruleType": rule, "rulePayload": payload, "destination": destination, "seconds": int64(time.Since(r.started).Seconds()), "uploaded": r.up.Load(), "downloaded": r.down.Load()})
 		}
 	}
 	b, _ := json.Marshal(rows)
 	return string(b)
 }
 
-type nativeRouteView struct{ route, rule, host string }
+// payload is the matched rule's own value (a domain, category or rule-set name), published only
+// with inspected connections like the destination it describes.
+type nativeRouteView struct{ route, rule, payload, host string }
 
 // withNativeHost labels an address-only destination with the domain the native runtime
 // knows for the flow. In full-native mode fake-IP and sniffing live in Mihomo's own
@@ -161,7 +164,7 @@ func nativeConnectionRoutes(inspect bool) map[string]nativeRouteView {
 		if len(chain) > 0 && (chain[0] == "DIRECT" || chain[0] == "REJECT") {
 			route = chain[0]
 		}
-		rule, host := "", ""
+		rule, payload, host := "", "", ""
 		if inspect {
 			names := []string{}
 			for i := len(chain) - 1; i >= 0 && len(names) < 8; i-- {
@@ -174,6 +177,9 @@ func nativeConnectionRoutes(inspect bool) map[string]nativeRouteView {
 				route = strings.Join(names, " → ")
 			}
 			rule = publicTrackerRule(info.Rule)
+			if rule != "" {
+				payload = publicRulePayload(info.RulePayload)
+			}
 			if h := m.Host; len(h) <= 253 && !hasControl(h) && !strings.ContainsAny(h, " ()") && !isAddress(h) {
 				host = h
 			}
@@ -183,10 +189,18 @@ func nativeConnectionRoutes(inspect bool) map[string]nativeRouteView {
 			destination = m.RawDstAddr.String()
 		}
 		key := nativeFlowKey(network, netip.AddrPortFrom(m.SrcIP.Unmap(), m.SrcPort).String(), destination)
-		result[key] = nativeRouteView{route, rule, host}
+		result[key] = nativeRouteView{route, rule, payload, host}
 		return true
 	})
 	return result
+}
+
+// publicRulePayload keeps a short, printable payload; anything else is withheld.
+func publicRulePayload(value string) string {
+	if len(value) > 256 || hasControl(value) {
+		return ""
+	}
+	return value
 }
 
 func publicTrackerRule(value string) string {

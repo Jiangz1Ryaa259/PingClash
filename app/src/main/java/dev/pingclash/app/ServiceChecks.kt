@@ -69,6 +69,13 @@ internal data class ServiceCheckState(
 internal fun serviceSelection(ids: List<String>) = serviceTargets.filter { it.id in ids.toSet() }
 
 /** User-triggered HTTPS over this app's current system route, independent of node URLTest. */
+/**
+ * Where cancellations of native probes run: outside any page's or model's scope, so they still run
+ * when that scope is being cancelled, and off the main thread.
+ */
+internal val CleanupScope =
+    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
+
 internal class ServiceChecks(
     private val scope: CoroutineScope,
     context: Context,
@@ -198,8 +205,9 @@ internal class ServiceChecks(
                 mutable.value = ServiceCheckState()
                 runs.snapshot()
             }
-        // A disconnect may wait for a blocked reader. Never close probe sockets on the UI thread.
-        scope.launch(Dispatchers.IO) { controls.forEach { it.cancel() } }
+        // A disconnect may wait for a blocked reader. Never close probe sockets on the UI thread,
+        // and not in [scope] either: closing the page cancels it before this could run.
+        CleanupScope.launch { controls.forEach { it.cancel() } }
     }
 
     override fun close() {

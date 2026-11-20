@@ -35,6 +35,7 @@ import (
 // profile globally. No raw config, parse error or native snapshot is exported.
 type fullNativeRuntime struct {
 	cfg       *config.Config
+	warmStop  atomic.Pointer[context.CancelFunc] // ends the startup pass of the automatic groups
 	primary   *nativePrimary
 	closeOnce sync.Once
 	stopOnce  sync.Once
@@ -93,6 +94,14 @@ func (c *nativePrimaryPacket) Upstream() any { return c.PacketConn }
 // streams that legitimately outlive a configuration reload.
 func (n *fullNativeRuntime) retire() {
 	n.closeOnce.Do(func() {
+		// A retired generation only drains its connections: its automatic groups stop warming up,
+		// and one not started yet never starts (the placeholder makes start's swap fail).
+		var none context.CancelFunc = func() {}
+		if !n.warmStop.CompareAndSwap(nil, &none) {
+			if stop := n.warmStop.Load(); stop != nil {
+				(*stop)()
+			}
+		}
 		for _, p := range n.cfg.Providers {
 			if closer, ok := p.(io.Closer); ok {
 				_ = closer.Close()
@@ -108,6 +117,26 @@ func (n *fullNativeRuntime) retire() {
 
 // Set while the live VPN has installed the singleton native executor.
 var nativeExecutorLive atomic.Bool
+
+// carriedHostMapper is the fake-IP mapper of the last full-native session, kept in memory only.
+// The next session's ApplyConfig reuses its domain/fake-IP pairs (as Mihomo does on a hot update),
+// so an app that cached a fake IP before a reconnect still reaches the same domain instead of a
+// reset: closing a session puts the global mapper back to none, which would start the pool empty.
+var carriedHostMapper atomic.Pointer[MDNS.ResolverEnhancer]
+
+// adoptCarriedHostMapper offers the last session's fake-IP mapper to ApplyConfig, which copies
+// its pairs into the new one; only when no mapper is installed (a new session, not a hot update).
+func adoptCarriedHostMapper() {
+	if resolver.DefaultHostMapper == nil {
+		if carried := carriedHostMapper.Load(); carried != nil {
+			resolver.DefaultHostMapper = carried
+		}
+	}
+}
+
+// unifiedDelayOwner makes "is the executor live" and setting adapter.UnifiedDelay one step, for
+// a probe and for the executor applying its config alike.
+var unifiedDelayOwner sync.Mutex
 
 type initializedRuleProvider struct{ P.RuleProvider }
 
@@ -227,13 +256,10 @@ func prepareFullNative(s *vpnSession) (*fullNativeRuntime, error) {
 			return nil, invalid
 		}
 		for name, set := range sets {
-			entries := set.Entries
-			// Classical rules use the bounded native leaf adapters already compiled by
-			// configure(). Immutable runtime providers restore classical matchers below.
-			if set.Behavior == "classical" {
-				entries = []string{}
-			}
-			providers[name] = map[string]any{"type": "inline", "behavior": set.Behavior, "payload": entries}
+			// Every behaviour gets an empty payload: privateStoredProviders below puts the app's
+			// own bounded matcher in place of each provider, so Mihomo never needs to parse the
+			// entries itself (twice the work, and lines it would skip with a warning).
+			providers[name] = map[string]any{"type": "inline", "behavior": set.Behavior, "payload": []string{}}
 		}
 	}
 	root["rule-providers"] = providers
@@ -251,7 +277,7 @@ func prepareFullNative(s *vpnSession) (*fullNativeRuntime, error) {
 		return nil, invalid
 	}
 	if ordered, ok := root[nativeDNSDocumentKey].(string); ok && s.options.UseSubscriptionDNS {
-		fragment, e := config.UnmarshalRawConfig([]byte(ordered))
+		fragment, e := unmarshalSavedDNS(ordered)
 		if e != nil {
 			return nil, invalid
 		}
@@ -275,6 +301,8 @@ func prepareFullNative(s *vpnSession) (*fullNativeRuntime, error) {
 		raw.DNS.FallbackFilter.GeoIP = false
 		raw.DNS.IPv6 = s.options.IPv6
 	}
+	// The app's IPv6 switch wins over a subscription's DNS section, as in the DNS-only runtime.
+	raw.DNS.IPv6 = raw.DNS.IPv6 && s.options.IPv6
 	raw.DNS.Listen = ""
 	raw.DNS.ListenRoutingMark = 0
 	raw.Profile.StoreSelected = false
@@ -384,6 +412,8 @@ func prepareFullNative(s *vpnSession) (*fullNativeRuntime, error) {
 			cfg.Rules = append(cfg.Rules, rule.native)
 		}
 	}
+	// Kept in every mode: a later switch to rule mode is applied without rebuilding this. The
+	// sections share one compiler, which decodes the profile's rule sets once.
 	var sections map[string][]string
 	if data, ok := root["sub-rules"]; ok {
 		encoded, _ := json.Marshal(data)
@@ -391,8 +421,9 @@ func prepareFullNative(s *vpnSession) (*fullNativeRuntime, error) {
 			return nil, invalid
 		}
 	}
+	compile := newRuntimeRuleCompiler(s.options.Definition)
 	for name, lines := range sections {
-		rules, _, code := compileRuntimeRules(lines, s.options.Definition)
+		rules, _, code := compile(lines)
 		if code != "" {
 			return nil, invalid
 		}
@@ -493,7 +524,18 @@ func (n *fullNativeRuntime) apply() error {
 	defer nativeConfigParse.Unlock()
 	_ = os.Setenv("QUIC_GO_DISABLE_GSO", strconv.FormatBool(n.cfg.Experimental.QUICGoDisableGSO))
 	_ = os.Setenv("QUIC_GO_DISABLE_ECN", strconv.FormatBool(n.cfg.Experimental.QUICGoDisableECN))
+	adoptCarriedHostMapper()
+	unifiedDelayOwner.Lock()
 	executor.ApplyConfig(n.cfg, true)
+	// From here the subscription's unified-delay owns the flag; no probe may change it.
+	nativeExecutorLive.Store(true)
+	unifiedDelayOwner.Unlock()
+	warm, stop := context.WithCancel(context.Background())
+	if n.warmStop.CompareAndSwap(nil, &stop) {
+		go warmAutomaticGroups(warm, n.cfg.Proxies)
+	} else {
+		stop()
+	}
 	return nil
 }
 func closeNativeFlows() {
@@ -506,6 +548,9 @@ func (n *fullNativeRuntime) stop() {
 		n.closing = true
 		n.trafficMu.Unlock()
 		n.retire()
+		if stop := n.warmStop.Load(); stop != nil {
+			(*stop)()
+		}
 		for _, p := range n.cfg.Proxies {
 			_ = p.Close()
 		}
@@ -533,6 +578,9 @@ func saveNativeGlobals() func() {
 	return func() {
 		nativeConfigParse.Lock()
 		defer nativeConfigParse.Unlock()
+		if current, ok := resolver.DefaultHostMapper.(*MDNS.ResolverEnhancer); ok && current != nil {
+			carriedHostMapper.Store(current)
+		}
 		nativeExecutorLive.Store(false)
 		tunnel.OnSuspend()
 		closeNativeFlows()

@@ -70,7 +70,9 @@ internal fun SolidColorPicker(
             onSave = { hex ->
                 onApply(
                     hex,
-                    if (original == null) (swatches + hex).distinct().take(MAX_SOLID_SWATCHES)
+                    // A full palette makes room by dropping its oldest colour, so the new one is
+                    // always kept.
+                    if (original == null) (swatches + hex).distinct().takeLast(MAX_SOLID_SWATCHES)
                     else swatches.map { if (it == original) hex else it }.distinct(),
                 )
             },

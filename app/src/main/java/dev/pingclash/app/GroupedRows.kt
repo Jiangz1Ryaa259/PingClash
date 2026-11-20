@@ -7,8 +7,8 @@ package dev.pingclash.app
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,13 +43,11 @@ internal fun GroupTitle(text: String) {
 
 @Composable
 internal fun GroupCard(content: @Composable ColumnScope.() -> Unit) {
-    Surface(
-        Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Panel.copy(alpha = if (LocalImmersiveScene.current) .9f else 1f),
-    ) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 4.dp), content = content)
-    }
+    GlassPanel(
+        padding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
+        spacing = 0.dp,
+        content = content,
+    )
 }
 
 @Composable

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_optional">Optional</string>
+    <string name="import_section_import">Import</string>
+    <string name="import_section_by_hand">Enter by hand</string>
+    <string name="import_group_link">Link</string>
+    <string name="import_group_link_hint">Type it or paste from the clipboard</string>
+    <string name="import_group_file">File</string>
+    <string name="import_group_file_hint">Configuration, text or ZIP bundle</string>
+    <string name="import_group_qr">QR code</string>
+    <string name="import_group_qr_hint">From an image or the camera</string>
+    <string name="import_node">Type a node</string>
+    <string name="import_node_hint">Protocol, address, port and password</string>
+    <string name="import_subscription_manual">Fill in a subscription</string>
+    <string name="import_subscription_manual_hint">Name, link and User-Agent</string>
+    <string name="node_protocol">Protocol</string>
+    <string name="node_address">Address</string>
+    <string name="node_password">Password</string>
+    <string name="node_cipher">Encryption</string>
+    <string name="node_transport">Transport</string>
+    <string name="node_obfuscation">Obfuscation</string>
+    <string name="node_obfuscation_password">Obfuscation password</string>
+    <string name="node_address_required">Enter the server address.</string>
+    <string name="node_secret_required">Fill in the UUID or password.</string>
+    <string name="node_obfuscation_password_required">Fill in the obfuscation password.</string>
+    <string name="node_ws_path">Path</string>
+    <string name="node_grpc_service">Service name</string>
+</resources>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ui_optional">任意</string>
+    <string name="import_section_import">読み込み</string>
+    <string name="import_section_by_hand">手動で入力</string>
+    <string name="import_group_link">リンク</string>
+    <string name="import_group_link_hint">入力またはクリップボードから貼り付け</string>
+    <string name="import_group_file">ファイル</string>
+    <string name="import_group_file_hint">設定ファイル、テキスト、ZIPバンドル</string>
+    <string name="import_group_qr">QRコード</string>
+    <string name="import_group_qr_hint">画像またはカメラから</string>
+    <string name="import_node">ノードを入力</string>
+    <string name="import_node_hint">プロトコル、アドレス、ポート、パスワード</string>
+    <string name="import_subscription_manual">サブスクリプションを入力</string>
+    <string name="import_subscription_manual_hint">名前、リンク、User-Agent</string>
+    <string name="node_protocol">プロトコル</string>
+    <string name="node_address">アドレス</string>
+    <string name="node_password">パスワード</string>
+    <string name="node_cipher">暗号化方式</string>
+    <string name="node_transport">トランスポート</string>
+    <string name="node_obfuscation">難読化</string>
+    <string name="node_obfuscation_password">難読化パスワード</string>
+    <string name="node_address_required">サーバーのアドレスを入力してください。</string>
+    <string name="node_secret_required">UUIDまたはパスワードを入力してください。</string>
+    <string name="node_obfuscation_password_required">難読化パスワードを入力してください。</string>
+    <string name="node_ws_path">パス</string>
+    <string name="node_grpc_service">サービス名</string>
+</resources>

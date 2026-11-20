@@ -12,17 +12,26 @@ import java.util.concurrent.Executors
 internal object RuleData {
     private var pending: CompletableFuture<Boolean>? = null
 
+    // Anything install throws completes the future first, then goes on as before.
+    @Suppress("TooGenericExceptionCaught")
     @Synchronized
     fun prepare(context: Context): CompletableFuture<Boolean> {
-        pending?.let {
-            return it
-        }
+        // A finished failure is not kept: the next connect or import tries the install again.
+        pending
+            ?.takeUnless { it.isDone && (it.isCompletedExceptionally || it.getNow(false) != true) }
+            ?.let {
+                return it
+            }
         val result = CompletableFuture<Boolean>()
         pending = result
         val executor = Executors.newSingleThreadExecutor { task -> Thread(task, "rule-data-init") }
         executor.execute {
             try {
                 result.complete(install(context.applicationContext))
+            } catch (failure: Throwable) {
+                // Never leave a caller waiting on .get() for a result that will not come.
+                result.complete(false)
+                throw failure
             } finally {
                 executor.shutdown()
             }

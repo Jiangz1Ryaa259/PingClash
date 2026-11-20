@@ -44,6 +44,7 @@ class PingClashApplication : Application() {
         UiStrings.migrate(repository.data.value.client.language)
         if (nativeReady) ProviderRefreshCoordinator(this, repository).start()
         Automation.start(this)
+        QuotaReminder.start(this)
     }
 }
 

@@ -5,7 +5,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.ViewModelProvider
@@ -70,6 +73,7 @@ class PendingProxyUiTest {
                 }
             }
         }
+        compose.openProxyGroup("Main")
         for (name in listOf("Queued fixture", "Running fixture", "Auto")) {
             compose.onNodeWithTag("proxy-pending-$name").assertIsDisplayed()
         }
@@ -92,6 +96,10 @@ class PendingProxyUiTest {
         for (name in listOf("Queued fixture", "Running fixture", "Auto")) {
             compose.onNodeWithTag("proxy-pending-$name").assertDoesNotExist()
         }
-        compose.onNodeWithText("42 ms").assertIsDisplayed()
+        // The node itself, and the Auto group pinned to it, both read 42 ms.
+        compose
+            .onAllNodes(hasTestTag("proxy-latency-Queued fixture") and hasText("42 ms"))
+            .onFirst()
+            .assertIsDisplayed()
     }
 }

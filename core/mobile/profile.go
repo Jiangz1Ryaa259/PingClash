@@ -351,7 +351,8 @@ func safeYAMLWithBudget(node *yaml.Node, depth int, count *int, budget int) bool
 		if n.Kind == yaml.MappingNode {
 			for i := 0; i+1 < len(n.Content); i += 2 {
 				switch n.Content[i].Value {
-				case "hosts", "nameserver-policy", "proxy-server-nameserver-policy", "proxy-providers", "rule-providers":
+				// pingclash-selections holds one entry per group, so it is as wide as the groups.
+				case "hosts", "nameserver-policy", "proxy-server-nameserver-policy", "proxy-providers", "rule-providers", "pingclash-selections":
 					value := n.Content[i+1]
 					wide[value] = true
 					if value.Kind == yaml.AliasNode {

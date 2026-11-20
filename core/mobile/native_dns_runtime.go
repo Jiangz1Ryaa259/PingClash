@@ -102,7 +102,7 @@ func newNativeDNSRuntime(definition string, session *vpnSession) (*nativeDNSRunt
 		if json.Unmarshal(saved, &text) != nil || len(text) > 1024*1024 {
 			return nil, errors.New("dns_invalid")
 		}
-		fragment, e := config.UnmarshalRawConfig([]byte(text))
+		fragment, e := unmarshalSavedDNS(text)
 		if e != nil {
 			return nil, errors.New("dns_invalid")
 		}
@@ -110,8 +110,9 @@ func newNativeDNSRuntime(definition string, session *vpnSession) (*nativeDNSRunt
 		raw.DNS.Enable = true
 	}
 	raw.GeoXUrl = config.RawGeoXUrl{}
+	// As the full runtime does: the configured DNS with its port, not the address alone.
 	if len(raw.DNS.DefaultNameserver) == 0 {
-		raw.DNS.DefaultNameserver = []string{session.dns.Addr().String()}
+		raw.DNS.DefaultNameserver = []string{bootstrapNameserver(session.dns)}
 	}
 	raw.GeoAutoUpdate = false
 	raw.GeodataMode = true
@@ -440,4 +441,22 @@ func (r *nativeDNSRuntime) release() {
 	if r.references.Add(-1) == 0 {
 		r.resolvers.ClearCache()
 	}
+}
+
+// unmarshalSavedDNS reads the subscription's own DNS section saved in a profile with the same
+// limits as the profile itself (size, depth, aliases, element count) before Mihomo parses it.
+func unmarshalSavedDNS(text string) (*config.RawConfig, error) {
+	invalid := errors.New("dns_invalid")
+	if len(text) > 1024*1024 {
+		return nil, invalid
+	}
+	var node yaml.Node
+	if yaml.Unmarshal([]byte(text), &node) != nil {
+		return nil, invalid
+	}
+	count := 0
+	if !safeYAML(&node, 0, &count) {
+		return nil, invalid
+	}
+	return config.UnmarshalRawConfig([]byte(text))
 }

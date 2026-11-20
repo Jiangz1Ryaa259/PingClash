@@ -69,8 +69,15 @@ internal object SystemExits {
             if (exit.reason == ApplicationExitInfo.REASON_ANR)
                 runCatching {
                         exit.traceInputStream?.bufferedReader()?.use { reader ->
+                            // One read() may return less than is there: read to the limit or the
+                            // end.
                             val buffer = CharArray(TRACE_LIMIT)
-                            val read = reader.read(buffer)
+                            var read = 0
+                            while (read < buffer.size) {
+                                val n = reader.read(buffer, read, buffer.size - read)
+                                if (n < 0) break
+                                read += n
+                            }
                             if (read > 0) CrashText.sanitize(String(buffer, 0, read)) else null
                         }
                     }

@@ -111,6 +111,7 @@ class DelayCompatibilityTest {
             assertEquals(0, profile.unsupported)
             assertEquals(0, profile.groupsUnsupported)
             compose.onNodeWithTag("nav-1").performClick()
+            compose.openProxyGroup("主代理")
             compose.onNodeWithTag("proxy-test-group").assertIsEnabled()
             compose.onNodeWithTag("group-choice-主代理-自动选择").assertIsEnabled()
             captureSyntheticFixture(
@@ -232,10 +233,29 @@ class DelayCompatibilityTest {
                 .toString()
         val p = repo.importProfile("队列回归", raw)
         try {
-            assertEquals(10, ClientSettings().probeConcurrency)
+            assertEquals(32, ClientSettings().probeConcurrency)
+            // Earlier defaults (2, then 10) move to the current one; an own choice stays.
+            assertEquals(
+                32,
+                ClientSettings.read(JSONObject().put("probeConcurrency", 2)).probeConcurrency,
+            )
+            assertEquals(
+                32,
+                ClientSettings.read(
+                        JSONObject().put("probeConcurrency", 10).put("probeSettingsVersion", 2)
+                    )
+                    .probeConcurrency,
+            )
+            assertEquals(
+                7,
+                ClientSettings.read(
+                        JSONObject().put("probeConcurrency", 7).put("probeSettingsVersion", 2)
+                    )
+                    .probeConcurrency,
+            )
             assertEquals(
                 10,
-                ClientSettings.read(JSONObject().put("probeConcurrency", 2)).probeConcurrency,
+                ClientSettings.read(ClientSettings(probeConcurrency = 10).json()).probeConcurrency,
             )
             assertEquals(
                 2,
@@ -253,6 +273,7 @@ class DelayCompatibilityTest {
             )
             compose.waitForIdle()
             compose.onNodeWithTag("nav-1").performClick()
+            compose.openProxyGroup("测速队列")
             compose.onNodeWithTag("proxy-test-group").assertIsEnabled().performClick()
             compose.waitUntil(10000) { peak.get() >= 10 }
             compose.onNodeWithTag("proxy-test-group").assertIsEnabled().performClick()

@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package dev.pingclash.app
 
-import java.util.concurrent.atomic.AtomicInteger
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-
 /** A measurement plan, never a rewritten subscription or a replacement routing graph. */
 internal class ProxyDelayPlan(
     private val profile: LocalProfile,
@@ -23,8 +18,9 @@ internal class ProxyDelayPlan(
     init {
         val requested = requestedNames.distinct().take(MAX_TARGETS)
         // Directly shown nodes start before nodes discovered inside a group card.
-        requested.filter { it in nodes }.forEach { expand(it, context, emptySet()) }
-        requested.filterNot { it in nodes }.forEach { expand(it, context, emptySet()) }
+        val leaf = { name: String -> name in nodes || name == DIRECT_OUTBOUND }
+        requested.filter(leaf).forEach { expand(it, context, emptySet()) }
+        requested.filterNot(leaf).forEach { expand(it, context, emptySet()) }
     }
 
     val independent
@@ -40,7 +36,8 @@ internal class ProxyDelayPlan(
 
     private fun expand(name: String, parent: String, path: Set<String>): Set<String> {
         if (++work > MAX_WORK || path.size > MAX_DEPTH || name in path) return emptySet()
-        return if (name in nodes) recordNode(name, parent) else expandGroup(name, parent, path)
+        return if (name in nodes || name == DIRECT_OUTBOUND) recordNode(name, parent)
+        else expandGroup(name, parent, path)
     }
 
     private fun recordNode(name: String, parent: String): Set<String> {
@@ -84,6 +81,15 @@ internal class ProxyDelayPlan(
     }
 }
 
+/** Each finished result of this batch appended to its node's history. */
+internal fun ProxyDelayPlan.historyEntries(
+    history: Map<String, List<Long>>,
+    results: Map<String, ProxyDelay>,
+): Map<String, List<Long>> =
+    results.entries.associate { (name, delay) ->
+        key(name) to history[key(name)].orEmpty().plusResult(delay)
+    }
+
 internal fun ProxyTestState.delayFor(
     profile: String,
     name: String,
@@ -91,33 +97,4 @@ internal fun ProxyTestState.delayFor(
 ): ProxyDelay? {
     val key = delayKey(profile, name, group)
     return values[aliases[key] ?: key]
-}
-
-/** Auto-group dependencies can fan out inside the core; never multiply that pool by ten. */
-private const val MAX_DELAY_WORKERS = 16
-
-internal suspend fun runDelayPlan(
-    plan: ProxyDelayPlan,
-    concurrency: Int,
-    active: () -> Boolean,
-    probe: (String) -> Unit,
-) {
-    val nodes = plan.independent
-    val cursor = AtomicInteger()
-    coroutineScope {
-        List(minOf(concurrency.coerceIn(1, MAX_DELAY_WORKERS), nodes.size)) {
-                async {
-                    while (active()) {
-                        val index = cursor.getAndIncrement()
-                        if (index >= nodes.size) break
-                        probe(nodes[index])
-                    }
-                }
-            }
-            .awaitAll()
-    }
-    for (name in plan.chained) {
-        if (!active()) break
-        probe(name)
-    }
 }

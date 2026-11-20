@@ -43,6 +43,7 @@ public final class PeerActivity extends Activity {
                 if(vpn==null)throw new java.io.IOException("vpn_route_unavailable");
                 stage="dns";
                 InetAddress address = vpn.getAllByName(host)[0];
+                result.putString("address", address.getHostAddress());
                 stage = "connect";
                 try (Socket socket = new Socket()) {
                     socket.connect(new InetSocketAddress(address, 8080), 8000);
@@ -55,7 +56,12 @@ public final class PeerActivity extends Activity {
                     while ((count = socket.getInputStream().read(buffer)) >= 0 && bytes.size() < 8192) bytes.write(buffer, 0, count);
                     result.putBoolean("success", bytes.toString("US-ASCII").startsWith("HTTP/1.1 204"));
                 }
-            } catch (Exception failure) { result.putBoolean("success", false); result.putString("stage", stage); }
+            } catch (Exception failure) {
+                result.putBoolean("success", false);
+                result.putString("stage", stage);
+                // The test prints it: which exception, so an intermittent failure says why.
+                result.putString("error", failure.getClass().getSimpleName() + ": " + failure.getMessage());
+            }
             if (receiver != null) receiver.send(0, result);
             runOnUiThread(this::finish);
         }, "controlled-vpn-peer").start();

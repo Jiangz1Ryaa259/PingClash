@@ -68,6 +68,49 @@ class ProxyDelayPlanTest {
         }
     }
 
+    /** DIRECT is a member like a node: measured by itself, without a proxy in between. */
+    @Test
+    fun directIsMeasuredLikeANode() {
+        val before = app.repository.data.value
+        val target = NoContentServer()
+        val group =
+            JSONObject()
+                .put("name", "main")
+                .put("type", "select")
+                .put("proxies", JSONArray(listOf("DIRECT", "unused")))
+        val raw =
+            JSONObject()
+                .put("proxies", JSONArray().put(socks("unused", 9)))
+                .put("proxy-groups", JSONArray().put(group))
+                .toString()
+        val profile = app.repository.importProfile("Synthetic direct", raw)
+        try {
+            app.repository.activate(profile.id)
+            app.repository.clientSettings(
+                before.client.copy(
+                    probeConcurrency = 4,
+                    probeTimeout = 3000,
+                    unifiedDelay = false,
+                    delayUrl = "http://127.0.0.1:${target.port}/",
+                ),
+                before.dnsAddress,
+                before.probeUrl,
+            )
+            compose.waitForIdle()
+            model.testProxies(profile, listOf("DIRECT"), "main")
+            compose.waitUntil(10000) {
+                !model.proxyTests.value.running && model.proxyTests.value.completed == 1
+            }
+            val result = model.proxyTests.value
+            assertEquals(1, result.total)
+            assertEquals("passed", result.delayFor(profile.id, "DIRECT", "main")?.state)
+            assertTrue("DIRECT should reach the test address itself", target.hits.get() >= 1)
+        } finally {
+            restore(profile, before)
+            target.close()
+        }
+    }
+
     @Test
     fun groupCardsCannotDelayTheDirectFastNodeAndCancellationStopsAllWorkers() {
         val before = app.repository.data.value
@@ -213,6 +256,37 @@ class ProxyDelayPlanTest {
                     .put(group("fallback", "fallback", members)),
             )
             .toString()
+    }
+}
+
+/** A local address that answers every request with 204, as a latency test address does. */
+internal class NoContentServer : java.io.Closeable {
+    private val server = ServerSocket(0, 16, java.net.InetAddress.getByName("127.0.0.1"))
+    val hits = AtomicInteger()
+    val port
+        get() = server.localPort
+
+    private val acceptor =
+        thread(isDaemon = true) {
+            while (!server.isClosed) {
+                val socket = runCatching { server.accept() }.getOrNull() ?: break
+                thread(isDaemon = true) { runCatching { answer(socket) } }
+            }
+        }
+
+    private fun answer(socket: Socket) {
+        socket.use {
+            it.getInputStream().read(ByteArray(2048))
+            hits.incrementAndGet()
+            val reply = "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+            it.getOutputStream().write(reply.toByteArray())
+            it.getOutputStream().flush()
+        }
+    }
+
+    override fun close() {
+        server.close()
+        acceptor.join(2000)
     }
 }
 

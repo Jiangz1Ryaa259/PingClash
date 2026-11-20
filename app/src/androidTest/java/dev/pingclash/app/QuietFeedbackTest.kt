@@ -39,6 +39,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+private const val MEMBER_ROW = "group-choice-$ROUTE_MANUAL-香港 02"
+
 @RunWith(AndroidJUnit4::class)
 class QuietFeedbackTest {
     @get:Rule(order = 0) val locale = ResourceLocaleRule()
@@ -58,18 +60,16 @@ class QuietFeedbackTest {
                             Modifier.fillMaxSize().background(Color.White).padding(20.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            ProxyMemberLatency("Fixture", ProxyDelay("passed", 42)) { latency++ }
-                            ProxyMemberCard(
-                                ProxyMemberPresentation(
-                                    "Card",
-                                    "AnyTLS",
-                                    false,
-                                    true,
-                                    ProxyDelay("passed", 42),
-                                    false,
+                            LatencyMark("Fixture", ProxyDelay("passed", 42)) { latency++ }
+                            val state = routeState()
+                            MemberRow(
+                                state,
+                                state.groups.getValue(ROUTE_MANUAL),
+                                "香港 02",
+                                routeActions(
+                                    choose = { _, _ -> select++ },
+                                    details = { _, _ -> details++ },
                                 ),
-                                ProxyMemberActions({ select++ }, { details++ }, null, null),
-                                Modifier.testTag("quiet-card"),
                             )
                             HomeServiceChecks(
                                 DashboardState(
@@ -91,13 +91,13 @@ class QuietFeedbackTest {
         compose.mainClock.autoAdvance = false
         try {
             assertNoPressedWash("proxy-latency-Fixture")
-            // Proxy cards and website tiles sink under the finger by design (no wash).
-            for (tag in listOf("quiet-card", "service-target-google")) assertFluidPress(tag)
+            // Proxy rows and website tiles sink under the finger by design (no wash).
+            for (tag in listOf(MEMBER_ROW, "service-target-google")) assertFluidPress(tag)
             assertEquals(0, latency + website + select + details)
             compose.onNodeWithTag("proxy-latency-Fixture").performClick()
             compose.onNodeWithTag("service-target-google").performClick()
-            compose.onNodeWithTag("quiet-card").performClick()
-            compose.onNodeWithTag("quiet-card").performTouchInput { longClick() }
+            compose.onNodeWithTag(MEMBER_ROW).performClick()
+            compose.onNodeWithTag(MEMBER_ROW).performTouchInput { longClick() }
             assertEquals(1, latency)
             assertEquals(1, website)
             assertEquals(1, select)

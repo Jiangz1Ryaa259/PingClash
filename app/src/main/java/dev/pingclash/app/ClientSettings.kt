@@ -38,7 +38,8 @@ data class ClientSettings(
     val showService: Boolean = true,
     val notificationSpeed: Boolean = true,
     val probeTimeout: Int = 5000,
-    val probeConcurrency: Int = 10,
+    /** Delay tests run at once; batches in the core handle many cheaply ([DelayBatchRun]). */
+    val probeConcurrency: Int = DEFAULT_PROBE_CONCURRENCY,
     val unifiedDelay: Boolean = true,
     val delayUrl: String = "",
     val autoReconnect: Boolean = true,
@@ -55,6 +56,8 @@ data class ClientSettings(
     val startOnBoot: Boolean = false,
     /** Hours between automatic subscription updates; 0 updates only when asked. */
     val subscriptionHours: Int = DEFAULT_SUBSCRIPTION_HOURS,
+    /** Notify before a subscription's data runs out or it expires ([QuotaReminder]). */
+    val quotaReminder: Boolean = false,
     /** Disconnect on [trustedWifi] networks and connect on any other network. */
     val wifiAuto: Boolean = false,
     val trustedWifi: List<String> = emptyList(),
@@ -97,7 +100,7 @@ data class ClientSettings(
             put("notificationSpeed", notificationSpeed)
             put("probeTimeout", probeTimeout)
             put("probeConcurrency", probeConcurrency)
-            put("probeSettingsVersion", 2)
+            put("probeSettingsVersion", PROBE_SETTINGS_VERSION)
             put("unifiedDelay", unifiedDelay)
             put("delayUrl", delayUrl)
             put("autoReconnect", autoReconnect)
@@ -111,6 +114,7 @@ data class ClientSettings(
             put("solidSwatches", org.json.JSONArray(solidSwatches))
             put("startOnBoot", startOnBoot)
             put("subscriptionHours", subscriptionHours)
+            put("quotaReminder", quotaReminder)
             put("wifiAuto", wifiAuto)
             put("trustedWifi", JSONArray(trustedWifi))
             // Sorted, so the same choices always serialise the same way.
@@ -149,9 +153,7 @@ data class ClientSettings(
                     p.optBoolean("showService", true),
                     p.optBoolean("notificationSpeed", true),
                     p.optInt("probeTimeout", 5000),
-                    p.optInt("probeConcurrency", 10).let {
-                        if (p.optInt("probeSettingsVersion") < 2 && it == 2) 10 else it
-                    },
+                    readProbeConcurrency(p),
                     p.optBoolean("unifiedDelay", true),
                     p.optString("delayUrl"),
                     p.optBoolean("autoReconnect", true),
@@ -205,6 +207,7 @@ data class ClientSettings(
                     p.optInt("subscriptionHours", DEFAULT_SUBSCRIPTION_HOURS).takeIf {
                         it in SUBSCRIPTION_HOURS
                     } ?: DEFAULT_SUBSCRIPTION_HOURS,
+                quotaReminder = p.optBoolean("quotaReminder"),
                 wifiAuto = p.optBoolean("wifiAuto"),
                 trustedWifi =
                     p.optJSONArray("trustedWifi")?.let { list ->
@@ -241,14 +244,18 @@ data class LocalUsage(
     }
 }
 
+/** The custom rules as the VPN runs them: trimmed, without blank lines and comments. */
+internal fun ClientSettings.customRuleLines(): List<String> =
+    customRules
+        .lineSequence()
+        .map(String::trim)
+        .filter { it.isNotBlank() && !it.startsWith("#") }
+        .toList()
+
 internal fun AppData.runtimeOptions(settings: ClientSettings = client): String {
     // Keep one compiled rule table when switching between rule/global/direct.
     val rules =
-        settings.customRules
-            .lineSequence()
-            .map(String::trim)
-            .filter { it.isNotBlank() && !it.startsWith("#") }
-            .toList() +
+        settings.customRuleLines() +
             // The user's own choices, then the subscription: services and blocking apply to
             // every profile and survive its updates.
             serviceRouteRules(
@@ -351,7 +358,7 @@ internal fun validateClientSettings(value: ClientSettings) {
             value.theme in listOf("system", "light", "dark") &&
             value.customRules.toByteArray().size <= 64 * 1024 &&
             value.probeTimeout in 1000..20000 &&
-            value.probeConcurrency in 1..16
+            value.probeConcurrency in PROBE_CONCURRENCY_RANGE
     ) {
         tr(R.string.display_or_latency_options_are_invalid_or)
     }
@@ -376,5 +383,23 @@ private fun validateAutomation(value: ClientSettings) {
             value.trustedWifi.distinct().size == value.trustedWifi.size
     ) {
         tr(R.string.ui_auto_invalid)
+    }
+}
+
+/** Delay tests at once by default, and the allowed range. */
+internal const val DEFAULT_PROBE_CONCURRENCY = 32
+internal val PROBE_CONCURRENCY_RANGE = 1..64
+
+/** Version 3 raised the default concurrency from 10 to 32. */
+private const val PROBE_SETTINGS_VERSION = 3
+
+/** The saved concurrency; old defaults (2, then 10) move to the current one, own choices stay. */
+private fun readProbeConcurrency(p: JSONObject): Int {
+    val value = p.optInt("probeConcurrency", DEFAULT_PROBE_CONCURRENCY)
+    val version = p.optInt("probeSettingsVersion")
+    return when {
+        version < 2 && value == 2 -> DEFAULT_PROBE_CONCURRENCY
+        version < PROBE_SETTINGS_VERSION && value == 10 -> DEFAULT_PROBE_CONCURRENCY
+        else -> value
     }
 }

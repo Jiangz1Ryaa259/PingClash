@@ -79,7 +79,10 @@ private fun NodeField(form: ImportFormState, busy: Boolean, masked: Boolean) {
  */
 @Composable
 internal fun AdvancedSection(form: ImportFormState, busy: Boolean, onUserAgent: (String) -> Unit) {
-    var open by rememberSaveable { mutableStateOf(form.agent != DEFAULT_SUBSCRIPTION_UA) }
+    var open by
+        rememberSaveable(form.showAgent) {
+            mutableStateOf(form.showAgent || form.agent != DEFAULT_SUBSCRIPTION_UA)
+        }
     SettingsSection(tr(R.string.ui_advanced), tr(R.string.ui_subscription_ua_hint)) {
         if (!open)
         // The section footer explains it; the short name leaves room for the value.

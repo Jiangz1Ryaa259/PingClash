@@ -11,9 +11,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.Until
 import dev.pingclash.diagnostics.ReportFormatter
 import dev.pingclash.mobile.Mobile
 import java.io.Closeable
@@ -113,7 +111,7 @@ class ClientIntegrationTest {
                     .toString()
             compose.onNodeWithTag("nav-2").performClick()
             compose.onNodeWithTag("profile-add").performClick()
-            compose.onNodeWithTag("import-method-url").performClick()
+            compose.chooseImport("url")
             compose.onNodeWithText("节点配置").performClick()
             compose.onNodeWithTag("field-名称（可选）").performTextInput(name)
             compose.onNodeWithTag("subscription-content").performTextInput(config)
@@ -287,15 +285,21 @@ class ClientIntegrationTest {
             )
             compose.onNodeWithTag("nav-3").performClick()
             visibleSettingsControl(compose, "tool-diagnosis").performClick()
-            val previewControl = compose.onNodeWithText("预览脱敏报告").performScrollTo()
+            compose.onNodeWithTag("doctor-start").performScrollTo().performClick()
+            compose.waitUntil(130_000) {
+                model.doctor.state.value.let { it.evidence != null && !it.running }
+            }
+            val nodeName = requireNotNull(model.doctor.state.value.evidence).nodeName
+            assertTrue("Doctor checked no node", nodeName.isNotBlank())
+            val downloadControl = compose.onNodeWithTag("doctor-download").performScrollTo()
             val navTop =
                 compose.onNodeWithTag("glass-navigation").fetchSemanticsNode().boundsInRoot.top
             val distance =
-                previewControl.fetchSemanticsNode().boundsInRoot.bottom - navTop +
+                downloadControl.fetchSemanticsNode().boundsInRoot.bottom - navTop +
                     16 * compose.activity.resources.displayMetrics.density
             if (distance > 0)
                 compose
-                    .onNode(hasScrollAction() and hasAnyDescendant(hasText("预览脱敏报告")))
+                    .onNode(hasScrollAction() and hasAnyDescendant(hasTestTag("doctor-download")))
                     .performSemanticsAction(
                         androidx.compose.ui.semantics.SemanticsActions.ScrollBy
                     ) {
@@ -303,40 +307,31 @@ class ClientIntegrationTest {
                     }
             compose.waitForIdle()
             assertTrue(
-                "Report preview control remains behind navigation",
-                previewControl.fetchSemanticsNode().boundsInRoot.bottom <= navTop,
+                "Download control remains behind navigation",
+                downloadControl.fetchSemanticsNode().boundsInRoot.bottom <= navTop,
             )
-            previewControl.performClick()
-            compose.onNodeWithText("脱敏报告预览").assertIsDisplayed()
-            device.waitForIdle(2000)
-            compose.onNodeWithText("保存 .md").performClick()
-            device.setOrientationLeft()
-            device.waitForIdle(2000)
-            val saveButton =
-                device.wait(
-                    Until.findObject(By.res("com.android.documentsui", "button_save")),
-                    5000,
-                )
-                    ?: device.wait(
-                        Until.findObject(
-                            By.text(java.util.regex.Pattern.compile("(?i)^save$|^保存$"))
-                        ),
-                        3000,
-                    )
-            assertNotNull("System document save button missing", saveButton)
-            saveButton!!.click()
-            assertTrue(
-                "System file picker did not complete saving",
-                device.wait(Until.gone(By.pkg("com.android.documentsui")), 8000),
-            )
-            device.setOrientationNatural()
-            device.waitForIdle(2000)
-            val filename = "PingClash-${report.runId.take(8)}.md"
-            compose.waitUntil(5000) {
-                device.executeShellCommand("cat /sdcard/Download/$filename").contains("# PingClash")
-            }
+            val before = device.executeShellCommand("ls /sdcard/Download/").lines().toSet()
+            downloadControl.performClick()
+            compose.waitUntil(8000) { model.ui.value.message == "已保存到“下载”" }
+            val filename =
+                device.executeShellCommand("ls /sdcard/Download/").lines().first {
+                    it.startsWith("PingClash-diagnosis-") && it !in before
+                }
             val exported = device.executeShellCommand("cat /sdcard/Download/$filename")
-            assertFalse("Export leaked a credential", exported.contains("fixture-private-password"))
+            assertTrue("Details miss the node name", exported.contains(nodeName))
+            assertTrue(
+                "Details miss the code",
+                exported.contains(
+                    doctorSupportCode(requireNotNull(model.doctor.state.value.evidence))
+                ),
+            )
+            assertFalse(
+                "Details leaked a credential",
+                exported.contains("fixture-private-password"),
+            )
+            assertFalse("Details leaked an address", exported.contains("127.0.0.1"))
+            assertFalse("Details leaked the server", exported.contains(fixture.host))
+            device.executeShellCommand("rm /sdcard/Download/$filename")
             device.pressBack()
 
             compose.onNodeWithTag("nav-0").performClick()
@@ -394,6 +389,9 @@ internal class ControlledServers(
     val host = "peer-${UUID.randomUUID()}.fixture.test"
     val intercepted = AtomicInteger()
     val dnsRequests = AtomicInteger()
+    /** The address and port of the last SOCKS request, for a failure message. */
+    @Volatile var lastTarget = ""
+
     private val sockets = CopyOnWriteArrayList<Socket>()
     private val workers =
         Executors.newCachedThreadPool { task ->
@@ -496,6 +494,7 @@ internal class ControlledServers(
                     else -> error("address_invalid")
                 }
             val port = input.readUnsignedShort()
+            lastTarget = "$address:$port"
             val mapped =
                 when {
                     address == "127.0.0.1" && port in listOf(http.localPort, dns.localPort) -> port

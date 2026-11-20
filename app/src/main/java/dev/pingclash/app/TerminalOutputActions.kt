@@ -14,10 +14,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -69,7 +67,7 @@ internal fun TerminalOutputActions(
         }
     }
     Row(Modifier.fillMaxWidth()) {
-        TextButton(
+        GlassTextButton(
             keyboard,
             enabled = session != null,
             modifier = Modifier.testTag("terminal-keyboard"),
@@ -77,7 +75,7 @@ internal fun TerminalOutputActions(
             Text(tr(R.string.terminal_keyboard))
         }
         Spacer(Modifier.weight(1f))
-        TextButton(
+        GlassTextButton(
             {
                 copyTerminalOutput(context, terminalOutput(session))
                 copied = true
@@ -87,7 +85,7 @@ internal fun TerminalOutputActions(
         ) {
             Text(tr(if (copied) R.string.ui_copied else R.string.terminal_copy_output))
         }
-        TextButton(
+        GlassTextButton(
             { preview = terminalOutput(session) },
             enabled = session != null,
             modifier = Modifier.testTag("terminal-share"),
@@ -96,7 +94,7 @@ internal fun TerminalOutputActions(
         }
     }
     preview?.let { text ->
-        AlertDialog(
+        GlassDialog(
             onDismissRequest = { preview = null },
             modifier = Modifier.testTag("terminal-share-preview"),
             title = { Text(tr(R.string.terminal_output)) },
@@ -117,7 +115,7 @@ internal fun TerminalOutputActions(
                 }
             },
             confirmButton = {
-                TextButton(
+                GlassTextButton(
                     {
                         runCatching {
                                 context.startActivity(
@@ -139,7 +137,7 @@ internal fun TerminalOutputActions(
                 }
             },
             dismissButton = {
-                TextButton({ preview = null }, Modifier.testTag("terminal-share-cancel")) {
+                GlassTextButton({ preview = null }, Modifier.testTag("terminal-share-cancel")) {
                     Text(tr(R.string.cancel))
                 }
             },

@@ -12,4 +12,5 @@
 }
 -keepclassmembers class dev.pingclash.app.PingVpnService {
     android.os.ParcelFileDescriptor descriptor;
+    dev.pingclash.app.AppData appliedData;
 }

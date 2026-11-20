@@ -36,6 +36,23 @@ internal fun successColor(dark: Boolean) = if (dark) Color(0xFF98D4B1) else Colo
 
 internal fun warningColor(dark: Boolean) = if (dark) Color(0xFFFFD54F) else Color(0xFF806400)
 
+/**
+ * Latency at a glance: a clear green, amber and red, deeper on light backgrounds so the numbers
+ * stay readable, brighter on dark ones.
+ */
+internal fun latencyGood(dark: Boolean) = if (dark) Color(0xFF3DD68C) else Color(0xFF1E9E5A)
+
+internal fun latencySlow(dark: Boolean) = if (dark) Color(0xFFFFB224) else Color(0xFFC47F00)
+
+internal fun latencyBad(dark: Boolean) = if (dark) Color(0xFFFF6166) else Color(0xFFE5484D)
+
+internal val LatencyGood: Color
+    @Composable get() = latencyGood(MaterialTheme.colorScheme.background.luminance() < .5f)
+internal val LatencySlow: Color
+    @Composable get() = latencySlow(MaterialTheme.colorScheme.background.luminance() < .5f)
+internal val LatencyBad: Color
+    @Composable get() = latencyBad(MaterialTheme.colorScheme.background.luminance() < .5f)
+
 internal object UiCorners {
     val Compact = RoundedCornerShape(8.dp)
     val Card = RoundedCornerShape(14.dp)

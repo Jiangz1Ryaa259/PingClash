@@ -11,7 +11,16 @@ import (
 
 // Rule-set references use a per-runtime registry. Native boolean constructors
 // receive this resolver too; no process-global provider registry is consulted.
+// compileRuntimeRules compiles one list of rule lines against a profile's definition.
 func compileRuntimeRules(lines []string, definition string) ([]outboundRule, int, string) {
+	return newRuntimeRuleCompiler(definition)(lines)
+}
+
+// newRuntimeRuleCompiler returns a compiler for many rule lists of one profile (the main rules and
+// each sub-rule section): its stored rule sets and sub-rule registry are decoded once, not once
+// per list.
+func newRuntimeRuleCompiler(definition string) func([]string) ([]outboundRule, int, string) {
+
 	var sets map[string]storedRuleSet
 	loaded := false
 	compiled := map[string]*providerRuleMatcher{}
@@ -70,17 +79,28 @@ func compileRuntimeRules(lines []string, definition string) ([]outboundRule, int
 		source, noResolve := RC.ParseParams(params)
 		return &privateRuleSet{target: target, name: payload, source: source, noResolve: noResolve, matcher: matcher}, ""
 	}
-	compiler, targets, code := compileSubRuleRegistry(definition, leaf)
-	if code != "" {
-		return nil, 0, code
-	}
-	rules, line, code := compileRulesUsing(lines, compiler)
-	for i := range rules {
-		if rules[i].kind == "SUB-RULE" {
-			rules[i].exits = targets[rules[i].target]
+	var (
+		registry     nativeRuleCompiler
+		targets      map[string][]string
+		registryCode string
+		registered   bool
+	)
+	return func(lines []string) ([]outboundRule, int, string) {
+		if !registered {
+			registered = true
+			registry, targets, registryCode = compileSubRuleRegistry(definition, leaf)
 		}
+		if registryCode != "" {
+			return nil, 0, registryCode
+		}
+		rules, line, code := compileRulesUsing(lines, registry)
+		for i := range rules {
+			if rules[i].kind == "SUB-RULE" {
+				rules[i].exits = targets[rules[i].target]
+			}
+		}
+		return rules, line, code
 	}
-	return rules, line, code
 }
 
 type privateRuleSet struct {

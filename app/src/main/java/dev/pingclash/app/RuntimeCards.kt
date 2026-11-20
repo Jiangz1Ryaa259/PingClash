@@ -25,17 +25,7 @@ internal fun durationText(seconds: Long) =
 
 @Composable
 internal fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
-    Surface(
-        Modifier.fillMaxWidth(),
-        shape = UiCorners.Card,
-        color = Panel.copy(alpha = if (LocalImmersiveScene.current) .86f else 1f),
-    ) {
-        Column(
-            Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            content = content,
-        )
-    }
+    GlassPanel(padding = PaddingValues(16.dp), spacing = 10.dp, content = content)
 }
 
 @Composable

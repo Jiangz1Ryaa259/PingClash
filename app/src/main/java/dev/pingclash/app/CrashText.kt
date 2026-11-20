@@ -10,6 +10,9 @@ internal object CrashText {
             // Shrunk release builds report most app and library frames as "Unknown Source:83".
             "^at ([A-Za-z0-9_.$/<>-]+)\\(([A-Za-z0-9_.$-]+(?::[0-9]+)?|Native Method|Unknown Source(?::[0-9]+)?)\\)$"
         )
+    // A failed cast names two classes and nothing else; they say what was found where.
+    private val castMessage = Regex("^([A-Za-z0-9_.$]+) cannot be cast to ([A-Za-z0-9_.$]+)$")
+    private val castLine = Regex("^cast: [A-Za-z0-9_.$]+ -> [A-Za-z0-9_.$]+$")
     private val goFrame = Regex("^([A-Za-z0-9_./*()\\[\\]-]+)\\(.*\\)(?: \\+0x[0-9a-f]+)?$")
     private val goFile =
         Regex("^(?:.*[/\\\\])?([A-Za-z0-9_.-]+\\.go):([0-9]+)(?: \\+0x[0-9a-f]+)?$")
@@ -42,6 +45,7 @@ internal object CrashText {
             line.startsWith("fatal error:") -> "fatal error: [message omitted]"
             line.startsWith("recovered panic in ") -> "recovered panic [message omitted]"
             line == "recovered panic [message omitted]" -> line
+            castLine.matches(line) -> line
             else -> safeFrame(line)
         }
 
@@ -64,6 +68,10 @@ internal object CrashText {
                     .forEachIndexed { index, cause ->
                         if (index > 0) append("Caused by: ")
                         appendLine(cause.javaClass.name)
+                        if (cause is ClassCastException)
+                            castMessage.matchEntire(cause.message.orEmpty())?.let {
+                                appendLine("cast: ${it.groupValues[1]} -> ${it.groupValues[2]}")
+                            }
                         cause.stackTrace.take(MAX_FRAMES).forEach { appendLine("at $it") }
                     }
             }

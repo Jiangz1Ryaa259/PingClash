@@ -44,6 +44,26 @@ class ProfileBatteryTest {
         LocalProfile("battery-fixture", "Quota fixture", null, emptyList(), 0, false, quota = quota)
 
     @Test
+    fun allowanceAndLevelFollowTheDataLeft() {
+        val gib = 1024L * 1024 * 1024
+        fun quota(used: Long, total: Long) = SubscriptionQuota(0, used, total, null)
+        assertEquals(
+            "144.25 / 200 GB",
+            quotaAllowance(quota(200 * gib - 144 * gib - gib / 4, 200 * gib)),
+        )
+        assertEquals(
+            "6.2 / 50 GB",
+            quotaAllowance(quota(50 * gib - (6.2 * gib).toLong(), 50 * gib)),
+        )
+        assertEquals("0 / 1 TB", quotaAllowance(quota(2048 * gib, 1024 * gib)))
+        assertEquals(null, quotaAllowance(SubscriptionQuota(1, 2, null, null)))
+        assertEquals(QuotaLevel.GOOD, quotaLevel(.40f))
+        assertEquals(QuotaLevel.LOW, quotaLevel(.39f))
+        assertEquals(QuotaLevel.LOW, quotaLevel(.20f))
+        assertEquals(QuotaLevel.CRITICAL, quotaLevel(.19f))
+    }
+
+    @Test
     fun compactCardsShowRemainingBatteryAndMenuKeepsExactQuotaAndInventory() {
         val raw = "proxies: [{name: quota-node, type: socks5, server: example.invalid, port: 443}]"
         val quota = SubscriptionQuota(1024, 2048, 8192, 2000000000)
@@ -62,7 +82,8 @@ class ProfileBatteryTest {
             compose
                 .onNodeWithTag("profile-quota-${p.id}", useUnmergedTree = true)
                 .assertIsDisplayed()
-            compose.onNodeWithText(tr(R.string.profile_remaining_percent, 62)).assertIsDisplayed()
+            // 5120 of 8192 bytes are left: the card says the allowance, not a share.
+            compose.onNodeWithText("5 / 8 KB").assertIsDisplayed()
             val card = compose.onNodeWithTag("profile-${p.id}").fetchSemanticsNode().boundsInRoot
             assertTrue(
                 "Quota card grew back to the old tall layout",

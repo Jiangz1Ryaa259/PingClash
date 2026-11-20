@@ -52,6 +52,15 @@ class FunctionalReviewTest {
             }
         }
         compose.onNodeWithText("TCP · DOMAIN-SUFFIX · DIRECT").assertExists()
+        // With a reason the rule type moves into the reason line instead of being repeated.
+        val reason = tr(R.string.connection_reason_custom, 1)
+        compose.runOnUiThread {
+            compose.activity.setContent {
+                PingClashTheme("light", false) { ConnectionListItem(row, reason) {} }
+            }
+        }
+        compose.onNodeWithText("TCP · DIRECT").assertExists()
+        compose.onNodeWithText(reason).assertExists()
     }
 
     @Test

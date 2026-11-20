@@ -205,15 +205,15 @@ private fun TerminalPage(model: TerminalModel, back: () -> Unit) {
             .imePadding()
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(back) { Text(tr(R.string.back)) }
-            TextButton(
+            GlassTextButton(back) { Text(tr(R.string.back)) }
+            GlassTextButton(
                 model::create,
                 enabled = model.noticeAccepted && model.sessions.size < 3,
                 modifier = Modifier.testTag("terminal-new"),
             ) {
                 Text(tr(R.string.new_terminal))
             }
-            TextButton(model::closeCurrent, enabled = model.sessions.isNotEmpty()) {
+            GlassTextButton(model::closeCurrent, enabled = model.sessions.isNotEmpty()) {
                 Text(tr(R.string.close_session))
             }
         }
@@ -245,7 +245,7 @@ private fun TerminalPage(model: TerminalModel, back: () -> Unit) {
         } else {
             LazyRow {
                 items(model.sessions.size) { i ->
-                    FilterChip(
+                    GlassChip(
                         model.selected == i,
                         { model.selected = i },
                         label = {
@@ -300,7 +300,7 @@ private fun TerminalPage(model: TerminalModel, back: () -> Unit) {
                 items(8) { i ->
                     val key =
                         listOf("Ctrl+C", "Tab", "Esc", "↑", "↓", "←", "→", tr(R.string.paste))[i]
-                    TextButton(
+                    GlassTextButton(
                         {
                             if (i == 7) model.requestPaste()
                             else
@@ -325,19 +325,19 @@ private fun TerminalPage(model: TerminalModel, back: () -> Unit) {
         }
     }
     if (!model.noticeAccepted)
-        AlertDialog(
+        GlassDialog(
             onDismissRequest = back,
             title = { Text(tr(R.string.terminal_warning_title)) },
             text = { Text(tr(R.string.terminal_warning_body)) },
             confirmButton = {
-                TextButton(model::acceptNotice, Modifier.testTag("terminal-notice-accept")) {
+                GlassTextButton(model::acceptNotice, Modifier.testTag("terminal-notice-accept")) {
                     Text(tr(R.string.terminal_warning_accept))
                 }
             },
-            dismissButton = { TextButton(back) { Text(tr(R.string.cancel)) } },
+            dismissButton = { GlassTextButton(back) { Text(tr(R.string.cancel)) } },
         )
     model.paste?.let { text ->
-        AlertDialog(
+        GlassDialog(
             onDismissRequest = { model.paste = null },
             title = { Text(tr(R.string.paste_into_terminal)) },
             text = {
@@ -350,14 +350,16 @@ private fun TerminalPage(model: TerminalModel, back: () -> Unit) {
                 )
             },
             confirmButton = {
-                TextButton({
+                GlassTextButton({
                     model.sessions.getOrNull(model.selected)?.emulator?.paste(text)
                     model.paste = null
                 }) {
                     Text(tr(R.string.paste))
                 }
             },
-            dismissButton = { TextButton({ model.paste = null }) { Text(tr(R.string.cancel_2)) } },
+            dismissButton = {
+                GlassTextButton({ model.paste = null }) { Text(tr(R.string.cancel_2)) }
+            },
         )
     }
     IssueNoticeHost(model.notices)

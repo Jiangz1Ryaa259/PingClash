@@ -64,19 +64,29 @@ internal class ProviderRefreshCoordinator(
                     foreground,
                     networkAvailable(),
                     VpnRuntime.state.map { it.active }.distinctUntilChanged(),
-                    repository.data.map { it.profiles }.distinctUntilChanged(),
+                    // Which profiles take part, not their contents: a refresh that saves one must
+                    // not cancel the pass that is updating the others.
+                    repository.data
+                        .map { data ->
+                            data.profiles
+                                .filter { it.remote != null || it.autoUpdates }
+                                .map { it.id }
+                        }
+                        .distinctUntilChanged(),
                     repository.data.map { it.client.subscriptionHours }.distinctUntilChanged(),
-                ) { shown, connected, _, profiles, _ ->
+                ) { shown, connected, _, ids, _ ->
                     // Also while the VPN runs: downloads follow the tunnel, and the result is
                     // applied through the hot routing update instead of waiting for a reconnect.
-                    profiles.filter { shown && connected && (it.remote != null || it.autoUpdates) }
+                    if (shown && connected) ids else emptyList()
                 }
-                .collectLatest { profiles ->
-                    if (profiles.isEmpty()) return@collectLatest
+                .collectLatest { ids ->
+                    if (ids.isEmpty()) return@collectLatest
                     delay(INITIAL_DELAY)
                     RuleData.prepare(app).get()
                     while (true) {
-                        profiles.forEach { profile ->
+                        ids.forEach { id ->
+                            // Each step reads the profile as saved now, never an older copy.
+                            val profile = saved(id) ?: return@forEach
                             if (subscriptionDelay(profile) == 0L) {
                                 subscriptionAttempts[profile.id] = now()
                                 // Failures wait for the retry backoff; manual refresh shows errors.
@@ -87,9 +97,12 @@ internal class ProviderRefreshCoordinator(
                                         if (it is kotlinx.coroutines.CancellationException) throw it
                                     }
                             }
-                            runInterruptible { repository.refreshProviders(profile) }
+                            val latest = saved(id) ?: return@forEach
+                            runInterruptible { repository.refreshProviders(latest) }
                         }
                         runInterruptible { repository.applyPendingProvidersLive() }
+                        val profiles = repository.data.value.profiles.filter { it.id in ids }
+                        if (profiles.isEmpty()) return@collectLatest
                         val seconds =
                             minOf(
                                 profiles
@@ -106,6 +119,9 @@ internal class ProviderRefreshCoordinator(
     }
 
     private fun now() = java.time.Instant.now().epochSecond
+
+    /** The profile as saved now. */
+    private fun saved(id: String) = repository.data.value.profiles.firstOrNull { it.id == id }
 
     private fun subscriptionDelay(profile: LocalProfile): Long {
         val now = now()

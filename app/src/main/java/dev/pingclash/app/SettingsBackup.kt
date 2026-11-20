@@ -28,16 +28,25 @@ internal data class SettingsBackupContent(
  * links, node passwords or usage. With it, subscription links (which usually carry an access token)
  * and local profiles' configurations are included, so the file must be kept private.
  */
+/** Whether this backup entry is here already: the same link, or a local profile of that name. */
+internal fun BackupProfile.presentIn(profiles: List<LocalProfile>) =
+    profiles.any {
+        subscription != null && it.source == subscription ||
+            configuration != null && it.source == null && it.name == name
+    }
+
 internal object SettingsBackup {
     const val FORMAT = "pingclash-backup"
     private const val VERSION = 1
-    private const val MAX_PROFILES = 200
+    // The app keeps at most 20 profiles, so no backup it writes holds more.
+    private const val MAX_PROFILES = 20
     /** Room for many local profiles; each one is limited like an import. */
     const val MAX_BYTES = 4 * MAX_FEED_BYTES
 
     fun export(
         data: AppData,
         withProfiles: Boolean,
+        skipped: MutableList<String> = mutableListOf(),
         configuration: (LocalProfile) -> String = ::configurationExport,
     ): String {
         val root =
@@ -59,7 +68,9 @@ internal object SettingsBackup {
                                     .put("subscription", profile.source)
                                     .put("userAgent", profile.userAgent)
                             else ->
+                                // Left out, but named in [skipped] so the user is told.
                                 runCatching { configuration(profile) }
+                                    .onFailure { skipped += profile.name }
                                     .getOrNull()
                                     ?.let { entry.put("configuration", it) }
                         }
