@@ -12,17 +12,11 @@ import org.junit.runner.RunWith
 /** Logic fixed after the 2026-11-15 review, checked without a screen. */
 @RunWith(AndroidJUnit4::class)
 class ReviewFixesTest {
-    private fun profile(id: String, groups: List<LocalGroup> = emptyList(), definition: String = "") =
-        LocalProfile(
-            id,
-            id,
-            null,
-            emptyList(),
-            0,
-            false,
-            groups = groups,
-            definition = definition,
-        )
+    private fun profile(
+        id: String,
+        groups: List<LocalGroup> = emptyList(),
+        definition: String = "",
+    ) = LocalProfile(id, id, null, emptyList(), 0, false, groups = groups, definition = definition)
 
     @Test
     fun aMainProxyChosenOnAnotherProfileIsNotShown() {
@@ -50,12 +44,16 @@ class ReviewFixesTest {
             JSONObject()
                 .put(
                     "proxy-groups",
-                    org.json.JSONArray()
+                    org.json
+                        .JSONArray()
                         .put(JSONObject().put("name", "one").put("hidden", true))
                         .put(JSONObject().put("name", "two").put("hidden", true)),
                 )
                 .toString()
-        assertEquals(listOf("one", "two"), profile("p", groups, hidden).displayGroups().map { it.name })
+        assertEquals(
+            listOf("one", "two"),
+            profile("p", groups, hidden).displayGroups().map { it.name },
+        )
         val oneHidden =
             JSONObject()
                 .put(
