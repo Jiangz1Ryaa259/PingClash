@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -44,7 +43,7 @@ private const val MEMBER_ROW = "group-choice-$ROUTE_MANUAL-香港 02"
 @RunWith(AndroidJUnit4::class)
 class QuietFeedbackTest {
     @get:Rule(order = 0) val locale = ResourceLocaleRule()
-    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 1) val compose = mainThreadComposeRule<MainActivity>()
 
     @Test
     fun heldControlsHaveNoDarkWashWhileClicksAndLongPressStillWork() {

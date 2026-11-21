@@ -7,7 +7,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.ResultReceiver
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -35,7 +34,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ClientIntegrationTest {
     @get:org.junit.Rule(order = 0) val resourceLocale = ResourceLocaleRule()
-    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 1) val compose = mainThreadComposeRule<MainActivity>()
 
     private fun tcpAcceptors(): Set<String> {
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -312,7 +311,12 @@ class ClientIntegrationTest {
             )
             val before = device.executeShellCommand("ls /sdcard/Download/").lines().toSet()
             downloadControl.performClick()
-            compose.waitUntil(8000) { model.ui.value.message == "已保存到“下载”" }
+            // The app turns the message into a notice and clears it from the model at once, so
+            // wait for the notice rather than the model field.
+            compose.waitUntil(8000) {
+                model.notices.entries.any { it.detail == "已保存到“下载”" } ||
+                    model.ui.value.message == "已保存到“下载”"
+            }
             val filename =
                 device.executeShellCommand("ls /sdcard/Download/").lines().first {
                     it.startsWith("PingClash-diagnosis-") && it !in before

@@ -1,7 +1,6 @@
 package dev.pingclash.app
 
 import androidx.compose.ui.test.*
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.pingclash.diagnostics.RunControl
 import java.net.InetAddress
@@ -16,7 +15,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SubscriptionFeaturesTest {
     @get:Rule(order = 0) val locale = ResourceLocaleRule()
-    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 1) val compose = mainThreadComposeRule<MainActivity>()
     private val app
         get() = compose.activity.application as PingClashApplication
 

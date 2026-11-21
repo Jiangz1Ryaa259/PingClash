@@ -6,7 +6,6 @@ import android.net.Uri
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -29,7 +28,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class DeepLinkSecurityTest {
     @get:Rule(order = 0) val locale = ResourceLocaleRule()
-    @get:Rule(order = 1) val compose = createEmptyComposeRule()
+    @get:Rule(order = 1) val compose = mainThreadEmptyComposeRule()
     private val app
         get() =
             InstrumentationRegistry.getInstrumentation().targetContext.applicationContext

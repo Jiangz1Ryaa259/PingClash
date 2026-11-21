@@ -3,7 +3,6 @@ package dev.pingclash.app
 import android.util.Base64
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -168,7 +167,7 @@ internal class SubscriptionFixture : Closeable {
 @RunWith(AndroidJUnit4::class)
 class SubscriptionImportTest {
     @get:org.junit.Rule(order = 0) val resourceLocale = ResourceLocaleRule()
-    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 1) val compose = mainThreadComposeRule<MainActivity>()
 
     @Test
     fun mixedSubscriptionRetainsAllThirtyTwoVlessNodesWithLegacyPlaceholders() {

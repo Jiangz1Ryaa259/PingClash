@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.net.Uri
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertIsSelected
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -29,7 +28,7 @@ import org.junit.runner.RunWith
 class CustomBackgroundUiTest {
     // It hung twice in full runs without saying where; a hang now fails with both stacks.
     @get:Rule(order = 0) val hang = HangReport(3 * 60_000L)
-    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 1) val compose = mainThreadComposeRule<MainActivity>()
 
     @Test
     fun storedPictureIsDrawnBehindPagesAndCanBeRemovedFromAppearance() {

@@ -1,6 +1,5 @@
 package dev.pingclash.app
 
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.pingclash.diagnostics.Models
 import dev.pingclash.diagnostics.ReportFormatter
@@ -14,7 +13,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class CanaryPrivacyTest {
     @get:Rule(order = 0) val locale = ResourceLocaleRule()
-    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 1) val compose = mainThreadComposeRule<MainActivity>()
 
     @Test
     fun automaticMessagesReportsAndEncryptedStorageDoNotExposeCanaryCredentials() {

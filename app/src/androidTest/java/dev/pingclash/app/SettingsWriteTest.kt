@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 package dev.pingclash.app
 
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -13,7 +12,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SettingsWriteTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule val compose = mainThreadComposeRule<MainActivity>()
 
     @Test
     fun anEmptySelectedAppsListSavesAndOnlyValidPackageNamesAreAccepted() {

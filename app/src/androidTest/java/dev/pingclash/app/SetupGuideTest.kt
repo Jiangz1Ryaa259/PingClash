@@ -5,7 +5,6 @@ import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -49,7 +48,7 @@ class SetupGuideTest {
 
     @get:Rule(order = 0) val resourceLocale = ResourceLocaleRule()
     @get:Rule(order = 1) val setup = firstLaunch
-    @get:Rule(order = 2) val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 2) val compose = mainThreadComposeRule<MainActivity>()
 
     private fun title(text: String) {
         compose.waitForIdle()

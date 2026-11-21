@@ -7,6 +7,10 @@ def test_inventory(root):
     result = []
     for source in sorted((pathlib.Path(root) / 'app/src/androidTest/java').rglob('*.kt')):
         text = source.read_text(encoding='utf-8-sig')
+        # Compose's own rules resume effects on worker threads; see MainThreadComposeRule.kt.
+        if source.name != 'MainThreadComposeRule.kt' and re.search(
+                r'\bcreate(?:Android|Empty)?ComposeRule\b', text):
+            raise RuntimeError(source.name + ': use mainThreadComposeRule, not Compose\'s rule')
         count = len(re.findall(r'(?m)^\s*@(?:org\.junit\.)?Test\b', text))
         if not count:
             continue
