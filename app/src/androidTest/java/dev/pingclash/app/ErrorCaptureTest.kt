@@ -156,7 +156,34 @@ class ErrorCaptureTest {
         }
     }
 
+    /** Secure windows of the import page, its error dialog's own window included. */
+    private fun secureWindows(activity: ProfileImportActivity): Int {
+        var count = 0
+        instrumentation.runOnMainSync {
+            count =
+                android.view.inspector.WindowInspector.getGlobalWindowViews().count { view ->
+                    val params = view.layoutParams as? WindowManager.LayoutParams
+                    val owner =
+                        generateSequence(view.context) {
+                                (it as? android.content.ContextWrapper)?.baseContext
+                            }
+                            .any { it === activity }
+                    owner &&
+                        view.isAttachedToWindow &&
+                        params != null &&
+                        params.flags and WindowManager.LayoutParams.FLAG_SECURE != 0
+                }
+        }
+        return count
+    }
+
     private fun assertSafeFrame(activity: ProfileImportActivity) {
+        // The dialog follows the page's protection one recomposition later; a screenshot taken
+        // in between is refused by the system.
+        compose.waitUntil(5000) {
+            compose.waitForIdle()
+            secureWindows(activity) == 0
+        }
         UiDevice.getInstance(instrumentation).waitForIdle(1000)
         Thread.sleep(300)
         val frame = instrumentation.uiAutomation.takeScreenshot()
